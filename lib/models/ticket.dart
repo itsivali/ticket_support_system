@@ -38,18 +38,18 @@ class Ticket {
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
-      id: json['_id'] ?? '',
-      title: json['title'] ?? '',
-      description: json['description'] ?? '',
+      id: json['_id']?.toString() ?? '', 
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
       dueDate: json['dueDate'] != null 
-          ? DateTime.parse(json['dueDate']) 
+          ? DateTime.parse(json['dueDate'].toString())
           : DateTime.now().add(const Duration(days: 1)),
-      estimatedHours: (json['estimatedHours'] ?? 0.0).toDouble(),
-      status: json['status'],
-      assignedTo: json['assignedTo'],
-      priority: json['priority'],
+      estimatedHours: double.tryParse(json['estimatedHours']?.toString() ?? '0') ?? 0.0,
+      status: json['status']?.toString(),
+      assignedTo: json['assignedTo']?.toString(),
+      priority: json['priority']?.toString(),
       createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt'])
+          ? DateTime.parse(json['createdAt'].toString())
           : DateTime.now(),
     );
   }

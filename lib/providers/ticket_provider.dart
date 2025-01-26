@@ -21,6 +21,7 @@ class TicketProvider with ChangeNotifier {
       _tickets = await _ticketService.getTickets();
     } catch (e) {
       _error = e.toString();
+      print('Error fetching tickets: $e'); // For debugging
     } finally {
       _isLoading = false;
       notifyListeners();
