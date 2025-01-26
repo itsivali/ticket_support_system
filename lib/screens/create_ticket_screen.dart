@@ -4,7 +4,7 @@ import '../providers/ticket_provider.dart';
 import '../models/ticket.dart';
 
 class CreateTicketScreen extends StatefulWidget {
-  const CreateTicketScreen({Key? key}) : super(key: key);
+  const CreateTicketScreen({super.key});
 
   @override
   State<CreateTicketScreen> createState() => _CreateTicketScreenState();

@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
 import '../widgets/ticket_card.dart';
-import '../models/ticket.dart';
 
 class TicketListScreen extends StatefulWidget {
-  const TicketListScreen({Key? key}) : super(key: key);
+  const TicketListScreen({super.key});
 
   @override
   State<TicketListScreen> createState() => _TicketListScreenState();
@@ -31,6 +30,10 @@ class _TicketListScreenState extends State<TicketListScreen> {
             icon: const Icon(Icons.refresh),
             onPressed: () => context.read<TicketProvider>().fetchTickets(),
           ),
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () => _showFilterDialog(context),
+          ),
         ],
       ),
       body: Consumer<TicketProvider>(
@@ -45,6 +48,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Error: ${ticketProvider.error}'),
+                  const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => ticketProvider.fetchTickets(),
                     child: const Text('Retry'),
@@ -74,8 +78,36 @@ class _TicketListScreenState extends State<TicketListScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
-        child: const Icon(Icons.add),
         tooltip: 'Create New Ticket',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Future<void> _showFilterDialog(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter Tickets'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Add filter options here
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              // Apply filters
+              Navigator.pop(context);
+            },
+            child: const Text('Apply'),
+          ),
+        ],
       ),
     );
   }
