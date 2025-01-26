@@ -1,0 +1,26 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ticket_support_system (web)",
+            "request": "launch",
+            "type": "dart",
+            "args": [
+                "-d",
+                "web-server",
+                "--web-browser-flag=--disable-web-security",
+                "--web-port=3001"
+            ],
+            "flutterMode": "debug",
+            "env": {
+                "CHROME_EXECUTABLE": "/usr/bin/google-chrome-stable"
+            }
+        },
+        {
+            "name": "ticket_support_system (linux)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug"
+        }
+    ]
+}

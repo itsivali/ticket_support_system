@@ -38,8 +38,25 @@ execute_process(
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../
 )
 
-# Set Chrome executable path
-set(ENV{CHROME_EXECUTABLE} "/usr/bin/google-chrome-stable")
+# Set Chrome as default
+set(CHROME_EXECUTABLE "/usr/bin/google-chrome-stable")
+
+# Verify Chrome installation
+if(NOT EXISTS "${CHROME_EXECUTABLE}")
+  message(WARNING "Chrome not found at ${CHROME_EXECUTABLE}, checking alternatives...")
+  execute_process(
+    COMMAND which google-chrome
+    OUTPUT_VARIABLE CHROME_PATH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  if(CHROME_PATH)
+    set(CHROME_EXECUTABLE "${CHROME_PATH}")
+  endif()
+endif()
+
+# Set environment variable for Flutter
+set(ENV{FLUTTER_TARGET_PLATFORM} "web")
+set(ENV{CHROME_EXECUTABLE} "${CHROME_EXECUTABLE}")
 
 # Add Chrome executable check
 if(NOT EXISTS "$ENV{CHROME_EXECUTABLE}")

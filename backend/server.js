@@ -5,34 +5,72 @@ const dotenv = require('dotenv');
 const ticketRoutes = require('./routes/tickets');
 const agentRoutes = require('./routes/agents');
 const errorHandler = require('./middleware/errorHandler');
+const seedDatabase = require('./scripts/seed');
 
 dotenv.config();
 
 const app = express();
 
+const log = {
+  info: (msg) => console.log(`[INFO] ${new Date().toISOString()} - ${msg}`),
+  error: (msg, err) => console.error(`[ERROR] ${new Date().toISOString()} - ${msg}`, err || '')
+};
+
 // Middleware
 app.use(cors());
 app.use(express.json());
-
-// Routes
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/agents', agentRoutes);
-
-// Error handling
 app.use(errorHandler);
 
-// Database connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost/ticket_system', {
+const mongooseOptions = {
   useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  connectTimeoutMS: 10000,
+  socketTimeoutMS: 45000
+};
 
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+async function connectDB() {
+  for (let attempts = 0; attempts < 5; attempts++) {
+    try {
+      await mongoose.connect('mongodb://127.0.0.1:27017/ticket_system', mongooseOptions);
+      log.info('MongoDB connected successfully');
+      return true;
+    } catch (error) {
+      log.error(`MongoDB connection attempt ${attempts + 1} failed:`, error);
+      if (attempts === 4) return false; // Exit after 5 attempts
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // Retry after 5 seconds
+    }
+  }
+}
+
+async function startServer() {
+  try {
+    const isConnected = await connectDB();
+    if (!isConnected) {
+      throw new Error('Failed to connect to MongoDB');
+    }
+
+    await seedDatabase();
+    log.info('Database seeded successfully');
+
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+      log.info(`Server running on port ${PORT}`);
+    });
+
+    mongoose.connection.on('disconnected', async () => {
+      log.error('MongoDB disconnected, attempting to reconnect...');
+      await connectDB();
+    });
+
+  } catch (error) {
+    log.error('Server startup error:', error);
+    setTimeout(startServer, 5000);
+  }
+}
+
+startServer();
 
 module.exports = app;

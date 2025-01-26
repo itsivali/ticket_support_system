@@ -3,21 +3,21 @@ const mongoose = require('mongoose');
 const ticketSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
+    required: [true, 'Title is required'],
     trim: true
   },
   description: {
     type: String,
-    required: true
+    required: [true, 'Description is required']
   },
   dueDate: {
     type: Date,
-    required: true
+    required: [true, 'Due date is required']
   },
   estimatedHours: {
     type: Number,
-    required: true,
-    min: 0
+    required: [true, 'Estimated hours is required'],
+    min: [0, 'Estimated hours must be positive']
   },
   status: {
     type: String,

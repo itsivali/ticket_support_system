@@ -3,11 +3,11 @@ const mongoose = require('mongoose');
 const agentSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true
+    required: [true, 'Name is required']
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'Email is required'],
     unique: true
   },
   isOnline: {
@@ -21,9 +21,8 @@ const agentSchema = new mongoose.Schema({
   shiftSchedule: {
     startTime: Date,
     endTime: Date,
-    weekdays: [Number]
+    weekdays: [Number] // 0-6 for Sunday-Saturday
   }
 });
 
 module.exports = mongoose.model('Agent', agentSchema);
-
