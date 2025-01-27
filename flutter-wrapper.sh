@@ -13,8 +13,25 @@ find_project_root() {
     return 1
 }
 
+# Function to check dependencies
+check_dependencies() {
+    if ! command -v google-chrome-stable &> /dev/null; then
+        echo "Warning: google-chrome-stable not found"
+        return 1
+    fi
+    return 0
+}
+
 # Function to show platform selection menu
 show_platform_menu() {
+    local project_root
+    project_root=$(find_project_root)
+    
+    if [[ $? -ne 0 ]]; then
+        echo "Error: Not in a Flutter project directory"
+        return 1
+    fi
+
     echo "Select platform to run:"
     echo "1) Web (Chrome)"
     echo "2) Linux Desktop"
@@ -22,10 +39,12 @@ show_platform_menu() {
 
     case $choice in
         1)
+            check_dependencies
             export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable
             command flutter run -d chrome --web-port=3001 --web-browser-flag="--disable-web-security"
             ;;
         2)
+            command flutter config --enable-linux-desktop
             command flutter run -d linux
             ;;
         *)
