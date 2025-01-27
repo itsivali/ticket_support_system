@@ -23,6 +23,24 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/agents', agentRoutes);
 app.use(errorHandler);
 
+
+app.get('/api/data', async (req, res) => {
+  try {
+    const tickets = await mongoose.model('Ticket').find();
+    const agents = await mongoose.model('Agent').find();
+    res.json({
+      tickets,
+      agents,
+      counts: {
+        tickets: tickets.length,
+        agents: agents.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 const mongooseOptions = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
