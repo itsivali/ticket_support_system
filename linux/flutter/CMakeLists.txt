@@ -1,13 +1,19 @@
 # This file controls Flutter-level build steps. It should not be edited.
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.13)
+project(runner LANGUAGES CXX)
 
-# Set absolute paths
+# Set absolute paths dynamically
 get_filename_component(ABSOLUTE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 set(EPHEMERAL_DIR "${ABSOLUTE_PATH}/ephemeral")
+get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 
 # Ensure Flutter root is set
 if(NOT DEFINED FLUTTER_ROOT)
-  set(FLUTTER_ROOT "/usr/lib/flutter")
+  if(EXISTS "$ENV{FLUTTER_ROOT}")
+    set(FLUTTER_ROOT $ENV{FLUTTER_ROOT})
+  else()
+    set(FLUTTER_ROOT "/usr/lib/flutter")
+  endif()
 endif()
 
 # Ensure ephemeral directory exists
@@ -21,8 +27,9 @@ if(EXISTS ${EPHEMERAL_DIR}/generated_config.cmake)
 else()
   message(WARNING "Flutter config not found, attempting to generate...")
   execute_process(
-    COMMAND flutter build linux
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../
+    COMMAND ${CMAKE_COMMAND} -E env "FLUTTER_ROOT=${FLUTTER_ROOT}"
+            flutter build linux
+    WORKING_DIRECTORY ${PROJECT_DIR}
     RESULT_VARIABLE FLUTTER_BUILD
   )
   if(FLUTTER_BUILD EQUAL 0)
@@ -34,8 +41,9 @@ endif()
 
 # Generate build files
 execute_process(
-  COMMAND ${FLUTTER_ROOT}/packages/flutter_tools/bin/tool_backend.sh linux-x64 debug
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../
+  COMMAND ${CMAKE_COMMAND} -E env "FLUTTER_ROOT=${FLUTTER_ROOT}"
+          ${FLUTTER_ROOT}/packages/flutter_tools/bin/tool_backend.sh linux-x64 debug
+  WORKING_DIRECTORY ${PROJECT_DIR}
 )
 
 # Set Chrome as default
@@ -150,3 +158,33 @@ add_custom_target(flutter_assemble DEPENDS
   ${FLUTTER_LIBRARY_HEADERS}
   ${FLUTTER_ICU_DATA_FILE}
 )
+
+# Get the project directory dynamically
+get_filename_component(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.." ABSOLUTE)
+
+set(BINARY_NAME "ticket_support_system")
+set(APPLICATION_ID "com.example.ticket_support_system")
+
+cmake_policy(SET CMP0063 NEW)
+
+set(CMAKE_INSTALL_RPATH "$ORIGIN/lib")
+
+# Configure build options.
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE "Debug" CACHE
+    STRING "Flutter build mode" FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Profile" "Release")
+endif()
+
+# Flutter library and tool build rules.
+add_subdirectory(flutter)
+
+# System-level dependencies.
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
+
+add_subdirectory(runner)
+
+# Generated plugin build rules
+include(flutter/generated_plugins.cmake)
