@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const express = require('express');
+const router = express.Router();
+const { Ticket, Agent } = require('../models');
 
 const ticketSchema = new mongoose.Schema({
   title: {

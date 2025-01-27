@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Agent = require('../models/agent');
+const { Agent } = require('../models');
 
 // Get all agents
 router.get('/', async (req, res) => {

@@ -5,29 +5,19 @@ const ticketSchema = new mongoose.Schema({
   title: {
     type: String,
     required: [true, 'Title is required'],
-    trim: true,
-    minlength: [3, 'Title must be at least 3 characters']
+    trim: true
   },
   description: {
     type: String,
-    required: [true, 'Description is required'],
-    minlength: [10, 'Description must be at least 10 characters']
+    required: [true, 'Description is required']
   },
   dueDate: {
     type: Date,
-    required: [true, 'Due date is required'],
-    validate: {
-      validator: function(v) {
-        return v > new Date();
-      },
-      message: 'Due date must be in the future'
-    }
+    required: [true, 'Due date is required']
   },
   estimatedHours: {
     type: Number,
-    required: [true, 'Estimated hours is required'],
-    min: [0.5, 'Estimated hours must be at least 0.5'],
-    max: [24, 'Estimated hours cannot exceed 24']
+    required: [true, 'Estimated hours is required']
   },
   status: {
     type: String,
@@ -41,9 +31,19 @@ const ticketSchema = new mongoose.Schema({
   },
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Agent',
-    default: null
-  }
+    ref: 'Agent'
+  },
+  comments: [{
+    text: String,
+    author: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Agent'
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 });
 
 const agentSchema = new mongoose.Schema({
@@ -57,6 +57,20 @@ const agentSchema = new mongoose.Schema({
     unique: true
   }
 });
+
+// Model methods
+ticketSchema.methods = {
+  addComment(text, authorId) {
+    this.comments.push({ text, author: authorId });
+    return this.save();
+  },
+
+  assignToAgent(agentId) {
+    this.assignedTo = agentId;
+    this.status = 'IN_PROGRESS';
+    return this.save();
+  }
+};
 
 // Create and export models
 module.exports = {
