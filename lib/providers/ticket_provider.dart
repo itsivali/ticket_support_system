@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import '../models/ticket.dart';
 import '../services/ticket_service.dart';
+import '../utils/logger.dart';
 
 class TicketProvider with ChangeNotifier {
   final TicketService _ticketService = TicketService();
+
   List<Ticket> _tickets = [];
   bool _isLoading = false;
   String? _error;
@@ -20,8 +22,8 @@ class TicketProvider with ChangeNotifier {
 
       _tickets = await _ticketService.getTickets();
     } catch (e) {
+      AppLogger.error('Error fetching tickets', error: e);
       _error = e.toString();
-      print('Error fetching tickets: $e'); // For debugging
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -36,7 +38,9 @@ class TicketProvider with ChangeNotifier {
 
       final newTicket = await _ticketService.createTicket(ticket);
       _tickets.add(newTicket);
+      AppLogger.info('Ticket created successfully');
     } catch (e) {
+      AppLogger.error('Error creating ticket', error: e);
       _error = e.toString();
     } finally {
       _isLoading = false;
@@ -52,7 +56,7 @@ class TicketProvider with ChangeNotifier {
 
       // Add implementation for ticket assignment
       // await _ticketService.assignTicket(ticketId, agentId);
-      
+
       // Update local ticket data
       await fetchTickets();
     } catch (e) {
