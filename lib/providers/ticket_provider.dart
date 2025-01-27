@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/ticket.dart';
+import '../models/agent.dart';
 import '../services/ticket_service.dart';
 import '../utils/logger.dart';
 
@@ -7,10 +8,12 @@ class TicketProvider with ChangeNotifier {
   final TicketService _ticketService = TicketService();
 
   List<Ticket> _tickets = [];
+  List<Agent> _agents = [];
   bool _isLoading = false;
   String? _error;
 
   List<Ticket> get tickets => _tickets;
+  List<Agent> get agents => _agents;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -23,6 +26,22 @@ class TicketProvider with ChangeNotifier {
       _tickets = await _ticketService.getTickets();
     } catch (e) {
       AppLogger.error('Error fetching tickets', error: e);
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchAgents() async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      _agents = await _ticketService.getAgents();
+    } catch (e) {
+      AppLogger.error('Error fetching agents', error: e);
       _error = e.toString();
     } finally {
       _isLoading = false;
@@ -54,10 +73,7 @@ class TicketProvider with ChangeNotifier {
       _error = null;
       notifyListeners();
 
-      // Add implementation for ticket assignment
-      // await _ticketService.assignTicket(ticketId, agentId);
-
-      // Update local ticket data
+      await _ticketService.assignTicket(ticketId, agentId);
       await fetchTickets();
     } catch (e) {
       _error = e.toString();

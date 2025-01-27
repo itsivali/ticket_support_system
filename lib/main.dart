@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'providers/ticket_provider.dart';
 import 'screens/ticket_list_screen.dart';
 import 'screens/create_ticket_screen.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/chat_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,8 +37,9 @@ class MyApp extends StatelessWidget {
         ),
         initialRoute: '/',
         routes: {
-          '/': (context) => const TicketListScreen(),
+          '/': (context) => const DashboardScreen(),
           '/create-ticket': (context) => const CreateTicketScreen(),
+          '/chat': (context) => const ChatScreen(),
         },
       ),
     );

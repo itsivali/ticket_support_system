@@ -5,9 +5,8 @@ class Ticket {
   final DateTime dueDate;
   final double estimatedHours;
   final String status;
-  final String? assignedTo;
   final String priority;
-  final DateTime createdAt;
+  final String? assignedTo;
 
   Ticket({
     required this.id,
@@ -15,134 +14,34 @@ class Ticket {
     required this.description,
     required this.dueDate,
     required this.estimatedHours,
-    String? status,
+    required this.status,
+    required this.priority,
     this.assignedTo,
-    String? priority,
-    DateTime? createdAt,
-  }) : status = status ?? 'PENDING',
-       priority = priority ?? 'MEDIUM',
-       createdAt = createdAt ?? DateTime.now() {
-    if (!validStatuses.contains(this.status)) {
-      throw ArgumentError('Invalid status: ${this.status}');
-    }
-    if (!validPriorities.contains(this.priority)) {
-      throw ArgumentError('Invalid priority: ${this.priority}');
-    }
-    if (estimatedHours <= 0) {
-      throw ArgumentError('Estimated hours must be greater than 0');
-    }
-    if (dueDate.isBefore(DateTime.now())) {
-      throw ArgumentError('Due date must be in the future');
-    }
-  }
+  });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
-      id: json['_id']?.toString() ?? '', 
-      title: json['title']?.toString() ?? '',
-      description: json['description']?.toString() ?? '',
-      dueDate: json['dueDate'] != null 
-          ? DateTime.parse(json['dueDate'].toString())
-          : DateTime.now().add(const Duration(days: 1)),
-      estimatedHours: double.tryParse(json['estimatedHours']?.toString() ?? '0') ?? 0.0,
-      status: json['status']?.toString(),
-      assignedTo: json['assignedTo']?.toString(),
-      priority: json['priority']?.toString(),
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt'].toString())
-          : DateTime.now(),
+      id: json['_id'] as String,
+      title: json['title'] as String,
+      description: json['description'] as String,
+      dueDate: DateTime.parse(json['dueDate'] as String),
+      estimatedHours: (json['estimatedHours'] as num).toDouble(),
+      status: json['status'] as String,
+      priority: json['priority'] as String,
+      assignedTo: json['assignedTo'] as String?,
     );
   }
 
-
-  Map<String, dynamic> toJson() => {
-    'title': title,
-    'description': description,
-    'dueDate': dueDate.toIso8601String(),
-    'estimatedHours': estimatedHours,
-    'status': status,
-    'assignedTo': assignedTo,
-    'priority': priority,
-    'createdAt': createdAt.toIso8601String(),
-  };
-
- 
-  Ticket copyWith({
-    String? id,
-    String? title,
-    String? description,
-    DateTime? dueDate,
-    double? estimatedHours,
-    String? status,
-    String? assignedTo,
-    String? priority,
-    DateTime? createdAt,
-  }) {
-    return Ticket(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      description: description ?? this.description,
-      dueDate: dueDate ?? this.dueDate,
-      estimatedHours: estimatedHours ?? this.estimatedHours,
-      status: status ?? this.status,
-      assignedTo: assignedTo ?? this.assignedTo,
-      priority: priority ?? this.priority,
-      createdAt: createdAt ?? this.createdAt,
-    );
+  Map<String, dynamic> toJson() {
+    return {
+      '_id': id,
+      'title': title,
+      'description': description,
+      'dueDate': dueDate.toIso8601String(),
+      'estimatedHours': estimatedHours,
+      'status': status,
+      'priority': priority,
+      'assignedTo': assignedTo,
+    };
   }
-
-  
-  static const List<String> validStatuses = [
-    'PENDING',
-    'ASSIGNED',
-    'IN_PROGRESS',
-    'COMPLETED'
-  ];
-
-  
-  static const List<String> validPriorities = [
-    'LOW',
-    'MEDIUM',
-    'HIGH'
-  ];
-
-
-  bool isValid() {
-    return title.isNotEmpty &&
-           description.isNotEmpty &&
-           estimatedHours > 0 &&
-           dueDate.isAfter(DateTime.now()) &&
-           validStatuses.contains(status) &&
-           validPriorities.contains(priority);
-  }
-
-  // Helper methods
-  bool get isPending => status == 'PENDING';
-  bool get isAssigned => status == 'ASSIGNED';
-  bool get isInProgress => status == 'IN_PROGRESS';
-  bool get isCompleted => status == 'COMPLETED';
-  bool get isHighPriority => priority == 'HIGH';
-
-  bool canBeAssignedTo(DateTime agentShiftEnd) {
-    final estimatedCompletionTime = DateTime.now().add(
-      Duration(hours: estimatedHours.ceil())
-    );
-    return estimatedCompletionTime.isBefore(agentShiftEnd) &&
-           !isCompleted;
-  }
-
-  @override
-  String toString() {
-    return 'Ticket{id: $id, title: $title, status: $status, priority: $priority}';
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is Ticket &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
-
-  @override
-  int get hashCode => id.hashCode;
 }
