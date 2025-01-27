@@ -1,10 +1,5 @@
 {
-    "dart.flutterRunAdditionalArgs": [
-        "-d",
-        "chrome",
-        "--web-port=3001",
-        "--web-browser-flag=--disable-web-security"
-    ],
+    "dart.flutterRunAdditionalArgs": [],
     "dart.previewFlutterUiGuides": true,
     "cmake.sourceDirectory": "${workspaceFolder}/linux/flutter",
     "dart.env": {
