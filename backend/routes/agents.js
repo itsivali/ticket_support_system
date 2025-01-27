@@ -1,41 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const Agent = require('../models/Agent');
+const Agent = require('../models/agent');
 
 // Get all agents
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res) => {
   try {
-    const agents = await Agent.find().populate('currentTickets');
+    const agents = await Agent.find();
     res.json(agents);
   } catch (err) {
-    next(err);
-  }
-});
-
-// Create agent
-router.post('/', async (req, res, next) => {
-  try {
-    const agent = new Agent(req.body);
-    await agent.save();
-    res.status(201).json(agent);
-  } catch (err) {
-    next(err);
-  }
-});
-
-// Update agent status
-router.put('/:id/status', async (req, res, next) => {
-  try {
-    const { isOnline } = req.body;
-    const agent = await Agent.findByIdAndUpdate(
-      req.params.id,
-      { isOnline },
-      { new: true }
-    );
-    if (!agent) return res.status(404).json({ message: 'Agent not found' });
-    res.json(agent);
-  } catch (err) {
-    next(err);
+    res.status(500).json({ message: err.message });
   }
 });
 

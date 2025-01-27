@@ -13,21 +13,13 @@ async function seedDatabase() {
     ]);
 
     // Create agents
-    const agents = await Promise.all(
-      Array(5).fill().map(async () => {
-        const agent = new Agent({
-          name: faker.person.fullName(),
-          email: faker.internet.email(),
-          isOnline: faker.datatype.boolean(),
-          shiftSchedule: {
-            startTime: new Date().setHours(9, 0, 0, 0),
-            endTime: new Date().setHours(17, 0, 0, 0),
-            weekdays: [1, 2, 3, 4, 5]
-          }
-        });
-        return agent.save();
-      })
-    );
+    const agents = [
+      { name: 'Agent 1' },
+      { name: 'Agent 2' },
+      { name: 'Agent 3' },
+    ];
+
+    await Agent.insertMany(agents);
 
     // Create tickets
     const tickets = await Promise.all(
