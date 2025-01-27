@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Function to find project root
+# Find Flutter project root directory
 find_project_root() {
     local dir="$PWD"
     while [[ "$dir" != "/" ]]; do
@@ -13,24 +13,49 @@ find_project_root() {
     return 1
 }
 
-# Function to check dependencies
+# Check required dependencies
 check_dependencies() {
-    if ! command -v google-chrome-stable &> /dev/null; then
-        echo "Warning: google-chrome-stable not found"
+    if ! command -v flutter &> /dev/null; then
+        echo "Error: Flutter SDK not found"
         return 1
+    fi
+    if ! command -v google-chrome-stable &> /dev/null; then
+        echo "Warning: google-chrome-stable not found (needed for web)"
     fi
     return 0
 }
 
-# Function to show platform selection menu
-show_platform_menu() {
+# Run web version
+run_web() {
+    export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable
+    flutter run -d chrome --web-port=3001
+}
+
+# Run Linux version
+run_linux() {
+    flutter config --enable-linux-desktop
+    flutter run -d linux
+}
+
+# Main execution
+main() {
     local project_root
     project_root=$(find_project_root)
     
     if [[ $? -ne 0 ]]; then
         echo "Error: Not in a Flutter project directory"
-        return 1
+        exit 1
     fi
+
+    cd "$project_root" || exit 1
+
+    if ! check_dependencies; then
+        exit 1
+    fi
+
+    # Clean and get dependencies
+    flutter clean
+    flutter pub get
 
     echo "Select platform to run:"
     echo "1) Web (Chrome)"
@@ -39,29 +64,16 @@ show_platform_menu() {
 
     case $choice in
         1)
-            check_dependencies
-            export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable
-            command flutter run -d chrome --web-port=3001 --web-browser-flag="--disable-web-security"
+            run_web
             ;;
         2)
-            command flutter config --enable-linux-desktop
-            command flutter run -d linux
+            run_linux
             ;;
         *)
             echo "Invalid choice"
-            return 1
+            exit 1
             ;;
     esac
 }
 
-# Main wrapper function
-flutter_wrapper() {
-    if [[ "$1" == "run" && $# -eq 1 ]]; then
-        show_platform_menu
-    else
-        command flutter "$@"
-    fi
-}
-
-# Execute the wrapper
-flutter_wrapper "$@"
+main "$@"
