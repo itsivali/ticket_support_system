@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
 import '../widgets/ticket_card.dart';
 import '../models/ticket.dart';
+import 'screens/create_ticket_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -164,6 +165,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
         icon: const Icon(Icons.add),
         label: const Text('New Ticket'),
       ),
+    );
+  }
+}
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TicketProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Ticket Support System',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+      ),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const DashboardScreen(),
+        '/create-ticket': (context) => const CreateTicketScreen(),
+      },
     );
   }
 }
