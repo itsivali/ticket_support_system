@@ -43,3 +43,52 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Backend
+backend/node_modules/
+backend/.env
+backend/dist/
+backend/logs/
+backend/*.log
+backend/npm-debug.log*
+
+# Frontend (Flutter)
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+*.iws
+.idea/
+.vscode/
+
+# Environment Files
+*.env
+.env.*
+*.env.local
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+*.swp
+*.swo
+*.swn
+*.bak
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+package-lock.json
+pubspec.lock

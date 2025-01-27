@@ -1,7 +1,6 @@
 const { faker } = require('@faker-js/faker');
 const mongoose = require('mongoose');
-const Ticket = require('../models/Ticket');
-const Agent = require('../models/Agent');
+const { Ticket, Agent } = require('../models');
 require('dotenv').config();
 
 async function seedDatabase() {
@@ -13,27 +12,23 @@ async function seedDatabase() {
     ]);
 
     // Create agents
-    const agents = [
-      { name: 'Agent 1' },
-      { name: 'Agent 2' },
-      { name: 'Agent 3' },
-    ];
-
-    await Agent.insertMany(agents);
+    const agents = await Agent.create([
+      { name: 'John Doe', email: 'john@example.com' },
+      { name: 'Jane Smith', email: 'jane@example.com' },
+      { name: 'Mike Wilson', email: 'mike@example.com' }
+    ]);
 
     // Create tickets
     const tickets = await Promise.all(
       Array(20).fill().map(async () => {
-        const dueDate = faker.date.future();
         const ticket = new Ticket({
           title: faker.hacker.phrase(),
           description: faker.lorem.paragraphs(2),
-          dueDate,
+          dueDate: faker.date.future(),
           estimatedHours: faker.number.int({ min: 1, max: 8 }),
-          status: faker.helpers.arrayElement(['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED']),
+          status: faker.helpers.arrayElement(['OPEN', 'IN_PROGRESS', 'CLOSED']),
           priority: faker.helpers.arrayElement(['LOW', 'MEDIUM', 'HIGH']),
-          assignedTo: faker.helpers.arrayElement([...agents.map(a => a._id), null]),
-          createdAt: faker.date.past()
+          assignedTo: faker.helpers.arrayElement([...agents.map(a => a._id), null])
         });
         return ticket.save();
       })
@@ -45,13 +40,6 @@ async function seedDatabase() {
     console.error('Seeding error:', error);
     throw error;
   }
-}
-
-if (require.main === module) {
-  mongoose.connect(process.env.MONGODB_URI)
-    .then(() => seedDatabase())
-    .then(() => mongoose.disconnect())
-    .catch(console.error);
 }
 
 module.exports = seedDatabase;
