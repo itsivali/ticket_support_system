@@ -1,0 +1,9 @@
+execute_process(
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../build_linux.sh
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/..
+    RESULT_VARIABLE BUILD_RESULT
+)
+
+if(BUILD_RESULT AND NOT BUILD_RESULT EQUAL 0)
+    message(FATAL_ERROR "Build failed")
+endif()
