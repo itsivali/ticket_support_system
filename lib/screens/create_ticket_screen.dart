@@ -3,6 +3,24 @@ import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
 import '../widgets/ticket_card.dart';
 
+/// Screen for creating a new ticket
+class CreateTicketScreen extends StatelessWidget {
+  const CreateTicketScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Create Ticket'),
+      ),
+      body: const Center(
+        child: Text('Create Ticket Screen'),
+      ),
+    );
+  }
+}
+
+/// Dashboard screen displaying a list of tickets
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 

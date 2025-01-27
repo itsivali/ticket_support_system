@@ -1,3 +1,8 @@
+import 'package:flutter/material.dart';
+
+enum TicketStatus { OPEN, IN_PROGRESS, CLOSED }
+enum TicketPriority { LOW, MEDIUM, HIGH }
+
 class Ticket {
   final String id;
   final String title;
@@ -8,7 +13,7 @@ class Ticket {
   final String priority;
   final String? assignedTo;
 
-  Ticket({
+  const Ticket({
     required this.id,
     required this.title,
     required this.description,
@@ -44,4 +49,34 @@ class Ticket {
       'assignedTo': assignedTo,
     };
   }
+
+  Color get statusColor {
+    switch (status) {
+      case 'OPEN':
+        return Colors.orange;
+      case 'IN_PROGRESS':
+        return Colors.blue;
+      case 'CLOSED':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color get priorityColor {
+    switch (priority) {
+      case 'HIGH':
+        return Colors.red;
+      case 'MEDIUM':
+        return Colors.orange;
+      case 'LOW':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  bool get isOpen => status == 'OPEN';
+  bool get isInProgress => status == 'IN_PROGRESS';
+  bool get isClosed => status == 'CLOSED';
 }

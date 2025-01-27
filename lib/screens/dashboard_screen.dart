@@ -15,16 +15,47 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TicketProvider>().fetchTickets();
+      final provider = context.read<TicketProvider>();
+      provider.fetchTickets();
+      provider.fetchAgents();
     });
+  }
+
+  Widget _buildStatCard(String title, int count) {
+    return Expanded(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '$count',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
+        title: const Text('Support Dashboard'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -33,51 +64,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: Consumer<TicketProvider>(
-        builder: (context, ticketProvider, child) {
-          if (ticketProvider.isLoading) {
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (ticketProvider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Error: ${ticketProvider.error}'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => ticketProvider.fetchTickets(),
-                    child: const Text('Retry'),
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    _buildStatCard(
+                      'Open',
+                      provider.tickets.where((t) => t.status == 'OPEN').length,
+                    ),
+                    const SizedBox(width: 16),
+                    _buildStatCard(
+                      'In Progress',
+                      provider.tickets.where((t) => t.status == 'IN_PROGRESS').length,
+                    ),
+                    const SizedBox(width: 16),
+                    _buildStatCard(
+                      'Closed',
+                      provider.tickets.where((t) => t.status == 'CLOSED').length,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 1.5,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    itemCount: provider.tickets.length,
+                    itemBuilder: (context, index) => TicketCard(
+                      ticket: provider.tickets[index],
+                    ),
                   ),
-                ],
-              ),
-            );
-          }
-
-          if (ticketProvider.tickets.isEmpty) {
-            return const Center(
-              child: Text('No tickets available'),
-            );
-          }
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+                ),
+              ],
             ),
-            itemCount: ticketProvider.tickets.length,
-            itemBuilder: (context, index) {
-              final ticket = ticketProvider.tickets[index];
-              return TicketCard(ticket: ticket);
-            },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
-        tooltip: 'Create New Ticket',
         child: const Icon(Icons.add),
       ),
     );

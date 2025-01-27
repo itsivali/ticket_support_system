@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
 import '../widgets/ticket_card.dart';
+import '../models/ticket.dart';
 
 class TicketListScreen extends StatefulWidget {
   const TicketListScreen({super.key});
@@ -11,75 +12,133 @@ class TicketListScreen extends StatefulWidget {
 }
 
 class _TicketListScreenState extends State<TicketListScreen> {
+  String _statusFilter = 'all';
+  String _priorityFilter = 'all';
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TicketProvider>().fetchTickets();
+      final provider = context.read<TicketProvider>();
+      provider.fetchTickets();
+      provider.fetchAgents();
     });
+  }
+
+  List<Ticket> _getFilteredTickets(List<Ticket> tickets) {
+    return tickets.where((ticket) {
+      final matchesStatus = _statusFilter == 'all' || 
+                          ticket.status.toLowerCase() == _statusFilter;
+      final matchesPriority = _priorityFilter == 'all' || 
+                            ticket.priority.toLowerCase() == _priorityFilter;
+      return matchesStatus && matchesPriority;
+    }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Support Tickets'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<TicketProvider>().fetchTickets(),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 150.0,
+            floating: false,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              title: const Text('Support Tickets Dashboard'),
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.secondary,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: () => _showFilterDialog(context),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () => context.read<TicketProvider>().fetchTickets(),
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () => _showFilterDialog(context),
+          SliverPadding(
+            padding: const EdgeInsets.all(16.0),
+            sliver: Consumer<TicketProvider>(
+              builder: (context, provider, child) {
+                if (provider.isLoading) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                if (provider.error != null) {
+                  return SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, 
+                            size: 48, 
+                            color: Theme.of(context).colorScheme.error),
+                          const SizedBox(height: 16),
+                          Text(provider.error!),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () => provider.fetchTickets(),
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                final filteredTickets = _getFilteredTickets(provider.tickets);
+
+                if (filteredTickets.isEmpty) {
+                  return const SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.inbox, size: 48, color: Colors.grey),
+                          SizedBox(height: 16),
+                          Text('No tickets available'),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+
+                return SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.5,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => TicketCard(ticket: filteredTickets[index]),
+                    childCount: filteredTickets.length,
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
-      body: Consumer<TicketProvider>(
-        builder: (context, ticketProvider, child) {
-          if (ticketProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (ticketProvider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Error: ${ticketProvider.error}'),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => ticketProvider.fetchTickets(),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          if (ticketProvider.tickets.isEmpty) {
-            return const Center(
-              child: Text('No tickets available'),
-            );
-          }
-
-          return RefreshIndicator(
-            onRefresh: () => ticketProvider.fetchTickets(),
-            child: ListView.builder(
-              itemCount: ticketProvider.tickets.length,
-              itemBuilder: (context, index) {
-                final ticket = ticketProvider.tickets[index];
-                return TicketCard(ticket: ticket);
-              },
-            ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
-        tooltip: 'Create New Ticket',
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('New Ticket'),
       ),
     );
   }
@@ -89,22 +148,49 @@ class _TicketListScreenState extends State<TicketListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Filter Tickets'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Add filter options here
-          ],
+        content: StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: _statusFilter,
+                decoration: const InputDecoration(labelText: 'Status'),
+                items: ['all', 'open', 'in_progress', 'closed']
+                    .map((status) => DropdownMenuItem(
+                          value: status,
+                          child: Text(status.toUpperCase()),
+                        ))
+                    .toList(),
+                onChanged: (value) => setState(() => _statusFilter = value!),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _priorityFilter,
+                decoration: const InputDecoration(labelText: 'Priority'),
+                items: ['all', 'high', 'medium', 'low']
+                    .map((priority) => DropdownMenuItem(
+                          value: priority,
+                          child: Text(priority.toUpperCase()),
+                        ))
+                    .toList(),
+                onChanged: (value) => setState(() => _priorityFilter = value!),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
             onPressed: () {
-              // Apply filters
+              setState(() {
+                _statusFilter = 'all';
+                _priorityFilter = 'all';
+              });
               Navigator.pop(context);
             },
+            child: const Text('Reset'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
             child: const Text('Apply'),
           ),
         ],
