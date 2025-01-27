@@ -2,56 +2,70 @@
 
 set -e # Exit on error
 
-# Check dependencies
-check_dependency() {
-    if ! command -v $1 &> /dev/null; then
-        echo "Error: $1 is not installed"
+# Function to check command status
+check_status() {
+    if [ $? -ne 0 ]; then
+        echo "Error: $1 failed"
         exit 1
     fi
 }
 
-check_dependency flutter
-check_dependency cmake
-check_dependency ninja
+# Check dependencies
+for dep in flutter cmake ninja; do
+    if ! command -v $dep &> /dev/null; then
+        echo "Error: $dep is not installed"
+        exit 1
+    fi
+done
 
-# Get the directory where the script is located
+# Get absolute path
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Ensure Flutter is configured for Linux
+# Configure Flutter
+echo "Configuring Flutter..."
 flutter config --enable-linux-desktop
+check_status "Flutter configuration"
 
-# Clean and prepare
-echo "Cleaning and preparing..."
+# Clean previous build
+echo "Cleaning..."
 flutter clean
+check_status "Flutter clean"
 
-# Generate Linux files
+# Generate Linux platform files
 echo "Generating Linux files..."
 flutter create --platforms=linux .
+check_status "Platform generation"
 
-# Ensure linux directory exists
-mkdir -p "${SCRIPT_DIR}/linux"
-
-# Configure build
-echo "Configuring build..."
+# Prepare Linux build
+echo "Preparing Linux build..."
 flutter build linux --debug
+check_status "Flutter build"
 
-# Create build directory
-echo "Creating build directory..."
+# Setup build directory
+echo "Setting up build directory..."
+rm -rf "${SCRIPT_DIR}/build"
 mkdir -p "${SCRIPT_DIR}/build/linux"
 
-# Run CMake
-echo "Running CMake..."
+# Generate CMake files
+echo "Generating CMake files..."
 cd "${SCRIPT_DIR}/build/linux"
-cmake ../../linux \
+cmake "${SCRIPT_DIR}/linux" \
     -DCMAKE_BUILD_TYPE=Debug \
     -G Ninja
+check_status "CMake configuration"
 
-# Build
-echo "Building..."
+# Build with Ninja
+echo "Building with Ninja..."
 ninja -v
+check_status "Ninja build"
 
-# Set permissions
-echo "Setting permissions..."
-chmod +x "${SCRIPT_DIR}/build/linux/x64/debug/bundle/ticket_support_system"
-
-echo "Build completed!"
+# Verify and set permissions
+EXECUTABLE="${SCRIPT_DIR}/build/linux/x64/debug/bundle/ticket_support_system"
+if [ -f "$EXECUTABLE" ]; then
+    echo "Setting executable permissions..."
+    chmod +x "$EXECUTABLE"
+    echo "Build completed successfully!"
+else
+    echo "Error: Executable not found"
+    exit 1
+fi
