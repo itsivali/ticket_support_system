@@ -89,7 +89,7 @@ class _TicketListScreenState extends State<TicketListScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Filter Tickets'),
-        content: Column(
+        content: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Add filter options here
