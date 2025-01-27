@@ -42,17 +42,6 @@ class TicketService {
     }
   }
 
-  Map<String, dynamic> _ticketToJson(Ticket ticket) {
-    return {
-      'title': ticket.title,
-      'description': ticket.description,
-      'dueDate': ticket.dueDate.toIso8601String(),
-      'estimatedHours': ticket.estimatedHours,
-      'status': ticket.status,
-      'assignedTo': ticket.assignedTo,
-      'priority': ticket.priority,
-    };
-  }
 }
 
 class HttpException implements Exception {
