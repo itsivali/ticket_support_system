@@ -200,7 +200,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      
+
       try {
         final newTicket = Ticket(
           id: '', // ID will be assigned by backend
@@ -215,14 +215,12 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
         await Provider.of<TicketProvider>(context, listen: false)
             .createTicket(newTicket);
-            
+
         if (!mounted) return;
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ticket created successfully'))
-        );
+            const SnackBar(content: Text('Ticket created successfully')));
         Navigator.pop(context);
-        
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

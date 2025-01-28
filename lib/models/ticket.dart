@@ -42,6 +42,5 @@ class Ticket {
     'status': status,
     'priority': priority,
     if (assignedTo != null) 'assignedTo': assignedTo,
-    if (id.isNotEmpty) '_id': id,
   };
 }

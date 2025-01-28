@@ -74,36 +74,36 @@ class TicketService {
   }
 
   Future<Ticket> createTicket(Ticket ticket) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/tickets'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode(ticket.toJson()),
-      );
+  try {
+    final response = await http.post(
+      Uri.parse('$baseUrl/tickets'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: json.encode(ticket.toJson()),
+    );
 
-      if (response.statusCode == 201) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        return Ticket.fromJson(jsonData);
-      } else {
-        final errorData = json.decode(response.body);
-        final message = errorData['message'] ?? 'Failed to create ticket';
-        ConsoleLogger.error(
-          'Failed to create ticket: ${response.statusCode}',
-          response.body,
-        );
-        throw Exception(message);
-      }
-    } catch (e, stack) {
-      ConsoleLogger.error('Network error', e, stack);
-      if (e is FormatException) {
-        throw Exception('Invalid response format');
-      }
-      throw Exception('Unable to create ticket: ${e.toString()}');
+    if (response.statusCode == 201) {
+      final Map<String, dynamic> jsonData = json.decode(response.body);
+      return Ticket.fromJson(jsonData);
+    } else {
+      final errorData = json.decode(response.body);
+      final message = errorData['message'] ?? 'Failed to create ticket';
+      ConsoleLogger.error(
+        'Failed to create ticket: ${response.statusCode}',
+        response.body,
+      );
+      throw Exception(message);
     }
+  } catch (e, stack) {
+    ConsoleLogger.error('Network error', e, stack);
+    if (e is FormatException) {
+      throw Exception('Invalid response format');
+    }
+    throw Exception('Unable to create ticket: ${e.toString()}');
   }
+}
 
   Future<Ticket> updateTicket(Ticket ticket) async {
     try {

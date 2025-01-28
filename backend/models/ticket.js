@@ -1,6 +1,48 @@
 const express = require('express');
 const router = express.Router();
 const { Ticket, Agent } = require('../models');
+const mongoose = require('mongoose');
+
+const ticketSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    minlength: 3,
+  },
+  description: {
+    type: String,
+    required: true,
+    minlength: 10,
+  },
+  dueDate: {
+    type: Date,
+    required: true,
+  },
+  estimatedHours: {
+    type: Number,
+    required: true,
+    min: 0.5,
+  },
+  status: {
+    type: String,
+    enum: ['OPEN', 'IN_PROGRESS', 'CLOSED'],
+    default: 'OPEN',
+  },
+  priority: {
+    type: String,
+    enum: ['LOW', 'MEDIUM', 'HIGH'],
+    default: 'MEDIUM',
+  },
+  assignedTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Agent',
+    default: null,
+  },
+}, {
+  timestamps: true,
+});
+
+module.exports = mongoose.model('Ticket', ticketSchema);
 
 // Get all tickets
 router.get('/', async (req, res) => {
