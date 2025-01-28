@@ -8,7 +8,7 @@ class Ticket {
   final String priority;
   final String? assignedTo;
 
-  const Ticket({
+  Ticket({
     required this.id,
     required this.title,
     required this.description,
@@ -21,28 +21,24 @@ class Ticket {
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
-      id: json['_id']?.toString() ?? '', // Convert to String
+      id: json['_id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      dueDate: json['dueDate'] != null 
-          ? DateTime.parse(json['dueDate'].toString())
-          : DateTime.now(),
+      dueDate: DateTime.parse(json['dueDate']?.toString() ?? DateTime.now().toIso8601String()),
       estimatedHours: (json['estimatedHours'] as num?)?.toDouble() ?? 0.0,
       status: json['status']?.toString() ?? 'OPEN',
       priority: json['priority']?.toString() ?? 'MEDIUM',
-      assignedTo: json['assignedTo']?.toString(), // Handle null case
+      assignedTo: json['assignedTo']?['_id']?.toString(), 
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'title': title,
-      'description': description,
-      'dueDate': dueDate.toIso8601String(),
-      'estimatedHours': estimatedHours,
-      'status': status,
-      'priority': priority,
-      'assignedTo': assignedTo,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'title': title,
+    'description': description,
+    'dueDate': dueDate.toIso8601String(),
+    'estimatedHours': estimatedHours,
+    'status': status,
+    'priority': priority,
+    if (assignedTo != null) 'assignedTo': assignedTo,
+  };
 }

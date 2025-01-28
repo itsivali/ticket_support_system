@@ -23,13 +23,15 @@ class TicketService {
         
         return jsonData.map((json) {
           try {
-            return Ticket.fromJson(json as Map<String, dynamic>);
+            if (json is! Map<String, dynamic>) {
+              throw const FormatException('Invalid ticket format');
+            }
+            return Ticket.fromJson(json);
           } catch (e) {
-            ConsoleLogger.error('Error parsing ticket: $e');
+            ConsoleLogger.error('Error parsing ticket', e);
             rethrow;
           }
         }).toList();
-        
       } else {
         ConsoleLogger.error(
           'Failed to load tickets: ${response.statusCode}',
