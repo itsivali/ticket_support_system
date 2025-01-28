@@ -40,20 +40,41 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                     children: [
                       // Title
                       TextFormField(
-                        decoration: const InputDecoration(labelText: 'Title'),
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Please enter a title' : null,
-                        onSaved: (value) => _title = value!,
+                        decoration: const InputDecoration(
+                          labelText: 'Title',
+                          border: OutlineInputBorder(),
+                          helperText: 'At least 3 characters',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a title';
+                          }
+                          if (value.length < 3) {
+                            return 'Title must be at least 3 characters';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _title = value!.trim(),
                       ),
                       const SizedBox(height: 16),
                       // Description
                       TextFormField(
-                        decoration:
-                            const InputDecoration(labelText: 'Description'),
+                        decoration: const InputDecoration(
+                          labelText: 'Description',
+                          border: OutlineInputBorder(),
+                          helperText: 'At least 10 characters',
+                        ),
                         maxLines: 3,
-                        validator: (value) =>
-                            value == null || value.isEmpty ? 'Please enter a description' : null,
-                        onSaved: (value) => _description = value!,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a description';
+                          }
+                          if (value.length < 10) {
+                            return 'Description must be at least 10 characters';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _description = value!.trim(),
                       ),
                       const SizedBox(height: 16),
                       // Due Date
@@ -176,29 +197,45 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     }
   }
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
-      final newTicket = Ticket(
-        id: '', // ID will be assigned by backend
-        title: _title,
-        description: _description,
-        dueDate: _dueDate,
-        estimatedHours: _estimatedHours,
-        status: _status,
-        priority: _priority,
-        assignedTo: _assignedTo,
-      );
-
-      Provider.of<TicketProvider>(context, listen: false)
-          .createTicket(newTicket)
-          .then((_) => Navigator.pop(context))
-          .catchError((error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $error')),
+      
+      try {
+        final newTicket = Ticket(
+          id: '', // ID will be assigned by backend
+          title: _title,
+          description: _description,
+          dueDate: _dueDate,
+          estimatedHours: _estimatedHours,
+          status: _status,
+          priority: _priority,
+          assignedTo: _assignedTo,
         );
-      });
+
+        await Provider.of<TicketProvider>(context, listen: false)
+            .createTicket(newTicket);
+            
+        if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Ticket created successfully'))
+        );
+        Navigator.pop(context);
+        
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString().replaceAll('Exception:', '')),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            action: SnackBarAction(
+              label: 'DISMISS',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
     }
   }
 }

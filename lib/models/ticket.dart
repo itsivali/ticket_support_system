@@ -24,11 +24,13 @@ class Ticket {
       id: json['_id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      dueDate: DateTime.parse(json['dueDate']?.toString() ?? DateTime.now().toIso8601String()),
+      dueDate: json['dueDate'] != null 
+          ? DateTime.parse(json['dueDate'].toString())
+          : DateTime.now(),
       estimatedHours: (json['estimatedHours'] as num?)?.toDouble() ?? 0.0,
       status: json['status']?.toString() ?? 'OPEN',
       priority: json['priority']?.toString() ?? 'MEDIUM',
-      assignedTo: json['assignedTo']?['_id']?.toString(), 
+      assignedTo: json['assignedTo']?.toString(),
     );
   }
 
@@ -40,5 +42,6 @@ class Ticket {
     'status': status,
     'priority': priority,
     if (assignedTo != null) 'assignedTo': assignedTo,
+    if (id.isNotEmpty) '_id': id,
   };
 }

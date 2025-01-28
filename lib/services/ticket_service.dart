@@ -88,15 +88,20 @@ class TicketService {
         final Map<String, dynamic> jsonData = json.decode(response.body);
         return Ticket.fromJson(jsonData);
       } else {
+        final errorData = json.decode(response.body);
+        final message = errorData['message'] ?? 'Failed to create ticket';
         ConsoleLogger.error(
           'Failed to create ticket: ${response.statusCode}',
-          'Response body: ${response.body}'
+          response.body,
         );
-        throw Exception('Failed to create ticket: ${response.statusCode}');
+        throw Exception(message);
       }
-        } catch (e, stack) {
+    } catch (e, stack) {
       ConsoleLogger.error('Network error', e, stack);
-      throw Exception('Network error: $e');
+      if (e is FormatException) {
+        throw Exception('Invalid response format');
+      }
+      throw Exception('Unable to create ticket: ${e.toString()}');
     }
   }
 
