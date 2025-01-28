@@ -1,8 +1,3 @@
-import 'package:flutter/material.dart';
-
-enum TicketStatus { OPEN, IN_PROGRESS, CLOSED }
-enum TicketPriority { LOW, MEDIUM, HIGH }
-
 class Ticket {
   final String id;
   final String title;
@@ -26,20 +21,21 @@ class Ticket {
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
-      id: json['_id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      dueDate: DateTime.parse(json['dueDate'] as String),
-      estimatedHours: (json['estimatedHours'] as num).toDouble(),
-      status: json['status'] as String,
-      priority: json['priority'] as String,
-      assignedTo: json['assignedTo'] as String?,
+      id: json['_id']?.toString() ?? '', // Convert to String
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      dueDate: json['dueDate'] != null 
+          ? DateTime.parse(json['dueDate'].toString())
+          : DateTime.now(),
+      estimatedHours: (json['estimatedHours'] as num?)?.toDouble() ?? 0.0,
+      status: json['status']?.toString() ?? 'OPEN',
+      priority: json['priority']?.toString() ?? 'MEDIUM',
+      assignedTo: json['assignedTo']?.toString(), // Handle null case
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      '_id': id,
       'title': title,
       'description': description,
       'dueDate': dueDate.toIso8601String(),
@@ -49,34 +45,4 @@ class Ticket {
       'assignedTo': assignedTo,
     };
   }
-
-  Color get statusColor {
-    switch (status) {
-      case 'OPEN':
-        return Colors.orange;
-      case 'IN_PROGRESS':
-        return Colors.blue;
-      case 'CLOSED':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Color get priorityColor {
-    switch (priority) {
-      case 'HIGH':
-        return Colors.red;
-      case 'MEDIUM':
-        return Colors.orange;
-      case 'LOW':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  bool get isOpen => status == 'OPEN';
-  bool get isInProgress => status == 'IN_PROGRESS';
-  bool get isClosed => status == 'CLOSED';
 }

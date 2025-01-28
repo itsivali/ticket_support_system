@@ -18,11 +18,18 @@ class TicketService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body);
+        final List<dynamic> jsonData = json.decode(response.body) as List<dynamic>;
         ConsoleLogger.info('Successfully fetched ${jsonData.length} tickets');
-        return jsonData
-            .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
-            .toList();
+        
+        return jsonData.map((json) {
+          try {
+            return Ticket.fromJson(json as Map<String, dynamic>);
+          } catch (e) {
+            ConsoleLogger.error('Error parsing ticket: $e');
+            rethrow;
+          }
+        }).toList();
+        
       } else {
         ConsoleLogger.error(
           'Failed to load tickets: ${response.statusCode}',
