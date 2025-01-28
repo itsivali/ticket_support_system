@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { Ticket, Agent } = require('../models');
+const mongoose = require('mongoose');
+const Ticket = require('../models/ticket');
 
 // Get all tickets
 router.get('/', async (req, res) => {
@@ -70,12 +71,20 @@ router.put('/:id', getTicket, async (req, res) => {
 });
 
 // Delete a ticket
-router.delete('/:id', getTicket, async (req, res) => {
+router.delete('/:id', async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ message: 'Invalid ticket ID' });
+  }
+
   try {
-    await res.ticket.remove();
+    const ticket = await Ticket.findByIdAndDelete(req.params.id);
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
+    }
+
     res.json({ message: 'Deleted Ticket' });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: 'Failed to delete ticket', error: err.message });
   }
 });
 
@@ -96,3 +105,5 @@ async function getTicket(req, res, next) {
 }
 
 module.exports = router;
+
+

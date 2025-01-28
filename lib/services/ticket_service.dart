@@ -133,27 +133,31 @@ class TicketService {
   }
 
   Future<void> deleteTicket(String ticketId) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/tickets/$ticketId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      );
+  try {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/tickets/$ticketId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    );
 
-      if (response.statusCode != 200) {
-        ConsoleLogger.error(
-          'Failed to delete ticket: ${response.statusCode}',
-          'Response body: ${response.body}'
-        );
-        throw Exception('Failed to delete ticket: ${response.statusCode}');
-      }
-    } catch (e, stack) {
-      ConsoleLogger.error('Network error', e, stack);
-      throw Exception('Network error: $e');
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      ConsoleLogger.info('Ticket $ticketId successfully deleted');
+    } else {
+      final responseBody = response.body.isNotEmpty ? response.body : 'No response body';
+      ConsoleLogger.error(
+        'Failed to delete ticket: ${response.statusCode}',
+        'Response body: $responseBody',
+      );
+      throw Exception('Failed to delete ticket: ${response.statusCode}');
     }
+  } catch (e, stack) {
+    ConsoleLogger.error('Network error while deleting ticket', e, stack);
+    throw Exception('Network error: $e');
   }
+}
+
 
   Future<void> assignTicket(String ticketId, String agentId) async {
     try {

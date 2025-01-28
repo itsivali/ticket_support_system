@@ -112,9 +112,12 @@ router.put('/:id', getTicket, async (req, res) => {
 });
 
 // Delete a ticket
-router.delete('/:id', getTicket, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
-    await res.ticket.remove();
+    const ticket = await Ticket.findByIdAndDelete(req.params.id);
+    if (!ticket) {
+      return res.status(404).json({ message: 'Cannot find ticket' });
+    }
     res.json({ message: 'Deleted Ticket' });
   } catch (err) {
     res.status(500).json({ message: err.message });
