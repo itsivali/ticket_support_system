@@ -4,21 +4,61 @@ import '../models/ticket.dart';
 import '../providers/ticket_provider.dart';
 
 class CreateTicketScreen extends StatefulWidget {
-  const CreateTicketScreen({super.key});
+  const CreateTicketScreen({Key? key}) : super(key: key);
 
   @override
-  State<CreateTicketScreen> createState() => _CreateTicketScreenState();
+  _CreateTicketScreenState createState() => _CreateTicketScreenState();
 }
 
 class _CreateTicketScreenState extends State<CreateTicketScreen> {
   final _formKey = GlobalKey<FormState>();
   String _title = '';
   String _description = '';
-  DateTime _dueDate = DateTime.now().add(const Duration(days: 7));
+  DateTime _dueDate = DateTime.now();
   double _estimatedHours = 1.0;
   String _status = 'OPEN';
   String _priority = 'MEDIUM';
   String? _assignedTo;
+
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      try {
+        final newTicket = Ticket(
+          id: '', // ID will be assigned by backend
+          title: _title,
+          description: _description,
+          dueDate: _dueDate,
+          estimatedHours: _estimatedHours,
+          status: _status,
+          priority: _priority,
+          assignedTo: _assignedTo,
+        );
+
+        await Provider.of<TicketProvider>(context, listen: false)
+            .createTicket(newTicket);
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ticket created successfully')));
+        Navigator.pop(context);
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString().replaceAll('Exception:', '')),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            action: SnackBarAction(
+              label: 'DISMISS',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -194,46 +234,6 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       setState(() {
         _dueDate = picked;
       });
-    }
-  }
-
-  void _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-
-      try {
-        final newTicket = Ticket(
-          id: '', // ID will be assigned by backend
-          title: _title,
-          description: _description,
-          dueDate: _dueDate,
-          estimatedHours: _estimatedHours,
-          status: _status,
-          priority: _priority,
-          assignedTo: _assignedTo,
-        );
-
-        await Provider.of<TicketProvider>(context, listen: false)
-            .createTicket(newTicket);
-
-        if (!mounted) return;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Ticket created successfully')));
-        Navigator.pop(context);
-      } catch (error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(error.toString().replaceAll('Exception:', '')),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            action: SnackBarAction(
-              label: 'DISMISS',
-              textColor: Colors.white,
-              onPressed: () {},
-            ),
-          ),
-        );
-      }
     }
   }
 }
