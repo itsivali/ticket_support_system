@@ -37,34 +37,26 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                 key: _formKey,
                 child: SingleChildScrollView(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Title
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'Title'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a title';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          _title = value!;
-                        },
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Please enter a title'
+                            : null,
+                        onSaved: (value) => _title = value!,
                       ),
                       const SizedBox(height: 16),
                       // Description
                       TextFormField(
-                        decoration: const InputDecoration(labelText: 'Description'),
+                        decoration:
+                            const InputDecoration(labelText: 'Description'),
                         maxLines: 3,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a description';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          _description = value!;
-                        },
+                        validator: (value) => value == null || value.isEmpty
+                            ? 'Please enter a description'
+                            : null,
+                        onSaved: (value) => _description = value!,
                       ),
                       const SizedBox(height: 16),
                       // Due Date
@@ -72,7 +64,8 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                         children: [
                           const Text('Due Date: '),
                           Text(
-                              '${_dueDate.year}-${_dueDate.month}-${_dueDate.day}'),
+                            '${_dueDate.year}-${_dueDate.month}-${_dueDate.day}',
+                          ),
                           IconButton(
                             icon: const Icon(Icons.calendar_today),
                             onPressed: _pickDueDate,
@@ -90,7 +83,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                               min: 0.5,
                               max: 24,
                               divisions: 47,
-                              label: _estimatedHours.toString(),
+                              label: _estimatedHours.toStringAsFixed(1),
                               onChanged: (value) {
                                 setState(() {
                                   _estimatedHours = value;
@@ -98,42 +91,44 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                               },
                             ),
                           ),
-                          Text(_estimatedHours.toString()),
+                          Text('${_estimatedHours.toStringAsFixed(1)} hrs'),
                         ],
                       ),
                       const SizedBox(height: 16),
                       // Status
                       DropdownButtonFormField<String>(
                         value: _status,
-                        decoration: const InputDecoration(labelText: 'Status'),
+                        decoration: const InputDecoration(
+                          labelText: 'Status',
+                          border: OutlineInputBorder(),
+                        ),
                         items: ['OPEN', 'IN_PROGRESS', 'CLOSED']
                             .map((status) => DropdownMenuItem(
                                   value: status,
                                   child: Text(status),
                                 ))
                             .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _status = value!;
-                          });
-                        },
+                        onChanged: (value) => setState(() {
+                          _status = value!;
+                        }),
                       ),
                       const SizedBox(height: 16),
                       // Priority
                       DropdownButtonFormField<String>(
                         value: _priority,
-                        decoration: const InputDecoration(labelText: 'Priority'),
+                        decoration: const InputDecoration(
+                          labelText: 'Priority',
+                          border: OutlineInputBorder(),
+                        ),
                         items: ['LOW', 'MEDIUM', 'HIGH']
                             .map((priority) => DropdownMenuItem(
                                   value: priority,
                                   child: Text(priority),
                                 ))
                             .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _priority = value!;
-                          });
-                        },
+                        onChanged: (value) => setState(() {
+                          _priority = value!;
+                        }),
                       ),
                       const SizedBox(height: 16),
                       // Assigned To
@@ -151,13 +146,11 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                           ...agents.map((agent) => DropdownMenuItem(
                                 value: agent.id,
                                 child: Text(agent.name),
-                              ))
+                              )),
                         ],
-                        onChanged: (value) {
-                          setState(() {
-                            _assignedTo = value;
-                          });
-                        },
+                        onChanged: (value) => setState(() {
+                          _assignedTo = value;
+                        }),
                       ),
                       const SizedBox(height: 24),
                       // Submit Button
@@ -174,13 +167,13 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   }
 
   Future<void> _pickDueDate() async {
-    final DateTime? picked = await showDatePicker(
+    final picked = await showDatePicker(
       context: context,
       initialDate: _dueDate,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    if (picked != null && picked != _dueDate) {
+    if (picked != null) {
       setState(() {
         _dueDate = picked;
       });

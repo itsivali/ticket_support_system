@@ -31,24 +31,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
             border: Border(left: BorderSide(color: color, width: 4)),
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
+              Text(title, style: const TextStyle(fontSize: 16)),
               const SizedBox(height: 8),
               Text(
-                '$count',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
+                count.toString(),
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -61,8 +51,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Support Dashboard'),
+        title: const Text('Dashboard'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () => _showFilterDialog(context),
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => context.read<TicketProvider>().fetchTickets(),
@@ -75,48 +69,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final tickets = provider.tickets;
-          final openCount = tickets.where((t) => t.status == 'OPEN').length;
-          final inProgressCount =
-              tickets.where((t) => t.status == 'IN_PROGRESS').length;
-          final closedCount = tickets.where((t) => t.status == 'CLOSED').length;
+          if (provider.error != null) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline,
+                      size: 48, color: Theme.of(context).colorScheme.error),
+                  const SizedBox(height: 16),
+                  Text(provider.error!),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => provider.fetchTickets(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
+            );
+          }
 
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
+          final openCount = provider.tickets
+              .where((ticket) => ticket.status == 'OPEN')
+              .length;
+          final inProgressCount = provider.tickets
+              .where((ticket) => ticket.status == 'IN_PROGRESS')
+              .length;
+          final closedCount = provider.tickets
+              .where((ticket) => ticket.status == 'CLOSED')
+              .length;
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
                   children: [
                     _buildStatCard('Open', openCount, Colors.orange),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 8),
                     _buildStatCard('In Progress', inProgressCount, Colors.blue),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 8),
                     _buildStatCard('Closed', closedCount, Colors.green),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: tickets.isEmpty
-                      ? const Center(
-                          child: Text('No tickets available'),
-                        )
-                      : GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 1.5,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                          itemCount: tickets.length,
-                          itemBuilder: (context, index) => TicketCard(
-                            ticket: tickets[index],
-                          ),
+              ),
+              Expanded(
+                child: provider.tickets.isEmpty
+                    ? const Center(
+                        child: Text('No tickets available'),
+                      )
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.5,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
                         ),
-                ),
-              ],
-            ),
+                        itemCount: provider.tickets.length,
+                        itemBuilder: (context, index) {
+                          final ticket = provider.tickets[index];
+                          return TicketCard(ticket: ticket);
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),
@@ -126,5 +144,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
         label: const Text('New Ticket'),
       ),
     );
+  }
+
+  Future<void> _showFilterDialog(BuildContext context) async {
+  showDialog(
+    context: context,
+    builder: (context) {
+    return AlertDialog(
+      title: const Text('Filter Tickets'),
+      content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CheckboxListTile(
+        title: const Text('Open'),
+        value: context.read<TicketProvider>().filterOpen,
+        onChanged: (value) {
+          context.read<TicketProvider>().setFilterOpen(value ?? false);
+        },
+        ),
+        CheckboxListTile(
+        title: const Text('In Progress'),
+        value: context.read<TicketProvider>().filterInProgress,
+        onChanged: (value) {
+          context.read<TicketProvider>().setFilterInProgress(value ?? false);
+        },
+        ),
+        CheckboxListTile(
+        title: const Text('Closed'),
+        value: context.read<TicketProvider>().filterClosed,
+        onChanged: (value) {
+          context.read<TicketProvider>().setFilterClosed(value ?? false);
+        },
+        ),
+      ],
+      ),
+      actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel'),
+      ),
+      ElevatedButton(
+        onPressed: () {
+        context.read<TicketProvider>().applyFilters();
+        Navigator.pop(context);
+        },
+        child: const Text('Apply'),
+      ),
+      ],
+    );
+    },
+  );
   }
 }

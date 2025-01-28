@@ -10,6 +10,53 @@ class TicketCard extends StatelessWidget {
 
   const TicketCard({super.key, required this.ticket});
 
+  Color _getPriorityColor() {
+    switch (ticket.priority.toLowerCase()) {
+      case 'high':
+        return Colors.red[100]!;
+      case 'medium':
+        return Colors.orange[100]!;
+      case 'low':
+        return Colors.green[100]!;
+      default:
+        return Colors.grey[100]!;
+    }
+  }
+
+  String _getFormattedDate(DateTime date) {
+    return DateFormat('MMM dd, yyyy HH:mm').format(date);
+  }
+
+  void _confirmDelete(BuildContext context, Ticket ticket) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Ticket'),
+        content: const Text('Are you sure you want to delete this ticket?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<TicketProvider>(context, listen: false)
+                  .deleteTicket(ticket.id)
+                  .then((_) {
+                Navigator.of(ctx).pop();
+              }).catchError((error) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Failed to delete ticket: $error')),
+                );
+              });
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -153,56 +200,6 @@ class TicketCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Color _getPriorityColor() {
-    switch (ticket.priority.toLowerCase()) {
-      case 'high':
-        return Colors.red[100]!;
-      case 'medium':
-        return Colors.orange[100]!;
-      case 'low':
-        return Colors.green[100]!;
-      default:
-        return Colors.grey[100]!;
-    }
-  }
-
-  String _getFormattedDate(DateTime date) {
-    return DateFormat('MMM dd, yyyy HH:mm').format(date);
-  }
-
-  void _confirmDelete(BuildContext context, Ticket ticket) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Ticket'),
-        content: const Text('Are you sure you want to delete this ticket?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Provider.of<TicketProvider>(context, listen: false)
-                  .deleteTicket(ticket.id)
-                  .then((_) {
-                Navigator.of(ctx).pop();
-                }).catchError((error) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                  content: Text('Failed to delete ticket: $error'),
-                  backgroundColor: Colors.red,
-                  ),
-                );
-              });
-            },
-            child: const Text('Delete'),
-          ),
-        ],
       ),
     );
   }

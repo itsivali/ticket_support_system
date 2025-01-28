@@ -5,7 +5,7 @@ import '../models/ticket.dart';
 import '../models/agent.dart';
 
 class TicketService {
-  final String baseUrl = 'http://localhost:3000/api';
+  final String baseUrl = 'http://localhost:3000/api/tickets';
 
   Future<List<Ticket>> getTickets() async {
     try {

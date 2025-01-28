@@ -1,54 +1,98 @@
-const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 const { Ticket, Agent } = require('../models');
 
-const ticketSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: [true, 'Title is required'],
-    trim: true,
-    minlength: [3, 'Title must be at least 3 characters']
-  },
-  description: {
-    type: String,
-    required: [true, 'Description is required'],
-    minlength: [10, 'Description must be at least 10 characters']
-  },
-  dueDate: {
-    type: Date,
-    required: [true, 'Due date is required'],
-    validate: {
-      validator: function(v) {
-        return v > new Date();
-      },
-      message: 'Due date must be in the future'
-    }
-  },
-  estimatedHours: {
-    type: Number,
-    required: [true, 'Estimated hours is required'],
-    min: [0.5, 'Estimated hours must be at least 0.5'],
-    max: [24, 'Estimated hours cannot exceed 24']
-  },
-  status: {
-    type: String,
-    enum: ['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED'],
-    default: 'PENDING'
-  },
-  assignedTo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Agent'
-  },
-  priority: {
-    type: String,
-    enum: ['LOW', 'MEDIUM', 'HIGH'],
-    default: 'MEDIUM'
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now
+// Get all tickets
+router.get('/', async (req, res) => {
+  try {
+    const tickets = await Ticket.find().populate('assignedTo');
+    res.json(tickets);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 
-module.exports = mongoose.model('Ticket', ticketSchema);
+// Get a single ticket by ID
+router.get('/:id', getTicket, (req, res) => {
+  res.json(res.ticket);
+});
+
+// Create a new ticket
+router.post('/', async (req, res) => {
+  const ticket = new Ticket({
+    title: req.body.title,
+    description: req.body.description,
+    dueDate: req.body.dueDate,
+    estimatedHours: req.body.estimatedHours,
+    status: req.body.status,
+    priority: req.body.priority,
+    assignedTo: req.body.assignedTo || null,
+  });
+
+  try {
+    const newTicket = await ticket.save();
+    res.status(201).json(newTicket);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Update a ticket
+router.put('/:id', getTicket, async (req, res) => {
+  if (req.body.title != null) {
+    res.ticket.title = req.body.title;
+  }
+  if (req.body.description != null) {
+    res.ticket.description = req.body.description;
+  }
+  if (req.body.dueDate != null) {
+    res.ticket.dueDate = req.body.dueDate;
+  }
+  if (req.body.estimatedHours != null) {
+    res.ticket.estimatedHours = req.body.estimatedHours;
+  }
+  if (req.body.status != null) {
+    res.ticket.status = req.body.status;
+  }
+  if (req.body.priority != null) {
+    res.ticket.priority = req.body.priority;
+  }
+  if (req.body.assignedTo !== undefined) {
+    res.ticket.assignedTo = req.body.assignedTo;
+  }
+
+  try {
+    const updatedTicket = await res.ticket.save();
+    res.json(updatedTicket);
+  } catch (err) {
+    res.status(400).json({ message: err.message });
+  }
+});
+
+// Delete a ticket
+router.delete('/:id', getTicket, async (req, res) => {
+  try {
+    await res.ticket.remove();
+    res.json({ message: 'Deleted Ticket' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// Middleware to get ticket by ID
+async function getTicket(req, res, next) {
+  let ticket;
+  try {
+    ticket = await Ticket.findById(req.params.id).populate('assignedTo');
+    if (ticket == null) {
+      return res.status(404).json({ message: 'Cannot find ticket' });
+    }
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+
+  res.ticket = ticket;
+  next();
+}
+
+module.exports = router;

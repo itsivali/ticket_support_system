@@ -12,10 +12,18 @@ class TicketProvider with ChangeNotifier {
   bool _isLoading = false;
   String? _error;
 
+  bool _filterOpen = false;
+  bool _filterInProgress = false;
+  bool _filterClosed = false;
+
   List<Ticket> get tickets => _tickets;
   List<Agent> get agents => _agents;
   bool get isLoading => _isLoading;
   String? get error => _error;
+
+  bool get filterOpen => _filterOpen;
+  bool get filterInProgress => _filterInProgress;
+  bool get filterClosed => _filterClosed;
 
   Future<void> fetchTickets() async {
     try {
@@ -121,5 +129,40 @@ class TicketProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void setFilterOpen(bool value) {
+    _filterOpen = value;
+    notifyListeners();
+  }
+
+  void setFilterInProgress(bool value) {
+    _filterInProgress = value;
+    notifyListeners();
+  }
+
+  void setFilterClosed(bool value) {
+    _filterClosed = value;
+    notifyListeners();
+  }
+
+  void applyFilters() {
+
+    List<Ticket> filteredTickets = _tickets;
+
+    if (_filterOpen) {
+      filteredTickets = filteredTickets.where((ticket) => ticket.status == 'open').toList();
+    }
+
+    if (_filterInProgress) {
+      filteredTickets = filteredTickets.where((ticket) => ticket.status == 'in_progress').toList();
+    }
+
+    if (_filterClosed) {
+      filteredTickets = filteredTickets.where((ticket) => ticket.status == 'closed').toList();
+    }
+
+    _tickets = filteredTickets;
+    notifyListeners();
   }
 }
