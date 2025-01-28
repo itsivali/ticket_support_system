@@ -1,32 +1,50 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'dart:io';
 import '../models/ticket.dart';
 import '../models/agent.dart';
+import '../utils/console_logger.dart';
 
 class TicketService {
   final String baseUrl = 'http://localhost:3000/api';
 
   Future<List<Ticket>> getTickets() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/tickets'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/tickets'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
+        ConsoleLogger.info('Successfully fetched ${jsonData.length} tickets');
         return jsonData
             .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
-        throw HttpException('Failed to load tickets: ${response.statusCode}');
+        ConsoleLogger.error(
+          'Failed to load tickets: ${response.statusCode}',
+          'Response body: ${response.body}'
+        );
+        throw Exception('Failed to load tickets: ${response.statusCode}');
       }
-    } catch (e) {
-      throw HttpException('Network error: $e');
+    } catch (e, stack) {
+      ConsoleLogger.error('Network error', e, stack);
+      throw Exception('Network error: $e');
     }
   }
 
   Future<List<Agent>> getAgents() async {
     try {
-      final response = await http.get(Uri.parse('$baseUrl/agents'));
+      final response = await http.get(
+        Uri.parse('$baseUrl/agents'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
@@ -34,10 +52,15 @@ class TicketService {
             .map((json) => Agent.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
-        throw HttpException('Failed to load agents: ${response.statusCode}');
+        ConsoleLogger.error(
+          'Failed to load agents: ${response.statusCode}',
+          'Response body: ${response.body}'
+        );
+        throw Exception('Failed to load agents: ${response.statusCode}');
       }
-    } catch (e) {
-      throw HttpException('Network error: $e');
+        } catch (e, stack) {
+      ConsoleLogger.error('Network error', e, stack);
+      throw Exception('Network error: $e');
     }
   }
 
@@ -45,7 +68,10 @@ class TicketService {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/tickets'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: json.encode(ticket.toJson()),
       );
 
@@ -53,10 +79,15 @@ class TicketService {
         final Map<String, dynamic> jsonData = json.decode(response.body);
         return Ticket.fromJson(jsonData);
       } else {
-        throw HttpException('Failed to create ticket: ${response.statusCode}');
+        ConsoleLogger.error(
+          'Failed to create ticket: ${response.statusCode}',
+          'Response body: ${response.body}'
+        );
+        throw Exception('Failed to create ticket: ${response.statusCode}');
       }
-    } catch (e) {
-      throw HttpException('Network error: $e');
+        } catch (e, stack) {
+      ConsoleLogger.error('Network error', e, stack);
+      throw Exception('Network error: $e');
     }
   }
 
@@ -64,7 +95,10 @@ class TicketService {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/tickets/${ticket.id}'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: json.encode(ticket.toJson()),
       );
 
@@ -72,10 +106,15 @@ class TicketService {
         final Map<String, dynamic> jsonData = json.decode(response.body);
         return Ticket.fromJson(jsonData);
       } else {
-        throw HttpException('Failed to update ticket: ${response.statusCode}');
+        ConsoleLogger.error(
+          'Failed to update ticket: ${response.statusCode}',
+          'Response body: ${response.body}'
+        );
+        throw Exception('Failed to update ticket: ${response.statusCode}');
       }
-    } catch (e) {
-      throw HttpException('Network error: $e');
+    } catch (e, stack) {
+      ConsoleLogger.error('Network error', e, stack);
+      throw Exception('Network error: $e');
     }
   }
 
@@ -83,13 +122,22 @@ class TicketService {
     try {
       final response = await http.delete(
         Uri.parse('$baseUrl/tickets/$ticketId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       );
 
       if (response.statusCode != 200) {
-        throw HttpException('Failed to delete ticket: ${response.statusCode}');
+        ConsoleLogger.error(
+          'Failed to delete ticket: ${response.statusCode}',
+          'Response body: ${response.body}'
+        );
+        throw Exception('Failed to delete ticket: ${response.statusCode}');
       }
-    } catch (e) {
-      throw HttpException('Network error: $e');
+    } catch (e, stack) {
+      ConsoleLogger.error('Network error', e, stack);
+      throw Exception('Network error: $e');
     }
   }
 
@@ -97,15 +145,23 @@ class TicketService {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl/tickets/$ticketId/assign'),
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: json.encode({'assignedTo': agentId}),
       );
 
       if (response.statusCode != 200) {
-        throw HttpException('Failed to assign ticket: ${response.statusCode}');
+        ConsoleLogger.error(
+          'Failed to assign ticket: ${response.statusCode}',
+          'Response body: ${response.body}'
+        );
+        throw Exception('Failed to assign ticket: ${response.statusCode}');
       }
-    } catch (e) {
-      throw HttpException('Network error: $e');
+    } catch (e, stack) {
+      ConsoleLogger.error('Network error', e, stack);
+      throw Exception('Network error: $e');
     }
   }
 }

@@ -40,13 +40,72 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 8),
               Text(
                 count.toString(),
-                style:
-                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  void _showFilterDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Filter Tickets'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButton<String>(
+                value: _statusFilter,
+                onChanged: (value) {
+                  setState(() {
+                    _statusFilter = value ?? 'all';
+                  });
+                },
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('All')),
+                  DropdownMenuItem(value: 'OPEN', child: Text('Open')),
+                  DropdownMenuItem(value: 'IN_PROGRESS', child: Text('In Progress')),
+                  DropdownMenuItem(value: 'CLOSED', child: Text('Closed')),
+                ],
+              ),
+              const SizedBox(height: 16),
+              DropdownButton<String>(
+                value: _priorityFilter,
+                onChanged: (value) {
+                  setState(() {
+                    _priorityFilter = value ?? 'all';
+                  });
+                },
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('All')),
+                  DropdownMenuItem(value: 'high', child: Text('High')),
+                  DropdownMenuItem(value: 'medium', child: Text('Medium')),
+                  DropdownMenuItem(value: 'low', child: Text('Low')),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Trigger filter logic here, if applicable
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -145,61 +204,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
         icon: const Icon(Icons.add),
         label: const Text('New Ticket'),
-      ),
-    );
-  }
-
-  Future<void> _showFilterDialog(BuildContext context) async {
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter Tickets'),
-        content: StatefulBuilder(
-          builder: (context, setState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: _statusFilter,
-                decoration: const InputDecoration(labelText: 'Status'),
-                items: ['all', 'open', 'in_progress', 'closed']
-                    .map((status) => DropdownMenuItem(
-                          value: status,
-                          child: Text(status.toUpperCase()),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _statusFilter = value!),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _priorityFilter,
-                decoration: const InputDecoration(labelText: 'Priority'),
-                items: ['all', 'high', 'medium', 'low']
-                    .map((priority) => DropdownMenuItem(
-                          value: priority,
-                          child: Text(priority.toUpperCase()),
-                        ))
-                    .toList(),
-                onChanged: (value) => setState(() => _priorityFilter = value!),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _statusFilter = 'all';
-                _priorityFilter = 'all';
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Reset'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Apply'),
-          ),
-        ],
       ),
     );
   }
