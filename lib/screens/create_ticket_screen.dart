@@ -37,14 +37,12 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                 key: _formKey,
                 child: SingleChildScrollView(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Title
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'Title'),
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter a title'
-                            : null,
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Please enter a title' : null,
                         onSaved: (value) => _title = value!,
                       ),
                       const SizedBox(height: 16),
@@ -53,9 +51,8 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                         decoration:
                             const InputDecoration(labelText: 'Description'),
                         maxLines: 3,
-                        validator: (value) => value == null || value.isEmpty
-                            ? 'Please enter a description'
-                            : null,
+                        validator: (value) =>
+                            value == null || value.isEmpty ? 'Please enter a description' : null,
                         onSaved: (value) => _description = value!,
                       ),
                       const SizedBox(height: 16),
@@ -64,8 +61,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                         children: [
                           const Text('Due Date: '),
                           Text(
-                            '${_dueDate.year}-${_dueDate.month}-${_dueDate.day}',
-                          ),
+                              '${_dueDate.year}-${_dueDate.month}-${_dueDate.day}'),
                           IconButton(
                             icon: const Icon(Icons.calendar_today),
                             onPressed: _pickDueDate,
@@ -83,7 +79,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                               min: 0.5,
                               max: 24,
                               divisions: 47,
-                              label: _estimatedHours.toStringAsFixed(1),
+                              label: _estimatedHours.toString(),
                               onChanged: (value) {
                                 setState(() {
                                   _estimatedHours = value;
@@ -91,7 +87,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                               },
                             ),
                           ),
-                          Text('${_estimatedHours.toStringAsFixed(1)} hrs'),
+                          Text(_estimatedHours.toString()),
                         ],
                       ),
                       const SizedBox(height: 16),
@@ -197,11 +193,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
       Provider.of<TicketProvider>(context, listen: false)
           .createTicket(newTicket)
-          .then((_) {
-        Navigator.pop(context);
-      }).catchError((error) {
+          .then((_) => Navigator.pop(context))
+          .catchError((error) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create ticket: $error')),
+          SnackBar(content: Text('Error: $error')),
         );
       });
     }

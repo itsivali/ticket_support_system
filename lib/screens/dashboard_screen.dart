@@ -11,6 +11,9 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  String _statusFilter = 'all';
+  String _priorityFilter = 'all';
+
   @override
   void initState() {
     super.initState();
@@ -147,52 +150,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _showFilterDialog(BuildContext context) async {
-  showDialog(
-    context: context,
-    builder: (context) {
-    return AlertDialog(
-      title: const Text('Filter Tickets'),
-      content: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        CheckboxListTile(
-        title: const Text('Open'),
-        value: context.read<TicketProvider>().filterOpen,
-        onChanged: (value) {
-          context.read<TicketProvider>().setFilterOpen(value ?? false);
-        },
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Filter Tickets'),
+        content: StatefulBuilder(
+          builder: (context, setState) => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                value: _statusFilter,
+                decoration: const InputDecoration(labelText: 'Status'),
+                items: ['all', 'open', 'in_progress', 'closed']
+                    .map((status) => DropdownMenuItem(
+                          value: status,
+                          child: Text(status.toUpperCase()),
+                        ))
+                    .toList(),
+                onChanged: (value) => setState(() => _statusFilter = value!),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _priorityFilter,
+                decoration: const InputDecoration(labelText: 'Priority'),
+                items: ['all', 'high', 'medium', 'low']
+                    .map((priority) => DropdownMenuItem(
+                          value: priority,
+                          child: Text(priority.toUpperCase()),
+                        ))
+                    .toList(),
+                onChanged: (value) => setState(() => _priorityFilter = value!),
+              ),
+            ],
+          ),
         ),
-        CheckboxListTile(
-        title: const Text('In Progress'),
-        value: context.read<TicketProvider>().filterInProgress,
-        onChanged: (value) {
-          context.read<TicketProvider>().setFilterInProgress(value ?? false);
-        },
-        ),
-        CheckboxListTile(
-        title: const Text('Closed'),
-        value: context.read<TicketProvider>().filterClosed,
-        onChanged: (value) {
-          context.read<TicketProvider>().setFilterClosed(value ?? false);
-        },
-        ),
-      ],
+        actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _statusFilter = 'all';
+                _priorityFilter = 'all';
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Reset'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Apply'),
+          ),
+        ],
       ),
-      actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text('Cancel'),
-      ),
-      ElevatedButton(
-        onPressed: () {
-        context.read<TicketProvider>().applyFilters();
-        Navigator.pop(context);
-        },
-        child: const Text('Apply'),
-      ),
-      ],
     );
-    },
-  );
   }
 }
