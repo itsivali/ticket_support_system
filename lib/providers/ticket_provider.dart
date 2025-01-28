@@ -67,6 +67,45 @@ class TicketProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateTicket(Ticket ticket) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      final updatedTicket = await _ticketService.updateTicket(ticket);
+      final index = _tickets.indexWhere((t) => t.id == updatedTicket.id);
+      if (index != -1) {
+        _tickets[index] = updatedTicket;
+        AppLogger.info('Ticket updated successfully');
+      }
+    } catch (e) {
+      AppLogger.error('Error updating ticket', error: e);
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteTicket(String ticketId) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await _ticketService.deleteTicket(ticketId);
+      _tickets.removeWhere((ticket) => ticket.id == ticketId);
+      AppLogger.info('Ticket deleted successfully');
+    } catch (e) {
+      AppLogger.error('Error deleting ticket', error: e);
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<void> assignTicket(String ticketId, String agentId) async {
     try {
       _isLoading = true;
@@ -76,46 +115,11 @@ class TicketProvider with ChangeNotifier {
       await _ticketService.assignTicket(ticketId, agentId);
       await fetchTickets();
     } catch (e) {
+      AppLogger.error('Error assigning ticket', error: e);
       _error = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
-
-  Future<void> updateTicket(Ticket ticket) async {
-    try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
-      await _ticketService.updateTicket(ticket);
-      final index = _tickets.indexWhere((t) => t.id == ticket.id);
-      _tickets[index] = ticket;
-      AppLogger.info('Ticket updated successfully');
-    } catch (e) {
-      AppLogger.error('Error updating ticket', error: e);
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-Future<void> deleteTicket(String id) async {
-  try {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    await _ticketService.deleteTicket(id);
-    _tickets.removeWhere((ticket) => ticket.id == id);
-    AppLogger.info('Ticket deleted successfully');
-  } catch (e) {
-    AppLogger.error('Error deleting ticket', error: e);
-    _error = e.toString();
-  } finally {
-    _isLoading = false;
-    notifyListeners();
-  }
-}
 }

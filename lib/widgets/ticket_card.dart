@@ -191,8 +191,13 @@ class TicketCard extends StatelessWidget {
                   .deleteTicket(ticket.id)
                   .then((_) {
                 Navigator.of(ctx).pop();
-              }).catchError((error) {
-                // Handle error accordingly
+                }).catchError((error) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                  content: Text('Failed to delete ticket: $error'),
+                  backgroundColor: Colors.red,
+                  ),
+                );
               });
             },
             child: const Text('Delete'),

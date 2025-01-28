@@ -21,13 +21,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  Widget _buildStatCard(String title, int count) {
+  Widget _buildStatCard(String title, int count, Color color) {
     return Expanded(
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
+        elevation: 2,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border(left: BorderSide(color: color, width: 4)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
@@ -39,9 +44,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               const SizedBox(height: 8),
               Text(
                 '$count',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  color: color,
                 ),
               ),
             ],
@@ -69,51 +75,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
+          final tickets = provider.tickets;
+          final openCount = tickets.where((t) => t.status == 'OPEN').length;
+          final inProgressCount =
+              tickets.where((t) => t.status == 'IN_PROGRESS').length;
+          final closedCount = tickets.where((t) => t.status == 'CLOSED').length;
+
           return Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   children: [
-                    _buildStatCard(
-                      'Open',
-                      provider.tickets.where((t) => t.status == 'OPEN').length,
-                    ),
+                    _buildStatCard('Open', openCount, Colors.orange),
                     const SizedBox(width: 16),
-                    _buildStatCard(
-                      'In Progress',
-                      provider.tickets.where((t) => t.status == 'IN_PROGRESS').length,
-                    ),
+                    _buildStatCard('In Progress', inProgressCount, Colors.blue),
                     const SizedBox(width: 16),
-                    _buildStatCard(
-                      'Closed',
-                      provider.tickets.where((t) => t.status == 'CLOSED').length,
-                    ),
+                    _buildStatCard('Closed', closedCount, Colors.green),
                   ],
                 ),
                 const SizedBox(height: 16),
                 Expanded(
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 1.5,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
-                    itemCount: provider.tickets.length,
-                    itemBuilder: (context, index) => TicketCard(
-                      ticket: provider.tickets[index],
-                    ),
-                  ),
+                  child: tickets.isEmpty
+                      ? const Center(
+                          child: Text('No tickets available'),
+                        )
+                      : GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 1.5,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
+                          itemCount: tickets.length,
+                          itemBuilder: (context, index) => TicketCard(
+                            ticket: tickets[index],
+                          ),
+                        ),
                 ),
               ],
             ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('New Ticket'),
       ),
     );
   }

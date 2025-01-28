@@ -54,8 +54,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                       const SizedBox(height: 16),
                       // Description
                       TextFormField(
-                        decoration:
-                            const InputDecoration(labelText: 'Description'),
+                        decoration: const InputDecoration(labelText: 'Description'),
                         maxLines: 3,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -123,8 +122,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                       // Priority
                       DropdownButtonFormField<String>(
                         value: _priority,
-                        decoration:
-                            const InputDecoration(labelText: 'Priority'),
+                        decoration: const InputDecoration(labelText: 'Priority'),
                         items: ['LOW', 'MEDIUM', 'HIGH']
                             .map((priority) => DropdownMenuItem(
                                   value: priority,
@@ -141,8 +139,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                       // Assigned To
                       DropdownButtonFormField<String>(
                         value: _assignedTo,
-                        decoration:
-                            const InputDecoration(labelText: 'Assign To'),
+                        decoration: const InputDecoration(
+                          labelText: 'Assign To',
+                          border: OutlineInputBorder(),
+                        ),
                         items: [
                           const DropdownMenuItem(
                             value: null,
@@ -207,7 +207,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           .then((_) {
         Navigator.pop(context);
       }).catchError((error) {
-        // Handle error accordingly
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create ticket: $error')),
+        );
       });
     }
   }

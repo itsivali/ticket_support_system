@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/ticket_provider.dart';
-import '../widgets/ticket_card.dart';
+import 'providers/ticket_provider.dart';
+import 'screens/dashboard_screen.dart';
 import 'screens/create_ticket_screen.dart';
+import 'screens/edit_ticket_screen.dart';
+import 'models/ticket.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -150,8 +152,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           mainAxisSpacing: 16,
                         ),
                         itemCount: tickets.length,
-                        itemBuilder: (context, index) => TicketCard(
-                          ticket: tickets[index],
+                        itemBuilder: (context, index) => Card(
+                          child: ListTile(
+                            title: Text(tickets[index].title),
+                            subtitle: Text(tickets[index].description),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/edit-ticket',
+                                arguments: tickets[index],
+                              );
+                            },
+                          ),
                         ),
                       ),
               ),
@@ -195,6 +207,10 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const DashboardScreen(),
         '/create-ticket': (context) => const CreateTicketScreen(),
+        '/edit-ticket': (context) {
+          final ticket = ModalRoute.of(context)!.settings.arguments as Ticket;
+          return EditTicketScreen(ticket: ticket);
+        },
       },
     );
   }
