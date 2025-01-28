@@ -44,19 +44,10 @@ async function startServer() {
     app.listen(PORT, () => {
       log.info(`Server running on port ${PORT}`);
     });
-
-    // Handle disconnections
-    mongoose.connection.on('disconnected', async () => {
-      log.error('MongoDB disconnected, attempting to reconnect...');
-      await connectDB();
-    });
-
   } catch (error) {
-    log.error('Server startup error:', error);
+    log.error('Failed to start server', error);
     process.exit(1);
   }
 }
 
 startServer();
-
-module.exports = app;

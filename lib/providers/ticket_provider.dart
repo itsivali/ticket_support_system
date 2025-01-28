@@ -82,4 +82,40 @@ class TicketProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> updateTicket(Ticket ticket) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await _ticketService.updateTicket(ticket);
+      final index = _tickets.indexWhere((t) => t.id == ticket.id);
+      _tickets[index] = ticket;
+      AppLogger.info('Ticket updated successfully');
+    } catch (e) {
+      AppLogger.error('Error updating ticket', error: e);
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+Future<void> deleteTicket(String id) async {
+  try {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    await _ticketService.deleteTicket(id);
+    _tickets.removeWhere((ticket) => ticket.id == id);
+    AppLogger.info('Ticket deleted successfully');
+  } catch (e) {
+    AppLogger.error('Error deleting ticket', error: e);
+    _error = e.toString();
+  } finally {
+    _isLoading = false;
+    notifyListeners();
+  }
+}
 }

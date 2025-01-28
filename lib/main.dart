@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
 import '../widgets/ticket_card.dart';
-import '../models/ticket.dart';
 import 'screens/create_ticket_screen.dart';
 
 class DashboardScreen extends StatefulWidget {

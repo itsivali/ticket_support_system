@@ -1,31 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../models/ticket.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import '../providers/ticket_provider.dart';
+import '../screens/edit_ticket_screen.dart';
 
 class TicketCard extends StatelessWidget {
   final Ticket ticket;
 
-  const TicketCard({
-    super.key,
-    required this.ticket,
-  });
-
-  Color _getPriorityColor() {
-    switch (ticket.priority.toLowerCase()) {
-      case 'high':
-        return Colors.red[100]!;
-      case 'medium':
-        return Colors.orange[100]!;
-      case 'low':
-        return Colors.green[100]!;
-      default:
-        return Colors.grey[100]!;
-    }
-  }
-
-  String _getFormattedDate(DateTime date) {
-    return DateFormat('MMM dd, yyyy HH:mm').format(date);
-  }
+  const TicketCard({super.key, required this.ticket});
 
   @override
   Widget build(BuildContext context) {
@@ -143,11 +126,78 @@ class TicketCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EditTicketScreen(ticket: ticket),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _confirmDelete(context, ticket),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Color _getPriorityColor() {
+    switch (ticket.priority.toLowerCase()) {
+      case 'high':
+        return Colors.red[100]!;
+      case 'medium':
+        return Colors.orange[100]!;
+      case 'low':
+        return Colors.green[100]!;
+      default:
+        return Colors.grey[100]!;
+    }
+  }
+
+  String _getFormattedDate(DateTime date) {
+    return DateFormat('MMM dd, yyyy HH:mm').format(date);
+  }
+
+  void _confirmDelete(BuildContext context, Ticket ticket) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Ticket'),
+        content: const Text('Are you sure you want to delete this ticket?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<TicketProvider>(context, listen: false)
+                  .deleteTicket(ticket.id)
+                  .then((_) {
+                Navigator.of(ctx).pop();
+              }).catchError((error) {
+                // Handle error accordingly
+              });
+            },
+            child: const Text('Delete'),
+          ),
+        ],
       ),
     );
   }

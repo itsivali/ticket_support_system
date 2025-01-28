@@ -75,4 +75,35 @@ class TicketService {
       throw HttpException('Network error: $e');
     }
   }
+
+  Future<void> updateTicket(Ticket ticket) async {
+    
+  try {
+    final response = await http.put(
+    Uri.parse('$baseUrl/tickets/${ticket.id}'),
+    headers: {'Content-Type': 'application/json'},
+    body: json.encode(ticket.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+    throw HttpException('Failed to update ticket: ${response.statusCode}');
+    }
+  } catch (e) {
+    throw HttpException('Network error: $e');
+  }
+  }
+  Future<void> deleteTicket(String ticketId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/tickets/$ticketId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (response.statusCode != 200) {
+        throw HttpException('Failed to delete ticket: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw HttpException('Network error: $e');
+    }
+  }
 }

@@ -3,22 +3,36 @@ import 'package:provider/provider.dart';
 import '../models/ticket.dart';
 import '../providers/ticket_provider.dart';
 
-class CreateTicketScreen extends StatefulWidget {
-  const CreateTicketScreen({super.key});
+class EditTicketScreen extends StatefulWidget {
+  final Ticket ticket;
+
+  const EditTicketScreen({super.key, required this.ticket});
 
   @override
-  State<CreateTicketScreen> createState() => _CreateTicketScreenState();
+  State<EditTicketScreen> createState() => _EditTicketScreenState();
 }
 
-class _CreateTicketScreenState extends State<CreateTicketScreen> {
+class _EditTicketScreenState extends State<EditTicketScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _title = '';
-  String _description = '';
-  DateTime _dueDate = DateTime.now().add(const Duration(days: 7));
-  double _estimatedHours = 1.0;
-  String _status = 'OPEN';
-  String _priority = 'MEDIUM';
+  late String _title;
+  late String _description;
+  late DateTime _dueDate;
+  late double _estimatedHours;
+  late String _status;
+  late String _priority;
   String? _assignedTo;
+
+  @override
+  void initState() {
+    super.initState();
+    _title = widget.ticket.title;
+    _description = widget.ticket.description;
+    _dueDate = widget.ticket.dueDate;
+    _estimatedHours = widget.ticket.estimatedHours;
+    _status = widget.ticket.status;
+    _priority = widget.ticket.priority;
+    _assignedTo = widget.ticket.assignedTo;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +41,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Ticket'),
+        title: const Text('Edit Ticket'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -40,6 +54,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                     children: [
                       // Title
                       TextFormField(
+                        initialValue: _title,
                         decoration: const InputDecoration(labelText: 'Title'),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -54,6 +69,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                       const SizedBox(height: 16),
                       // Description
                       TextFormField(
+                        initialValue: _description,
                         decoration:
                             const InputDecoration(labelText: 'Description'),
                         maxLines: 3,
@@ -163,7 +179,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                       // Submit Button
                       ElevatedButton(
                         onPressed: _submitForm,
-                        child: const Text('Create Ticket'),
+                        child: const Text('Update Ticket'),
                       ),
                     ],
                   ),
@@ -191,8 +207,8 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
 
-      final newTicket = Ticket(
-        id: '', // ID will be assigned by backend
+      final updatedTicket = Ticket(
+        id: widget.ticket.id,
         title: _title,
         description: _description,
         dueDate: _dueDate,
@@ -203,7 +219,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
       );
 
       Provider.of<TicketProvider>(context, listen: false)
-          .createTicket(newTicket)
+          .updateTicket(updatedTicket)
           .then((_) {
         Navigator.pop(context);
       }).catchError((error) {
