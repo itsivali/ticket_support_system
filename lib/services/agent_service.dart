@@ -34,6 +34,16 @@ class AgentService {
 
   Future<Agent> createAgent(Agent agent) async {
     try {
+      // Log request details
+      ConsoleLogger.info(
+        'Creating agent - Endpoint: $baseUrl\nPayload: ${json.encode({
+          'name': agent.name,
+          'email': agent.email,
+          'role': agent.role,
+          'isAvailable': agent.isAvailable,
+        })}'
+      );
+
       final response = await http.post(
         Uri.parse(baseUrl),
         headers: {
@@ -48,18 +58,19 @@ class AgentService {
         }),
       );
 
+      // Log response details
+      ConsoleLogger.info(
+        'Server response - Status: ${response.statusCode}\nBody: ${response.body}'
+      );
+
       if (response.statusCode == 201) {
         return Agent.fromJson(json.decode(response.body));
       }
       
-      ConsoleLogger.error(
-        'Failed to create agent: ${response.statusCode}',
-        'Response body: ${response.body}'
-      );
-      throw Exception('Failed to create agent: ${response.statusCode}');
+      throw Exception('Server error: ${response.statusCode}\n${response.body}');
     } catch (e, stack) {
-      ConsoleLogger.error('Network error', e, stack);
-      throw Exception('Network error: $e');
+      ConsoleLogger.error('Failed to create agent', e, stack);
+      rethrow;
     }
   }
 
