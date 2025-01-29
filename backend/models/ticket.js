@@ -42,7 +42,7 @@ const ticketSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-module.exports = mongoose.model('Ticket', ticketSchema);
+module.exports = mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);
 
 // Get all tickets
 router.get('/', async (req, res) => {
