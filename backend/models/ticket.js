@@ -47,10 +47,7 @@ ticketSchema.index({ status: 1, priority: 1 });
 ticketSchema.index({ assignedTo: 1 });
 ticketSchema.index({ createdAt: -1 });
 
-// Only create the model if it hasn't been created already
-const Ticket = mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);
-
-module.exports = Ticket;
+module.exports = mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);
 
 // Get all tickets
 router.get('/', async (req, res) => {
