@@ -1,25 +1,28 @@
-const express = require('express');
-const router = express.Router();
-const mongoose = require('mongoose');
-const Ticket = require('../models/ticket');
+const Ticket = require('../models/ticket.model');
 
-// Get all tickets
-router.get('/', async (req, res) => {
+exports.getAllTickets = async (req, res) => {
   try {
     const tickets = await Ticket.find().populate('assignedTo');
     res.json(tickets);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-});
+};
 
-// Get a single ticket by ID
-router.get('/:id', getTicket, (req, res) => {
-  res.json(res.ticket);
-});
+exports.getTicketById = async (req, res, next) => {
+  try {
+    const ticket = await Ticket.findById(req.params.id).populate('assignedTo');
+    if (!ticket) {
+      return res.status(404).json({ message: 'Cannot find ticket' });
+    }
+    res.ticket = ticket;
+    next();
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+};
 
-// Create a new ticket
-router.post('/', async (req, res) => {
+exports.createTicket = async (req, res) => {
   const ticket = new Ticket({
     title: req.body.title,
     description: req.body.description,
@@ -36,10 +39,9 @@ router.post('/', async (req, res) => {
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
-});
+};
 
-// Update a ticket
-router.put('/:id', getTicket, async (req, res) => {
+exports.updateTicket = async (req, res) => {
   if (req.body.title != null) {
     res.ticket.title = req.body.title;
   }
@@ -68,42 +70,16 @@ router.put('/:id', getTicket, async (req, res) => {
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
-});
+};
 
-// Delete a ticket
-router.delete('/:id', async (req, res) => {
-  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-    return res.status(400).json({ message: 'Invalid ticket ID' });
-  }
-
+exports.deleteTicket = async (req, res) => {
   try {
     const ticket = await Ticket.findByIdAndDelete(req.params.id);
     if (!ticket) {
-      return res.status(404).json({ message: 'Ticket not found' });
-    }
-
-    res.json({ message: 'Deleted Ticket' });
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to delete ticket', error: err.message });
-  }
-});
-
-// Middleware to get ticket by ID
-async function getTicket(req, res, next) {
-  let ticket;
-  try {
-    ticket = await Ticket.findById(req.params.id).populate('assignedTo');
-    if (ticket == null) {
       return res.status(404).json({ message: 'Cannot find ticket' });
     }
+    res.json({ message: 'Deleted Ticket' });
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
-
-  res.ticket = ticket;
-  next();
-}
-
-module.exports = router;
-
-
+};

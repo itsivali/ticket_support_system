@@ -1,13 +1,14 @@
 const { faker } = require('@faker-js/faker');
-const Ticket = require('../models/ticket');
+const mongoose = require('mongoose');
+const Ticket = require('../models/ticket.model');
 const Agent = require('../models/agent');
 require('dotenv').config();
 
 async function seedDatabase() {
   try {
     // Clear existing data
-    await Ticket.deleteMany({});
-    await Agent.deleteMany({});
+    await mongoose.model('Ticket').deleteMany({});
+    await mongoose.model('Agent').deleteMany({});
 
     // Create agents
     const agents = await Agent.create([
