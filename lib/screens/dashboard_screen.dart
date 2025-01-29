@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
+import '../providers/agent_provider.dart';
 import '../widgets/ticket_card.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -14,116 +15,194 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String _statusFilter = 'all';
   String _priorityFilter = 'all';
 
+  void _showFilterDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Filter Tickets'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DropdownButtonFormField<String>(
+            decoration: const InputDecoration(labelText: 'Status'),
+            value: _statusFilter,
+            items: const [
+              DropdownMenuItem(value: 'all', child: Text('All')),
+              DropdownMenuItem(value: 'OPEN', child: Text('Open')),
+              DropdownMenuItem(value: 'IN_PROGRESS', child: Text('In Progress')),
+              DropdownMenuItem(value: 'CLOSED', child: Text('Closed')),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _statusFilter = value!;
+              });
+            },
+          ),
+          const SizedBox(height: 16),
+          DropdownButtonFormField<String>(
+            decoration: const InputDecoration(labelText: 'Priority'),
+            value: _priorityFilter,
+            items: const [
+              DropdownMenuItem(value: 'all', child: Text('All')),
+              DropdownMenuItem(value: 'HIGH', child: Text('High')),
+              DropdownMenuItem(value: 'MEDIUM', child: Text('Medium')),
+              DropdownMenuItem(value: 'LOW', child: Text('Low')),
+            ],
+            onChanged: (value) {
+              setState(() {
+                _priorityFilter = value!;
+              });
+            },
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () {
+            context.read<TicketProvider>().applyFilters(_statusFilter, _priorityFilter);
+            Navigator.pop(context);
+          },
+          child: const Text('Apply'),
+        ),
+      ],
+    ),
+  );
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<TicketProvider>();
-      provider.fetchTickets();
-      provider.fetchAgents();
+      context.read<TicketProvider>().fetchTickets();
+      context.read<AgentProvider>().fetchAgents();
     });
   }
 
-  Widget _buildStatCard(String title, int count, Color color) {
-    return Expanded(
-      child: Card(
-        elevation: 2,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: Border(left: BorderSide(color: color, width: 4)),
+  Widget _buildStatCard(String title, int count, IconData icon, Color color) {
+    return Card(
+      elevation: 2,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: LinearGradient(
+            colors: [color.withAlpha(204), color.withAlpha(153)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(title, style: const TextStyle(fontSize: 16)),
-              const SizedBox(height: 8),
-              Text(
-                count.toString(),
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(icon, color: Colors.white, size: 32),
+                Text(
+                  count.toString(),
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _showFilterDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Filter Tickets'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButton<String>(
-                value: _statusFilter,
-                onChanged: (value) {
-                  setState(() {
-                    _statusFilter = value ?? 'all';
-                  });
-                },
-                items: const [
-                  DropdownMenuItem(value: 'all', child: Text('All')),
-                  DropdownMenuItem(value: 'OPEN', child: Text('Open')),
-                  DropdownMenuItem(value: 'IN_PROGRESS', child: Text('In Progress')),
-                  DropdownMenuItem(value: 'CLOSED', child: Text('Closed')),
-                ],
-              ),
-              const SizedBox(height: 16),
-              DropdownButton<String>(
-                value: _priorityFilter,
-                onChanged: (value) {
-                  setState(() {
-                    _priorityFilter = value ?? 'all';
-                  });
-                },
-                items: const [
-                  DropdownMenuItem(value: 'all', child: Text('All')),
-                  DropdownMenuItem(value: 'high', child: Text('High')),
-                  DropdownMenuItem(value: 'medium', child: Text('Medium')),
-                  DropdownMenuItem(value: 'low', child: Text('Low')),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                // Trigger filter logic here, if applicable
-              },
-              child: const Text('Apply'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: const Text('Support Dashboard'),
+        centerTitle: true,
+        elevation: 0,
+        scrolledUnderElevation: 2,
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list),
             onPressed: () => _showFilterDialog(context),
+            tooltip: 'Filter Tickets',
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => context.read<TicketProvider>().fetchTickets(),
+            tooltip: 'Refresh',
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [colorScheme.primary, colorScheme.primaryContainer],
+                ),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 32,
+                    child: Icon(Icons.support_agent, size: 32),
+                  ),
+                  SizedBox(height: 16),
+                  Text(
+                    'Ticket System',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.dashboard),
+              title: const Text('Dashboard'),
+              selected: true,
+              onTap: () => Navigator.pop(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Agents'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/agents');
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                // Add settings navigation
+              },
+            ),
+          ],
+        ),
       ),
       body: Consumer<TicketProvider>(
         builder: (context, provider, child) {
@@ -136,12 +215,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline,
-                      size: 48, color: Theme.of(context).colorScheme.error),
+                  Icon(Icons.error_outline, 
+                    size: 48, 
+                    color: colorScheme.error
+                  ),
                   const SizedBox(height: 16),
                   Text(provider.error!),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
+                  FilledButton.icon(
                     onPressed: () => provider.fetchTickets(),
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
@@ -163,31 +244,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           return Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.all(16.0),
+              Container(
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
-                    _buildStatCard('Open', openCount, Colors.orange),
+                    Expanded(
+                      child: _buildStatCard(
+                        'Open', 
+                        openCount, 
+                        Icons.fiber_new,
+                        Colors.orange,
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    _buildStatCard('In Progress', inProgressCount, Colors.blue),
+                    Expanded(
+                      child: _buildStatCard(
+                        'In Progress', 
+                        inProgressCount,
+                        Icons.trending_up, 
+                        Colors.blue,
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    _buildStatCard('Closed', closedCount, Colors.green),
+                    Expanded(
+                      child: _buildStatCard(
+                        'Closed', 
+                        closedCount,
+                        Icons.check_circle, 
+                        Colors.green,
+                      ),
+                    ),
                   ],
                 ),
               ),
               Expanded(
                 child: provider.tickets.isEmpty
-                    ? const Center(
-                        child: Text('No tickets available'),
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.inbox, 
+                              size: 64, 
+                              color: Colors.grey[400]
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'No tickets available',
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
                       )
                     : GridView.builder(
                         padding: const EdgeInsets.all(16),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 1.5,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 1.2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
                         ),
                         itemCount: provider.tickets.length,
                         itemBuilder: (context, index) {

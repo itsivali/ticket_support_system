@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/ticket_provider.dart';
+import 'providers/agent_provider.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/create_ticket_screen.dart';
 import 'screens/edit_ticket_screen.dart';
@@ -11,12 +12,12 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => TicketProvider()),
+        ChangeNotifierProvider(create: (_) => AgentProvider()),
       ],
       child: const MyApp(),
     ),
   );
 }
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 

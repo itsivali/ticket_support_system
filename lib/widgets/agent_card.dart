@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/agent.dart';
-import '../providers/ticket_provider.dart';
+import '../providers/agent_provider.dart'; // Update import
 import '../screens/edit_agent_screen.dart';
 
 class AgentCard extends StatelessWidget {
@@ -64,9 +64,9 @@ class AgentCard extends StatelessWidget {
             ),
             onPressed: () async {
               Navigator.of(dialogContext).pop();
-              
+
               try {
-                await Provider.of<TicketProvider>(context, listen: false)
+                await Provider.of<AgentProvider>(context, listen: false)
                     .deleteAgent(agent.id, context);
               } catch (e) {
                 if (context.mounted) {
@@ -106,7 +106,8 @@ class AgentCard extends StatelessWidget {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: agent.isAvailable ? Colors.green : Colors.grey,
+                    backgroundColor:
+                        agent.isAvailable ? Colors.green : Colors.grey,
                     child: const Icon(Icons.person, color: Colors.white),
                   ),
                   const SizedBox(width: 12),

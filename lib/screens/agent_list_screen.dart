@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/ticket_provider.dart';
+import '../providers/agent_provider.dart'; // Update import
 import '../widgets/agent_card.dart';
 
 class AgentListScreen extends StatefulWidget {
@@ -15,7 +15,7 @@ class _AgentListScreenState extends State<AgentListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TicketProvider>().fetchAgents();
+      context.read<AgentProvider>().fetchAgents();
     });
   }
 
@@ -27,11 +27,11 @@ class _AgentListScreenState extends State<AgentListScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<TicketProvider>().fetchAgents(),
+            onPressed: () => context.read<AgentProvider>().fetchAgents(),
           ),
         ],
       ),
-      body: Consumer<TicketProvider>(
+      body: Consumer<AgentProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -42,10 +42,8 @@ class _AgentListScreenState extends State<AgentListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, 
-                    size: 48, 
-                    color: Theme.of(context).colorScheme.error
-                  ),
+                  Icon(Icons.error_outline,
+                      size: 48, color: Theme.of(context).colorScheme.error),
                   const SizedBox(height: 16),
                   Text(provider.error!),
                   const SizedBox(height: 16),

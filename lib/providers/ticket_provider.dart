@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/ticket.dart';
-import '../models/agent.dart';
 import '../services/ticket_service.dart';
 import '../utils/console_logger.dart';
 import '../utils/ui_helpers.dart';
@@ -9,12 +8,10 @@ class TicketProvider with ChangeNotifier {
   final TicketService _ticketService = TicketService();
 
   List<Ticket> _tickets = [];
-  List<Agent> _agents = [];
   bool _isLoading = false;
   String? _error;
 
   List<Ticket> get tickets => _tickets;
-  List<Agent> get agents => _agents;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -96,22 +93,6 @@ class TicketProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchAgents() async {
-    try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
-      _agents = await _ticketService.getAgents();
-    } catch (e) {
-      ConsoleLogger.error('Error fetching agents', e);
-      _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
   Future<void> createTicket(Ticket ticket, BuildContext context) async {
     try {
       _isLoading = true;
@@ -181,5 +162,16 @@ class TicketProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  void applyFilters(String statusFilter, String priorityFilter) {
+    var filteredTickets = tickets.where((ticket) {
+      bool statusMatch = statusFilter == 'all' || ticket.status == statusFilter;
+      bool priorityMatch = priorityFilter == 'all' || ticket.priority == priorityFilter;
+      return statusMatch && priorityMatch;
+    }).toList();
+    
+    _tickets = filteredTickets;
+    notifyListeners();
   }
 }

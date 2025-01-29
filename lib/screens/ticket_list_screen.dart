@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
+import '../providers/agent_provider.dart';
 import '../widgets/ticket_card.dart';
 import '../models/ticket.dart';
 
@@ -19,9 +20,10 @@ class _TicketListScreenState extends State<TicketListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<TicketProvider>();
-      provider.fetchTickets();
-      provider.fetchAgents();
+      final ticketProvider = context.read<TicketProvider>();
+      final agentProvider = context.read<AgentProvider>();
+      ticketProvider.fetchTickets();
+      agentProvider.fetchAgents();
     });
   }
 

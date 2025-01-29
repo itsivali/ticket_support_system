@@ -18,9 +18,10 @@ class TicketService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body) as List<dynamic>;
+        final List<dynamic> jsonData =
+            json.decode(response.body) as List<dynamic>;
         ConsoleLogger.info('Successfully fetched ${jsonData.length} tickets');
-        
+
         return jsonData.map((json) {
           try {
             if (json is! Map<String, dynamic>) {
@@ -33,10 +34,8 @@ class TicketService {
           }
         }).toList();
       } else {
-        ConsoleLogger.error(
-          'Failed to load tickets: ${response.statusCode}',
-          'Response body: ${response.body}'
-        );
+        ConsoleLogger.error('Failed to load tickets: ${response.statusCode}',
+            'Response body: ${response.body}');
         throw Exception('Failed to load tickets: ${response.statusCode}');
       }
     } catch (e, stack) {
@@ -61,108 +60,106 @@ class TicketService {
             .map((json) => Agent.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
-        ConsoleLogger.error(
-          'Failed to load agents: ${response.statusCode}',
-          'Response body: ${response.body}'
-        );
+        ConsoleLogger.error('Failed to load agents: ${response.statusCode}',
+            'Response body: ${response.body}');
         throw Exception('Failed to load agents: ${response.statusCode}');
       }
-        } catch (e, stack) {
+    } catch (e, stack) {
       ConsoleLogger.error('Network error', e, stack);
       throw Exception('Network error: $e');
     }
   }
 
   Future<Ticket> createTicket(Ticket ticket) async {
-  try {
-    final response = await http.post(
-      Uri.parse('$baseUrl/tickets'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: json.encode(ticket.toJson()),
-    );
-
-    if (response.statusCode == 201) {
-      final Map<String, dynamic> jsonData = json.decode(response.body);
-      return Ticket.fromJson(jsonData);
-    } else {
-      final errorData = json.decode(response.body);
-      final message = errorData['message'] ?? 'Failed to create ticket';
-      ConsoleLogger.error(
-        'Failed to create ticket: ${response.statusCode}',
-        response.body,
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/tickets'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode(ticket.toJson()),
       );
-      throw Exception(message);
+
+      if (response.statusCode == 201) {
+        final Map<String, dynamic> jsonData = json.decode(response.body);
+        return Ticket.fromJson(jsonData);
+      } else {
+        final errorData = json.decode(response.body);
+        final message = errorData['message'] ?? 'Failed to create ticket';
+        ConsoleLogger.error(
+          'Failed to create ticket: ${response.statusCode}',
+          response.body,
+        );
+        throw Exception(message);
+      }
+    } catch (e, stack) {
+      ConsoleLogger.error('Network error', e, stack);
+      if (e is FormatException) {
+        throw Exception('Invalid response format');
+      }
+      throw Exception('Unable to create ticket: ${e.toString()}');
     }
-  } catch (e, stack) {
-    ConsoleLogger.error('Network error', e, stack);
-    if (e is FormatException) {
-      throw Exception('Invalid response format');
-    }
-    throw Exception('Unable to create ticket: ${e.toString()}');
   }
-}
 
   Future<Ticket> updateTicket(Ticket ticket) async {
-  try {
-    final response = await http.put(
-      Uri.parse('$baseUrl/tickets/${ticket.id}'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: json.encode(ticket.toJson()),
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> jsonData = json.decode(response.body);
-      return Ticket.fromJson(jsonData);
-    } else {
-      final errorData = json.decode(response.body);
-      final message = errorData['message'] ?? 'Failed to update ticket';
-      ConsoleLogger.error(
-        'Failed to update ticket: ${response.statusCode}',
-        'Response body: ${response.body}',
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/tickets/${ticket.id}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode(ticket.toJson()),
       );
-      throw Exception(message);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonData = json.decode(response.body);
+        return Ticket.fromJson(jsonData);
+      } else {
+        final errorData = json.decode(response.body);
+        final message = errorData['message'] ?? 'Failed to update ticket';
+        ConsoleLogger.error(
+          'Failed to update ticket: ${response.statusCode}',
+          'Response body: ${response.body}',
+        );
+        throw Exception(message);
+      }
+    } catch (e, stack) {
+      ConsoleLogger.error('Network error', e, stack);
+      if (e is FormatException) {
+        throw Exception('Invalid response format');
+      }
+      throw Exception('Unable to update ticket: ${e.toString()}');
     }
-  } catch (e, stack) {
-    ConsoleLogger.error('Network error', e, stack);
-    if (e is FormatException) {
-      throw Exception('Invalid response format');
-    }
-    throw Exception('Unable to update ticket: ${e.toString()}');
   }
-}
 
   Future<void> deleteTicket(String ticketId) async {
-  try {
-    final response = await http.delete(
-      Uri.parse('$baseUrl/tickets/$ticketId'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 204) {
-      ConsoleLogger.info('Ticket $ticketId successfully deleted');
-    } else {
-      final responseBody = response.body.isNotEmpty ? response.body : 'No response body';
-      ConsoleLogger.error(
-        'Failed to delete ticket: ${response.statusCode}',
-        'Response body: $responseBody',
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/tickets/$ticketId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
       );
-      throw Exception('Failed to delete ticket: ${response.statusCode}');
-    }
-  } catch (e, stack) {
-    ConsoleLogger.error('Network error while deleting ticket', e, stack);
-    throw Exception('Network error: $e');
-  }
-}
 
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        ConsoleLogger.info('Ticket $ticketId successfully deleted');
+      } else {
+        final responseBody =
+            response.body.isNotEmpty ? response.body : 'No response body';
+        ConsoleLogger.error(
+          'Failed to delete ticket: ${response.statusCode}',
+          'Response body: $responseBody',
+        );
+        throw Exception('Failed to delete ticket: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      ConsoleLogger.error('Network error while deleting ticket', e, stack);
+      throw Exception('Network error: $e');
+    }
+  }
 
   Future<void> assignTicket(String ticketId, String agentId) async {
     try {
@@ -176,15 +173,41 @@ class TicketService {
       );
 
       if (response.statusCode != 200) {
-        ConsoleLogger.error(
-          'Failed to assign ticket: ${response.statusCode}',
-          'Response body: ${response.body}'
-        );
+        ConsoleLogger.error('Failed to assign ticket: ${response.statusCode}',
+            'Response body: ${response.body}');
         throw Exception('Failed to assign ticket: ${response.statusCode}');
       }
     } catch (e, stack) {
       ConsoleLogger.error('Network error', e, stack);
       throw Exception('Network error: $e');
     }
+  }
+
+  Future<void> deleteAgent(String agentId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/agents/$agentId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        ConsoleLogger.info('Agent $agentId successfully deleted');
+      } else {
+        final responseBody =
+            response.body.isNotEmpty ? response.body : 'No response body';
+        ConsoleLogger.error(
+          'Failed to delete agent: ${response.statusCode}',
+          'Response body: $responseBody',
+        );
+        throw Exception('Failed to delete agent: ${response.statusCode}');
+      }
+    } catch (e, stack) {
+      ConsoleLogger.error('Network error while deleting agent', e, stack);
+      throw Exception('Network error: $e');
+    }
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 }

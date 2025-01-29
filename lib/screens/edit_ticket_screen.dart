@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/ticket.dart';
 import '../models/agent.dart';
 import '../providers/ticket_provider.dart';
+import '../providers/agent_provider.dart';
 import '../utils/ui_helpers.dart';
 
 class EditTicketScreen extends StatefulWidget {
@@ -39,8 +40,8 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
     
     // Fetch agents if needed
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.read<TicketProvider>().agents.isEmpty) {
-        context.read<TicketProvider>().fetchAgents();
+      if (context.read<AgentProvider>().agents.isEmpty) {
+        context.read<AgentProvider>().fetchAgents();
       }
     });
   }
@@ -150,9 +151,9 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
             ),
         ],
       ),
-      body: Consumer<TicketProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
+      body: Consumer2<TicketProvider, AgentProvider>(
+        builder: (context, ticketProvider, agentProvider, child) {
+          if (ticketProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
@@ -312,7 +313,7 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    _buildAgentDropdown(provider.agents),
+                    _buildAgentDropdown(agentProvider.agents),
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
