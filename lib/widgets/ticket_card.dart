@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/ticket.dart';
 import 'package:provider/provider.dart';
+import '../models/ticket.dart';
 import '../providers/ticket_provider.dart';
 import '../screens/edit_ticket_screen.dart';
 
@@ -35,10 +35,37 @@ class TicketCard extends StatelessWidget {
     }
   }
 
+  void _confirmDelete(BuildContext context, Ticket ticket) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Ticket'),
+        content: const Text('Are you sure you want to delete this ticket?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Provider.of<TicketProvider>(context, listen: false)
+                  .deleteTicket(ticket.id)
+                  .then((_) {
+                Navigator.of(ctx).pop();
+              }).catchError((error) {
+                // Handle error accordingly
+              });
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: getStatusColor(ticket.status).withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -83,34 +110,6 @@ class TicketCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _confirmDelete(BuildContext context, Ticket ticket) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Ticket'),
-        content: const Text('Are you sure you want to delete this ticket?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Provider.of<TicketProvider>(context, listen: false)
-                  .deleteTicket(ticket.id)
-                  .then((_) {
-                Navigator.of(ctx).pop();
-              }).catchError((error) {
-                // Handle error accordingly
-              });
-            },
-            child: const Text('Delete'),
-          ),
-        ],
       ),
     );
   }

@@ -34,6 +34,31 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
     _assignedTo = widget.ticket.assignedTo;
   }
 
+  void _submitForm() {
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
+
+      final updatedTicket = Ticket(
+        id: widget.ticket.id,
+        title: _title,
+        description: _description,
+        dueDate: _dueDate,
+        estimatedHours: _estimatedHours,
+        status: _status,
+        priority: _priority,
+        assignedTo: _assignedTo,
+      );
+
+      Provider.of<TicketProvider>(context, listen: false)
+          .updateTicket(updatedTicket)
+          .then((_) {
+        Navigator.pop(context);
+      }).catchError((error) {
+        // Handle error accordingly
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ticketProvider = Provider.of<TicketProvider>(context);
@@ -199,31 +224,6 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
     if (picked != null && picked != _dueDate) {
       setState(() {
         _dueDate = picked;
-      });
-    }
-  }
-
-  void _submitForm() {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-
-      final updatedTicket = Ticket(
-        id: widget.ticket.id,
-        title: _title,
-        description: _description,
-        dueDate: _dueDate,
-        estimatedHours: _estimatedHours,
-        status: _status,
-        priority: _priority,
-        assignedTo: _assignedTo,
-      );
-
-      Provider.of<TicketProvider>(context, listen: false)
-          .updateTicket(updatedTicket)
-          .then((_) {
-        Navigator.pop(context);
-      }).catchError((error) {
-        // Handle error accordingly
       });
     }
   }

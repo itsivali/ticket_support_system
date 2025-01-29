@@ -33,27 +33,23 @@ class TicketProvider with ChangeNotifier {
     }
   }
 
-Future<void> deleteTicket(String ticketId) async {
-  try {
-    if (!_tickets.any((ticket) => ticket.id == ticketId)) {
-      throw Exception('Ticket ID $ticketId not found in the list');
+  Future<void> deleteTicket(String ticketId) async {
+    try {
+      _isLoading = true;
+      _error = null;
+      notifyListeners();
+
+      await _ticketService.deleteTicket(ticketId);
+      _tickets.removeWhere((ticket) => ticket.id == ticketId);
+      ConsoleLogger.info('Ticket $ticketId deleted successfully');
+    } catch (e, stack) {
+      ConsoleLogger.error('Error deleting ticket: $e\n$stack');
+      _error = 'Failed to delete ticket: ${e.toString()}';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
-    await _ticketService.deleteTicket(ticketId);
-    _tickets.removeWhere((ticket) => ticket.id == ticketId);
-    ConsoleLogger.info('Ticket $ticketId deleted successfully');
-  } catch (e, stack) {
-    ConsoleLogger.error('Error deleting ticket: $e\n$stack');
-    _error = 'Failed to delete ticket: ${e.toString()}';
-  } finally {
-    _isLoading = false;
-    notifyListeners();
   }
-}
 
   Future<void> fetchAgents() async {
     try {
@@ -104,24 +100,6 @@ Future<void> deleteTicket(String ticketId) async {
     } catch (e) {
       ConsoleLogger.error('Error updating ticket', e);
       _error = e.toString();
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> assignTicket(String ticketId, String agentId) async {
-    try {
-      _isLoading = true;
-      _error = null;
-      notifyListeners();
-
-      await _ticketService.assignTicket(ticketId, agentId);
-      await fetchTickets();
-      ConsoleLogger.info('Ticket $ticketId assigned to agent $agentId');
-    } catch (e, stack) {
-      ConsoleLogger.error('Error assigning ticket: $e\n$stack');
-      _error = 'Failed to assign ticket: ${e.toString()}';
     } finally {
       _isLoading = false;
       notifyListeners();
