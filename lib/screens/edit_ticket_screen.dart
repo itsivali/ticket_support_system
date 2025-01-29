@@ -34,7 +34,7 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
     _estimatedHours = widget.ticket.estimatedHours;
     _status = widget.ticket.status;
     _priority = widget.ticket.priority;
-    _assignedTo = widget.ticket.assignedTo;
+    _assignedTo = widget.ticket.assignedTo?.toString();
   }
 
   Future<void> _submitForm() async {
@@ -267,7 +267,6 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                             ),
                           ),
                           ...agents.map((agent) => DropdownMenuItem<String?>(
-                            // Use just the ID string from the Agent model
                             value: agent.id,
                             child: Row(
                               children: [
@@ -279,7 +278,7 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                                 Text(agent.name),
                                 if (!agent.isAvailable) ...[
                                   const SizedBox(width: 4),
-                                  Icon(Icons.schedule, size: 16, color: Colors.orange),
+                                  const Icon(Icons.schedule, size: 16, color: Colors.orange),
                                 ],
                               ],
                             ),
