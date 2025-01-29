@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/ticket.dart';
 import '../providers/ticket_provider.dart';
+import '../utils/ui_helpers.dart';
 
 class EditTicketScreen extends StatefulWidget {
   final Ticket ticket;
 
-  const EditTicketScreen({super.key, required this.ticket});
+  const EditTicketScreen({Key? key, required this.ticket}) : super(key: key);
 
   @override
   State<EditTicketScreen> createState() => _EditTicketScreenState();
@@ -21,6 +22,7 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
   late String _status;
   late String _priority;
   String? _assignedTo;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -34,197 +36,88 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
     _assignedTo = widget.ticket.assignedTo;
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
+      setState(() => _isLoading = true);
 
-      final updatedTicket = Ticket(
-        id: widget.ticket.id,
-        title: _title,
-        description: _description,
-        dueDate: _dueDate,
-        estimatedHours: _estimatedHours,
-        status: _status,
-        priority: _priority,
-        assignedTo: _assignedTo,
-      );
+      try {
+        final updatedTicket = Ticket(
+          id: widget.ticket.id,
+          title: _title,
+          description: _description,
+          dueDate: _dueDate,
+          estimatedHours: _estimatedHours,
+          status: _status,
+          priority: _priority,
+          assignedTo: _assignedTo,
+        );
 
-      Provider.of<TicketProvider>(context, listen: false)
-          .updateTicket(updatedTicket)
-          .then((_) {
+        await Provider.of<TicketProvider>(context, listen: false)
+            .updateTicket(updatedTicket, context);
+
+        if (!mounted) return;
+        
+        UIHelpers.showCustomSnackBar(
+          context: context,
+          message: 'Ticket updated successfully!',
+          icon: Icons.check_circle,
+          backgroundColor: Colors.green,
+        );
+
         Navigator.pop(context);
-      }).catchError((error) {
-        // Handle error accordingly
-      });
+      } catch (error) {
+        UIHelpers.showCustomSnackBar(
+          context: context,
+          message: 'Failed to update ticket: $error',
+          icon: Icons.error_outline,
+          backgroundColor: Colors.red,
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final ticketProvider = Provider.of<TicketProvider>(context);
-    final agents = ticketProvider.agents;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Ticket'),
+        actions: [
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(color: Colors.white),
+            ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ticketProvider.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : Form(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
                 key: _formKey,
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Title
-                      TextFormField(
-                        initialValue: _title,
-                        decoration: const InputDecoration(labelText: 'Title'),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a title';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          _title = value!;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Description
-                      TextFormField(
-                        initialValue: _description,
-                        decoration:
-                            const InputDecoration(labelText: 'Description'),
-                        maxLines: 3,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a description';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          _description = value!;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Due Date
-                      Row(
-                        children: [
-                          const Text('Due Date: '),
-                          Text(
-                              '${_dueDate.year}-${_dueDate.month}-${_dueDate.day}'),
-                          IconButton(
-                            icon: const Icon(Icons.calendar_today),
-                            onPressed: _pickDueDate,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Estimated Hours
-                      Row(
-                        children: [
-                          const Text('Estimated Hours: '),
-                          Expanded(
-                            child: Slider(
-                              value: _estimatedHours,
-                              min: 0.5,
-                              max: 24,
-                              divisions: 47,
-                              label: _estimatedHours.toString(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _estimatedHours = value;
-                                });
-                              },
-                            ),
-                          ),
-                          Text(_estimatedHours.toString()),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      // Status
-                      DropdownButtonFormField<String>(
-                        value: _status,
-                        decoration: const InputDecoration(labelText: 'Status'),
-                        items: ['OPEN', 'IN_PROGRESS', 'CLOSED']
-                            .map((status) => DropdownMenuItem(
-                                  value: status,
-                                  child: Text(status),
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _status = value!;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Priority
-                      DropdownButtonFormField<String>(
-                        value: _priority,
-                        decoration:
-                            const InputDecoration(labelText: 'Priority'),
-                        items: ['LOW', 'MEDIUM', 'HIGH']
-                            .map((priority) => DropdownMenuItem(
-                                  value: priority,
-                                  child: Text(priority),
-                                ))
-                            .toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _priority = value!;
-                          });
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // Assigned To
-                      DropdownButtonFormField<String>(
-                        value: _assignedTo,
-                        decoration:
-                            const InputDecoration(labelText: 'Assign To'),
-                        items: [
-                          const DropdownMenuItem(
-                            value: null,
-                            child: Text('Unassigned'),
-                          ),
-                          ...agents.map((agent) => DropdownMenuItem(
-                                value: agent.id,
-                                child: Text(agent.name),
-                              ))
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _assignedTo = value;
-                          });
-                        },
-                      ),
+                      // ...existing form fields...
                       const SizedBox(height: 24),
-                      // Submit Button
-                      ElevatedButton(
-                        onPressed: _submitForm,
-                        child: const Text('Update Ticket'),
+                      ElevatedButton.icon(
+                        onPressed: _isLoading ? null : _submitForm,
+                        icon: const Icon(Icons.save),
+                        label: const Text('Update Ticket'),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 48),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
-      ),
+            ),
     );
-  }
-
-  Future<void> _pickDueDate() async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _dueDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _dueDate) {
-      setState(() {
-        _dueDate = picked;
-      });
-    }
   }
 }

@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/ticket.dart';
 import '../models/agent.dart';
 import '../services/ticket_service.dart';
 import '../utils/console_logger.dart';
+import '../utils/ui_helpers.dart';
 
 class TicketProvider with ChangeNotifier {
   final TicketService _ticketService = TicketService();
@@ -33,7 +34,7 @@ class TicketProvider with ChangeNotifier {
     }
   }
 
-  Future<void> deleteTicket(String ticketId) async {
+  Future<void> deleteTicket(String ticketId, BuildContext context) async {
     try {
       _isLoading = true;
       _error = null;
@@ -41,10 +42,22 @@ class TicketProvider with ChangeNotifier {
 
       await _ticketService.deleteTicket(ticketId);
       _tickets.removeWhere((ticket) => ticket.id == ticketId);
-      ConsoleLogger.info('Ticket $ticketId deleted successfully');
+      
+      UIHelpers.showCustomSnackBar(
+        context: context,
+        message: 'Ticket deleted successfully',
+        icon: Icons.delete_forever,
+        backgroundColor: Colors.orange,
+      );
     } catch (e, stack) {
       ConsoleLogger.error('Error deleting ticket: $e\n$stack');
       _error = 'Failed to delete ticket: ${e.toString()}';
+      UIHelpers.showCustomSnackBar(
+        context: context,
+        message: 'Failed to delete ticket: ${e.toString()}',
+        icon: Icons.error_outline,
+        backgroundColor: Colors.red,
+      );
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -67,7 +80,7 @@ class TicketProvider with ChangeNotifier {
     }
   }
 
-  Future<void> createTicket(Ticket ticket) async {
+  Future<void> createTicket(Ticket ticket, BuildContext context) async {
     try {
       _isLoading = true;
       _error = null;
@@ -75,17 +88,30 @@ class TicketProvider with ChangeNotifier {
 
       final newTicket = await _ticketService.createTicket(ticket);
       _tickets.add(newTicket);
-      ConsoleLogger.info('Ticket created successfully');
+      
+      UIHelpers.showCustomSnackBar(
+        context: context,
+        message: 'Ticket created successfully!',
+        icon: Icons.check_circle,
+        backgroundColor: Colors.green,
+      );
+      
     } catch (e) {
       ConsoleLogger.error('Error creating ticket', e);
       _error = e.toString();
+      UIHelpers.showCustomSnackBar(
+        context: context,
+        message: 'Failed to create ticket: ${e.toString()}',
+        icon: Icons.error_outline,
+        backgroundColor: Colors.red,
+      );
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> updateTicket(Ticket ticket) async {
+  Future<void> updateTicket(Ticket ticket, BuildContext context) async {
     try {
       _isLoading = true;
       _error = null;
@@ -95,11 +121,22 @@ class TicketProvider with ChangeNotifier {
       final index = _tickets.indexWhere((t) => t.id == updatedTicket.id);
       if (index != -1) {
         _tickets[index] = updatedTicket;
-        ConsoleLogger.info('Ticket updated successfully');
+        UIHelpers.showCustomSnackBar(
+          context: context,
+          message: 'Ticket updated successfully!',
+          icon: Icons.check_circle,
+          backgroundColor: Colors.blue,
+        );
       }
     } catch (e) {
       ConsoleLogger.error('Error updating ticket', e);
       _error = e.toString();
+      UIHelpers.showCustomSnackBar(
+        context: context,
+        message: 'Failed to update ticket: ${e.toString()}',
+        icon: Icons.error_outline,
+        backgroundColor: Colors.red,
+      );
     } finally {
       _isLoading = false;
       notifyListeners();

@@ -39,24 +39,41 @@ class TicketCard extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Ticket'),
-        content: const Text('Are you sure you want to delete this ticket?'),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
+            const SizedBox(width: 10),
+            const Text('Delete Ticket'),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete ticket "${ticket.title}"?',
+          style: const TextStyle(fontSize: 16),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+            child: const Text('CANCEL'),
           ),
-          TextButton(
+          ElevatedButton.icon(
+            icon: const Icon(Icons.delete_forever, color: Colors.white),
+            label: const Text('DELETE', style: TextStyle(color: Colors.white)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
             onPressed: () {
               Provider.of<TicketProvider>(context, listen: false)
-                  .deleteTicket(ticket.id)
+                  .deleteTicket(ticket.id, context)
                   .then((_) {
                 Navigator.of(ctx).pop();
-              }).catchError((error) {
-                // Handle error accordingly
               });
             },
-            child: const Text('Delete'),
           ),
         ],
       ),
