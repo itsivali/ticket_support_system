@@ -103,7 +103,42 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // ...existing form fields...
+                      TextFormField(
+                        initialValue: _title,
+                        decoration: const InputDecoration(
+                          labelText: 'Title',
+                          helperText: 'At least 3 characters',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a title';
+                          }
+                          if (value.length < 3) {
+                            return 'Title must be at least 3 characters';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _title = value!,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        initialValue: _description,
+                        decoration: const InputDecoration(
+                          labelText: 'Description',
+                          helperText: 'At least 10 characters',
+                        ),
+                        maxLines: 3,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a description';
+                          }
+                          if (value.length < 10) {
+                            return 'Description must be at least 10 characters';
+                          }
+                          return null;
+                        },
+                        onSaved: (value) => _description = value!,
+                      ),
                       const SizedBox(height: 24),
                       ElevatedButton.icon(
                         onPressed: _isLoading ? null : _submitForm,

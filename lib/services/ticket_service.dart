@@ -106,31 +106,36 @@ class TicketService {
 }
 
   Future<Ticket> updateTicket(Ticket ticket) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/tickets/${ticket.id}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode(ticket.toJson()),
-      );
+  try {
+    final response = await http.put(
+      Uri.parse('$baseUrl/tickets/${ticket.id}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: json.encode(ticket.toJson()),
+    );
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonData = json.decode(response.body);
-        return Ticket.fromJson(jsonData);
-      } else {
-        ConsoleLogger.error(
-          'Failed to update ticket: ${response.statusCode}',
-          'Response body: ${response.body}'
-        );
-        throw Exception('Failed to update ticket: ${response.statusCode}');
-      }
-    } catch (e, stack) {
-      ConsoleLogger.error('Network error', e, stack);
-      throw Exception('Network error: $e');
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> jsonData = json.decode(response.body);
+      return Ticket.fromJson(jsonData);
+    } else {
+      final errorData = json.decode(response.body);
+      final message = errorData['message'] ?? 'Failed to update ticket';
+      ConsoleLogger.error(
+        'Failed to update ticket: ${response.statusCode}',
+        'Response body: ${response.body}',
+      );
+      throw Exception(message);
     }
+  } catch (e, stack) {
+    ConsoleLogger.error('Network error', e, stack);
+    if (e is FormatException) {
+      throw Exception('Invalid response format');
+    }
+    throw Exception('Unable to update ticket: ${e.toString()}');
   }
+}
 
   Future<void> deleteTicket(String ticketId) async {
   try {

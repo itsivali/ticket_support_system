@@ -117,6 +117,14 @@ class TicketProvider with ChangeNotifier {
       _error = null;
       notifyListeners();
 
+      // Validate ticket fields before sending
+      if (ticket.title.length < 3) {
+        throw Exception('Title must be at least 3 characters');
+      }
+      if (ticket.description.length < 10) {
+        throw Exception('Description must be at least 10 characters');
+      }
+
       final updatedTicket = await _ticketService.updateTicket(ticket);
       final index = _tickets.indexWhere((t) => t.id == updatedTicket.id);
       if (index != -1) {
@@ -133,7 +141,7 @@ class TicketProvider with ChangeNotifier {
       _error = e.toString();
       UIHelpers.showCustomSnackBar(
         context: context,
-        message: 'Failed to update ticket: ${e.toString()}',
+        message: 'Failed to update ticket: ${e.toString().replaceAll('Exception:', '')}',
         icon: Icons.error_outline,
         backgroundColor: Colors.red,
       );
