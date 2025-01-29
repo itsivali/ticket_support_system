@@ -267,7 +267,8 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                             ),
                           ),
                           ...agents.map((agent) => DropdownMenuItem<String?>(
-                            value: agent.id, // Make sure this matches the stored _assignedTo value
+                            // Use just the ID string from the Agent model
+                            value: agent.id,
                             child: Row(
                               children: [
                                 Icon(
@@ -278,7 +279,7 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                                 Text(agent.name),
                                 if (!agent.isAvailable) ...[
                                   const SizedBox(width: 4),
-                                  const Icon(Icons.schedule, size: 16),
+                                  Icon(Icons.schedule, size: 16, color: Colors.orange),
                                 ],
                               ],
                             ),

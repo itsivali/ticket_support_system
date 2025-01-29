@@ -11,7 +11,7 @@ class Agent {
 
   factory Agent.fromJson(Map<String, dynamic> json) {
     return Agent(
-      id: json['_id'].toString(), 
+      id: json['_id']?.toString() ?? '',  
       name: json['name'] as String,
       isAvailable: json['isAvailable'] as bool,
     );
