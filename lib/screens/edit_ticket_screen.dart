@@ -316,13 +316,37 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                     const SizedBox(height: 24),
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton.icon(
+                      child: FilledButton.icon(
                         onPressed: _isLoading ? null : _submitForm,
-                        icon: const Icon(Icons.save),
-                        label: Text(_isLoading ? 'Updating...' : 'Update Ticket'),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.all(16),
-                          backgroundColor: Theme.of(context).primaryColor,
+                        icon: _isLoading 
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.update),
+                        label: Text(
+                          _isLoading ? 'UPDATING...' : 'UPDATE',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 20,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 3,
                         ),
                       ),
                     ),
