@@ -43,21 +43,25 @@ class TicketProvider with ChangeNotifier {
       await _ticketService.deleteTicket(ticketId);
       _tickets.removeWhere((ticket) => ticket.id == ticketId);
       
-      UIHelpers.showCustomSnackBar(
-        context: context,
-        message: 'Ticket deleted successfully',
-        icon: Icons.delete_forever,
-        backgroundColor: Colors.orange,
-      );
+      if (context.mounted) {
+        UIHelpers.showCustomSnackBar(
+          context: context,
+          message: 'Ticket deleted successfully',
+          icon: Icons.delete_forever,
+          backgroundColor: Colors.orange,
+        );
+      }
     } catch (e, stack) {
       ConsoleLogger.error('Error deleting ticket: $e\n$stack');
       _error = 'Failed to delete ticket: ${e.toString()}';
-      UIHelpers.showCustomSnackBar(
-        context: context,
-        message: 'Failed to delete ticket: ${e.toString()}',
-        icon: Icons.error_outline,
-        backgroundColor: Colors.red,
-      );
+      if (context.mounted) {
+        UIHelpers.showCustomSnackBar(
+          context: context,
+          message: 'Failed to delete ticket: ${e.toString()}',
+          icon: Icons.error_outline,
+          backgroundColor: Colors.red,
+        );
+      }
     } finally {
       _isLoading = false;
       notifyListeners();

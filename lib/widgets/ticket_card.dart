@@ -38,7 +38,7 @@ class TicketCard extends StatelessWidget {
   void _confirmDelete(BuildContext context, Ticket ticket) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: Row(
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
@@ -55,7 +55,7 @@ class TicketCard extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
+            onPressed: () => Navigator.of(dialogContext).pop(),
             style: TextButton.styleFrom(
               foregroundColor: Colors.grey[600],
             ),
@@ -75,12 +75,23 @@ class TicketCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            onPressed: () {
-              Provider.of<TicketProvider>(context, listen: false)
-                  .deleteTicket(ticket.id, context)
-                  .then((_) {
-                Navigator.of(ctx).pop();
-              });
+            onPressed: () async {
+              // Close dialog first
+              Navigator.of(dialogContext).pop();
+              // Then delete ticket
+              try {
+                await Provider.of<TicketProvider>(context, listen: false)
+                    .deleteTicket(ticket.id, context);
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete ticket: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
           ),
         ],
