@@ -34,8 +34,10 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
     _estimatedHours = widget.ticket.estimatedHours;
     _status = widget.ticket.status;
     _priority = widget.ticket.priority;
-    _assignedTo = widget.ticket.assignedTo?.toString();
+    // Only store the ID string
+    _assignedTo = widget.ticket.assignedTo;
     
+    // Fetch agents if needed
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.read<TicketProvider>().agents.isEmpty) {
         context.read<TicketProvider>().fetchAgents();
@@ -82,8 +84,17 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
   }
 
   Widget _buildAgentDropdown(List<Agent> agents) {
+    // Check if the current _assignedTo value exists in agents list
+    final bool hasValidAssignment = _assignedTo == null || 
+        agents.any((agent) => agent.id == _assignedTo);
+    
+    // Reset assignedTo if current value is invalid
+    if (!hasValidAssignment) {
+      _assignedTo = null;
+    }
+
     return DropdownButtonFormField<String?>(
-      value: _assignedTo,
+      value: hasValidAssignment ? _assignedTo : null,
       decoration: const InputDecoration(
         labelText: 'Assign To',
         helperText: 'Select agent to handle this ticket',
