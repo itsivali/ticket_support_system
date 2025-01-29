@@ -56,13 +56,21 @@ class TicketCard extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.grey[600],
+            ),
             child: const Text('CANCEL'),
           ),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.delete_forever, color: Colors.white),
-            label: const Text('DELETE', style: TextStyle(color: Colors.white)),
-            style: ElevatedButton.styleFrom(
+          FilledButton.icon(
+            icon: const Icon(Icons.delete_forever),
+            label: const Text('DELETE'),
+            style: FilledButton.styleFrom(
               backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
