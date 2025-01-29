@@ -4,12 +4,12 @@ import '../models/agent.dart';
 import '../utils/console_logger.dart';
 
 class AgentService {
-  final String baseUrl = 'http://localhost:3000/api';
+  final String baseUrl = 'http://localhost:3000/api/agents';
 
   Future<List<Agent>> getAgents() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/agents'),
+        Uri.parse(baseUrl),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -18,16 +18,14 @@ class AgentService {
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
-        return jsonData
-            .map((json) => Agent.fromJson(json as Map<String, dynamic>))
-            .toList();
-      } else {
-        ConsoleLogger.error(
-          'Failed to load agents: ${response.statusCode}',
-          'Response body: ${response.body}'
-        );
-        throw Exception('Failed to load agents: ${response.statusCode}');
+        return jsonData.map((json) => Agent.fromJson(json)).toList();
       }
+      
+      ConsoleLogger.error(
+        'Failed to load agents: ${response.statusCode}',
+        'Response body: ${response.body}'
+      );
+      throw Exception('Failed to load agents: ${response.statusCode}');
     } catch (e, stack) {
       ConsoleLogger.error('Network error', e, stack);
       throw Exception('Network error: $e');
@@ -37,7 +35,7 @@ class AgentService {
   Future<Agent> createAgent(Agent agent) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/agents'),
+        Uri.parse(baseUrl),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -52,11 +50,13 @@ class AgentService {
 
       if (response.statusCode == 201) {
         return Agent.fromJson(json.decode(response.body));
-      } else {
-        final errorData = json.decode(response.body);
-        final message = errorData['message'] ?? 'Failed to create agent';
-        throw Exception(message);
       }
+      
+      ConsoleLogger.error(
+        'Failed to create agent: ${response.statusCode}',
+        'Response body: ${response.body}'
+      );
+      throw Exception('Failed to create agent: ${response.statusCode}');
     } catch (e, stack) {
       ConsoleLogger.error('Network error', e, stack);
       throw Exception('Network error: $e');
@@ -66,7 +66,7 @@ class AgentService {
   Future<Agent> updateAgent(Agent agent) async {
     try {
       final response = await http.put(
-        Uri.parse('$baseUrl/agents/${agent.id}'),
+        Uri.parse('$baseUrl/${agent.id}'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -81,21 +81,23 @@ class AgentService {
 
       if (response.statusCode == 200) {
         return Agent.fromJson(json.decode(response.body));
-      } else {
-        final errorData = json.decode(response.body);
-        final message = errorData['message'] ?? 'Failed to update agent';
-        throw Exception(message);
       }
+      
+      ConsoleLogger.error(
+        'Failed to update agent: ${response.statusCode}',
+        'Response body: ${response.body}'
+      );
+      throw Exception('Failed to update agent: ${response.statusCode}');
     } catch (e, stack) {
       ConsoleLogger.error('Network error', e, stack);
       throw Exception('Network error: $e');
     }
   }
 
-  Future<void> deleteAgent(String agentId) async {
+  Future<void> deleteAgent(String id) async {
     try {
       final response = await http.delete(
-        Uri.parse('$baseUrl/agents/$agentId'),
+        Uri.parse('$baseUrl/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -103,10 +105,9 @@ class AgentService {
       );
 
       if (response.statusCode != 200 && response.statusCode != 204) {
-        final responseBody = response.body.isNotEmpty ? response.body : 'No response body';
         ConsoleLogger.error(
           'Failed to delete agent: ${response.statusCode}',
-          'Response body: $responseBody',
+          'Response body: ${response.body}'
         );
         throw Exception('Failed to delete agent: ${response.statusCode}');
       }
