@@ -102,6 +102,7 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                 key: _formKey,
                 child: SingleChildScrollView(
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       TextFormField(
                         initialValue: _title,
@@ -139,13 +140,86 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                         },
                         onSaved: (value) => _description = value!,
                       ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          const Text('Due Date: '),
+                          TextButton(
+                            onPressed: () async {
+                              final DateTime? picked = await showDatePicker(
+                                context: context,
+                                initialDate: _dueDate,
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now().add(const Duration(days: 365)),
+                              );
+                              if (picked != null && picked != _dueDate) {
+                                setState(() {
+                                  _dueDate = picked;
+                                });
+                              }
+                            },
+                            child: Text(
+                              '${_dueDate.year}-${_dueDate.month}-${_dueDate.day}',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text('Estimated Hours:'),
+                      Slider(
+                        value: _estimatedHours,
+                        min: 0.5,
+                        max: 24,
+                        divisions: 47,
+                        label: _estimatedHours.toString(),
+                        onChanged: (value) {
+                          setState(() {
+                            _estimatedHours = value;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _status,
+                        decoration: const InputDecoration(labelText: 'Status'),
+                        items: ['OPEN', 'IN_PROGRESS', 'CLOSED']
+                            .map((status) => DropdownMenuItem(
+                                  value: status,
+                                  child: Text(status),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _status = value!;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _priority,
+                        decoration: const InputDecoration(labelText: 'Priority'),
+                        items: ['LOW', 'MEDIUM', 'HIGH']
+                            .map((priority) => DropdownMenuItem(
+                                  value: priority,
+                                  child: Text(priority),
+                                ))
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _priority = value!;
+                          });
+                        },
+                      ),
                       const SizedBox(height: 24),
-                      ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _submitForm,
-                        icon: const Icon(Icons.save),
-                        label: const Text('Update Ticket'),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 48),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: _isLoading ? null : _submitForm,
+                          icon: const Icon(Icons.save),
+                          label: const Text('Update Ticket'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.all(16),
+                          ),
                         ),
                       ),
                     ],
