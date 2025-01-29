@@ -6,43 +6,51 @@ const mongoose = require('mongoose');
 const ticketSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true,
-    minlength: 3,
+    required: [true, 'Title is required'],
+    minlength: [3, 'Title must be at least 3 characters']
   },
   description: {
     type: String,
-    required: true,
-    minlength: 10,
+    required: [true, 'Description is required'],
+    minlength: [10, 'Description must be at least 10 characters']
   },
   dueDate: {
     type: Date,
-    required: true,
+    required: true
   },
   estimatedHours: {
     type: Number,
     required: true,
-    min: 0.5,
+    min: 0.5
   },
   status: {
     type: String,
     enum: ['OPEN', 'IN_PROGRESS', 'CLOSED'],
-    default: 'OPEN',
+    default: 'OPEN'
   },
   priority: {
     type: String,
     enum: ['LOW', 'MEDIUM', 'HIGH'],
-    default: 'MEDIUM',
+    default: 'MEDIUM'
   },
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Agent',
-    default: null,
-  },
+    default: null
+  }
 }, {
-  timestamps: true,
+  timestamps: true
 });
 
-module.exports = mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);
+// Create indexes
+ticketSchema.index({ status: 1, priority: 1 });
+ticketSchema.index({ assignedTo: 1 });
+ticketSchema.index({ createdAt: -1 });
+
+// Only create the model if it hasn't been created already
+const Ticket = mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);
+
+module.exports = Ticket;
 
 // Get all tickets
 router.get('/', async (req, res) => {

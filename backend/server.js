@@ -25,10 +25,7 @@ app.use(errorHandler);
 
 async function startServer() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGODB_URI);
     log.info('Connected to MongoDB');
 
     // Seed the database if needed

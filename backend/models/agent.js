@@ -10,6 +10,15 @@ const agentSchema = new mongoose.Schema({
     required: [true, 'Email is required'],
     unique: true
   },
+  role: {
+    type: String,
+    enum: ['SUPPORT', 'SUPERVISOR'],
+    default: 'SUPPORT'
+  },
+  isAvailable: {
+    type: Boolean,
+    default: true
+  },
   isOnline: {
     type: Boolean,
     default: false
@@ -23,6 +32,8 @@ const agentSchema = new mongoose.Schema({
     endTime: Date,
     weekdays: [Number] // 0-6 for Sunday-Saturday
   }
+}, {
+  timestamps: true
 });
 
-module.exports = mongoose.model('Agent', agentSchema);
+module.exports = mongoose.models.Agent || mongoose.model('Agent', agentSchema);
