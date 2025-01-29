@@ -44,11 +44,39 @@ class TicketProvider with ChangeNotifier {
       _tickets.removeWhere((ticket) => ticket.id == ticketId);
       
       if (context.mounted) {
+        // Show success dialog
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.green[700]),
+                const SizedBox(width: 10),
+                const Text('Success'),
+              ],
+            ),
+            content: const Text('Ticket has been successfully deleted.'),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            actions: [
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.green,
+                ),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+        
+        // Show snackbar for additional feedback
         UIHelpers.showCustomSnackBar(
           context: context,
           message: 'Ticket deleted successfully',
           icon: Icons.delete_forever,
-          backgroundColor: Colors.orange,
+          backgroundColor: Colors.green,
         );
       }
     } catch (e, stack) {

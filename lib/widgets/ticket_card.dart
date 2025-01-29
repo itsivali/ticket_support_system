@@ -46,9 +46,23 @@ class TicketCard extends StatelessWidget {
             const Text('Delete Ticket'),
           ],
         ),
-        content: Text(
-          'Are you sure you want to delete ticket "${ticket.title}"?',
-          style: const TextStyle(fontSize: 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Are you sure you want to delete this ticket?',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Title: ${ticket.title}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Text('Status: ${ticket.status}'),
+            Text('Priority: ${ticket.priority}'),
+          ],
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
@@ -76,14 +90,31 @@ class TicketCard extends StatelessWidget {
               ),
             ),
             onPressed: () async {
-              // Close dialog first
+              // Close the confirmation dialog
               Navigator.of(dialogContext).pop();
-              // Then delete ticket
+              
               try {
+                // Show loading dialog
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+                
                 await Provider.of<TicketProvider>(context, listen: false)
                     .deleteTicket(ticket.id, context);
-              } catch (e) {
+                
+                // Close loading dialog
                 if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+                
+              } catch (e) {
+                // Close loading dialog if error occurs
+                if (context.mounted) {
+                  Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Failed to delete ticket: $e'),
