@@ -90,24 +90,22 @@ class AgentCard extends StatelessWidget {
     return Card(
       elevation: 2,
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => EditAgentScreen(agent: agent),
-            ),
-          );
-        },
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditAgentScreen(agent: agent),
+          ),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor:
-                        agent.isAvailable ? Colors.green : Colors.grey,
+                    backgroundColor: agent.isAvailable ? Colors.green : Colors.grey,
                     child: const Icon(Icons.person, color: Colors.white),
                   ),
                   const SizedBox(width: 12),
@@ -138,19 +136,25 @@ class AgentCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
+                  Chip(
+                    label: Text(agent.role),
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                  ),
+                  const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.edit),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => EditAgentScreen(agent: agent),
-                        ),
-                      );
-                    },
+                    tooltip: 'Edit Agent',
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditAgentScreen(agent: agent),
+                      ),
+                    ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: const Icon(Icons.delete),
+                    tooltip: 'Delete Agent',
+                    color: Colors.red,
                     onPressed: () => _confirmDelete(context, agent),
                   ),
                 ],

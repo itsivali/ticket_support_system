@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
 import '../providers/agent_provider.dart';
 import '../widgets/ticket_card.dart';
+import '../screens/agent_list_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -185,11 +186,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onTap: () => Navigator.pop(context),
             ),
             ListTile(
-              leading: const Icon(Icons.person),
+              leading: const Icon(Icons.people),
               title: const Text('Agents'),
               onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/agents');
+                Navigator.pop(context); 
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AgentListScreen(),
+                  ),
+                );
               },
             ),
             const Divider(),
@@ -198,7 +204,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: const Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
-                // Add settings navigation
+              Navigator.pushNamed(context, '/settings');
               },
             ),
           ],

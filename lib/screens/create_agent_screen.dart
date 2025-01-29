@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ticket_support_system/providers/agent_provider.dart';
 import '../models/agent.dart';
-import '../providers/ticket_provider.dart';
 import '../utils/ui_helpers.dart';
 
 class CreateAgentScreen extends StatefulWidget {

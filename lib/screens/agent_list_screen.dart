@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/agent_provider.dart'; // Update import
+import '../providers/agent_provider.dart';
 import '../widgets/agent_card.dart';
+
 
 class AgentListScreen extends StatefulWidget {
   const AgentListScreen({super.key});
@@ -21,12 +22,15 @@ class _AgentListScreenState extends State<AgentListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Support Agents'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh Agents',
             onPressed: () => context.read<AgentProvider>().fetchAgents(),
           ),
         ],
@@ -42,12 +46,14 @@ class _AgentListScreenState extends State<AgentListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline,
-                      size: 48, color: Theme.of(context).colorScheme.error),
+                  Icon(Icons.error_outline, 
+                    size: 48, 
+                    color: colorScheme.error
+                  ),
                   const SizedBox(height: 16),
                   Text(provider.error!),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
+                  FilledButton.icon(
                     onPressed: () => provider.fetchAgents(),
                     icon: const Icon(Icons.refresh),
                     label: const Text('Retry'),
@@ -58,13 +64,22 @@ class _AgentListScreenState extends State<AgentListScreen> {
           }
 
           if (provider.agents.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.people_outline, size: 48, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text('No agents available'),
+                  Icon(Icons.people_outline, 
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No agents available',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 16,
+                    ),
+                  ),
                 ],
               ),
             );
@@ -79,14 +94,18 @@ class _AgentListScreenState extends State<AgentListScreen> {
               mainAxisSpacing: 16,
             ),
             itemCount: provider.agents.length,
-            itemBuilder: (context, index) => AgentCard(
-              agent: provider.agents[index],
-            ),
+            itemBuilder: (context, index) {
+              final agent = provider.agents[index];
+              return AgentCard(agent: agent);
+            },
           );
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/create-agent'),
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CreateAgentScreen()),
+        ),
         icon: const Icon(Icons.person_add),
         label: const Text('New Agent'),
       ),
