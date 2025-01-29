@@ -158,13 +158,43 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         value: _status,
-                        decoration: const InputDecoration(labelText: 'Status'),
-                        items: ['OPEN', 'IN_PROGRESS', 'CLOSED']
-                            .map((status) => DropdownMenuItem(
-                                  value: status,
-                                  child: Text(status),
-                                ))
-                            .toList(),
+                        decoration: const InputDecoration(
+                          labelText: 'Status',
+                          helperText: 'Current ticket status',
+                          prefixIcon: Icon(Icons.assignment_turned_in),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'OPEN',
+                            child: Row(
+                              children: [
+                                Icon(Icons.fiber_new, color: Colors.blue[700]),
+                                const SizedBox(width: 8),
+                                const Text('Open'),
+                              ],
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'IN_PROGRESS',
+                            child: Row(
+                              children: [
+                                Icon(Icons.trending_up, color: Colors.orange[700]),
+                                const SizedBox(width: 8),
+                                const Text('In Progress'),
+                              ],
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'CLOSED',
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green[700]),
+                                const SizedBox(width: 8),
+                                const Text('Closed'),
+                              ],
+                            ),
+                          ),
+                        ],
                         onChanged: (value) {
                           setState(() {
                             _status = value!;
@@ -174,13 +204,43 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         value: _priority,
-                        decoration: const InputDecoration(labelText: 'Priority'),
-                        items: ['LOW', 'MEDIUM', 'HIGH']
-                            .map((priority) => DropdownMenuItem(
-                                  value: priority,
-                                  child: Text(priority),
-                                ))
-                            .toList(),
+                        decoration: const InputDecoration(
+                          labelText: 'Priority',
+                          helperText: 'Ticket priority level',
+                          prefixIcon: Icon(Icons.flag),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'LOW',
+                            child: Row(
+                              children: [
+                                Icon(Icons.arrow_downward, color: Colors.green[700]),
+                                const SizedBox(width: 8),
+                                const Text('Low'),
+                              ],
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'MEDIUM',
+                            child: Row(
+                              children: [
+                                Icon(Icons.remove, color: Colors.orange[700]),
+                                const SizedBox(width: 8),
+                                const Text('Medium'),
+                              ],
+                            ),
+                          ),
+                          DropdownMenuItem(
+                            value: 'HIGH',
+                            child: Row(
+                              children: [
+                                Icon(Icons.arrow_upward, color: Colors.red[700]),
+                                const SizedBox(width: 8),
+                                const Text('High'),
+                              ],
+                            ),
+                          ),
+                        ],
                         onChanged: (value) {
                           setState(() {
                             _priority = value!;
@@ -188,22 +248,45 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                         },
                       ),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
+                      DropdownButtonFormField<String?>(
                         value: _assignedTo,
-                        decoration: const InputDecoration(labelText: 'Assign To'),
+                        decoration: const InputDecoration(
+                          labelText: 'Assign To',
+                          helperText: 'Select agent to handle this ticket',
+                          prefixIcon: Icon(Icons.person_add),
+                        ),
                         items: [
-                          const DropdownMenuItem(
+                          const DropdownMenuItem<String?>(
                             value: null,
-                            child: Text('Unassigned'),
+                            child: Row(
+                              children: [
+                                Icon(Icons.person_off_outlined),
+                                SizedBox(width: 8),
+                                Text('Unassigned'),
+                              ],
+                            ),
                           ),
-                          ...agents.map((agent) => DropdownMenuItem(
-                                value: agent.id,
-                                child: Text(agent.name),
-                              ))
+                          ...agents.map((agent) => DropdownMenuItem<String?>(
+                            value: agent.id, // Make sure this matches the stored _assignedTo value
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.person,
+                                  color: agent.isAvailable ? Colors.green : Colors.grey,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(agent.name),
+                                if (!agent.isAvailable) ...[
+                                  const SizedBox(width: 4),
+                                  const Icon(Icons.schedule, size: 16),
+                                ],
+                              ],
+                            ),
+                          )),
                         ],
-                        onChanged: (value) {
+                        onChanged: (String? newValue) {
                           setState(() {
-                            _assignedTo = value;
+                            _assignedTo = newValue;
                           });
                         },
                       ),
@@ -213,9 +296,10 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                         child: ElevatedButton.icon(
                           onPressed: _isLoading ? null : _submitForm,
                           icon: const Icon(Icons.save),
-                          label: const Text('Update Ticket'),
+                          label: Text(_isLoading ? 'Updating...' : 'Update Ticket'),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.all(16),
+                            backgroundColor: Theme.of(context).primaryColor,
                           ),
                         ),
                       ),
