@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const Ticket = require('../models/ticket');
+const { Ticket } = require('../models');
 
 // Get all tickets
 router.get('/', async (req, res) => {
