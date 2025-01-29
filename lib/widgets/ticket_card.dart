@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/ticket.dart';
 import 'package:provider/provider.dart';
-import 'package:intl/intl.dart';
 import '../providers/ticket_provider.dart';
 import '../screens/edit_ticket_screen.dart';
 
