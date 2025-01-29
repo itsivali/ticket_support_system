@@ -125,19 +125,7 @@ class TicketProvider with ChangeNotifier {
         throw Exception('Description must be at least 10 characters');
       }
 
-      // Ensure assignedTo is just the ID string
-      final updatedTicket = Ticket(
-        id: ticket.id,
-        title: ticket.title,
-        description: ticket.description,
-        dueDate: ticket.dueDate,
-        estimatedHours: ticket.estimatedHours,
-        status: ticket.status,
-        priority: ticket.priority,
-        assignedTo: ticket.assignedTo?.toString(),
-      );
-
-      final updated = await _ticketService.updateTicket(updatedTicket);
+      final updated = await _ticketService.updateTicket(ticket);
       final index = _tickets.indexWhere((t) => t.id == updated.id);
       if (index != -1) {
         _tickets[index] = updated;
@@ -153,7 +141,7 @@ class TicketProvider with ChangeNotifier {
       _error = e.toString();
       UIHelpers.showCustomSnackBar(
         context: context,
-        message: 'Failed to update ticket: ${e.toString().replaceAll('Exception:', '')}',
+        message: 'Failed to update ticket: ${e.toString()}',
         icon: Icons.error_outline,
         backgroundColor: Colors.red,
       );
