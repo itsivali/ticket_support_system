@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/ticket.dart';
+import '../models/agent.dart';
 import '../providers/ticket_provider.dart';
 import '../utils/ui_helpers.dart';
 
@@ -57,16 +58,9 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
             .updateTicket(updatedTicket, context);
 
         if (!mounted) return;
-        
-        UIHelpers.showCustomSnackBar(
-          context: context,
-          message: 'Ticket updated successfully!',
-          icon: Icons.check_circle,
-          backgroundColor: Colors.green,
-        );
-
         Navigator.pop(context);
       } catch (error) {
+        if (!mounted) return;
         UIHelpers.showCustomSnackBar(
           context: context,
           message: 'Failed to update ticket: $error',
@@ -83,6 +77,8 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final agents = Provider.of<TicketProvider>(context).agents;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Ticket'),
@@ -141,41 +137,22 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                         onSaved: (value) => _description = value!,
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          const Text('Due Date: '),
-                          TextButton(
-                            onPressed: () async {
-                              final DateTime? picked = await showDatePicker(
-                                context: context,
-                                initialDate: _dueDate,
-                                firstDate: DateTime.now(),
-                                lastDate: DateTime.now().add(const Duration(days: 365)),
-                              );
-                              if (picked != null && picked != _dueDate) {
-                                setState(() {
-                                  _dueDate = picked;
-                                });
-                              }
-                            },
-                            child: Text(
-                              '${_dueDate.year}-${_dueDate.month}-${_dueDate.day}',
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('Estimated Hours:'),
-                      Slider(
-                        value: _estimatedHours,
-                        min: 0.5,
-                        max: 24,
-                        divisions: 47,
-                        label: _estimatedHours.toString(),
-                        onChanged: (value) {
-                          setState(() {
-                            _estimatedHours = value;
-                          });
+                      ListTile(
+                        title: const Text('Due Date'),
+                        subtitle: Text('${_dueDate.toLocal()}'.split(' ')[0]),
+                        trailing: const Icon(Icons.calendar_today),
+                        onTap: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: _dueDate,
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                          );
+                          if (picked != null && picked != _dueDate) {
+                            setState(() {
+                              _dueDate = picked;
+                            });
+                          }
                         },
                       ),
                       const SizedBox(height: 16),
@@ -207,6 +184,26 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
                         onChanged: (value) {
                           setState(() {
                             _priority = value!;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _assignedTo,
+                        decoration: const InputDecoration(labelText: 'Assign To'),
+                        items: [
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('Unassigned'),
+                          ),
+                          ...agents.map((agent) => DropdownMenuItem(
+                                value: agent.id,
+                                child: Text(agent.name),
+                              ))
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _assignedTo = value;
                           });
                         },
                       ),
