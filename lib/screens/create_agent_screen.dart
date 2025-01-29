@@ -79,12 +79,15 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
                 TextFormField(
                   decoration: const InputDecoration(
                     labelText: 'Name',
-                    helperText: 'Full name of the agent',
+                    helperText: 'Enter agent\'s full name',
                     prefixIcon: Icon(Icons.person),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter agent name';
+                    }
+                    if (value.length < 3) {
+                      return 'Name must be at least 3 characters';
                     }
                     return null;
                   },
@@ -94,9 +97,10 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
                 TextFormField(
                   decoration: const InputDecoration(
                     labelText: 'Email',
-                    helperText: 'Work email address',
+                    helperText: 'Enter work email address',
                     prefixIcon: Icon(Icons.email),
                   ),
+                  keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Please enter email';
@@ -113,7 +117,7 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
                   value: _role,
                   decoration: const InputDecoration(
                     labelText: 'Role',
-                    helperText: 'Agent\'s role in the system',
+                    helperText: 'Select agent\'s role',
                     prefixIcon: Icon(Icons.work),
                   ),
                   items: const [
