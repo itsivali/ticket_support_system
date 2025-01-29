@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const Ticket = require('./ticket');
+const Agent = require('./agent');
 
 // Ticket Schema
 const ticketSchema = new mongoose.Schema({
@@ -138,9 +140,6 @@ const agentSchema = new mongoose.Schema({
 });
 
 // Create and export models
-const Ticket = mongoose.models.Ticket || mongoose.model('Ticket', ticketSchema);
-const Agent = mongoose.models.Agent || mongoose.model('Agent', agentSchema);
-
 module.exports = {
   Ticket,
   Agent

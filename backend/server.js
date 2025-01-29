@@ -25,27 +25,20 @@ app.use(errorHandler);
 
 async function startServer() {
   try {
-    // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 45000
     });
-    log.info('MongoDB connected successfully');
+    log.info('Connected to MongoDB');
 
-    // Seed the database
+    // Seed the database if needed
     await seedDatabase();
-    log.info('Database seeded successfully');
 
-    // Start the server
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => {
-      log.info(`Server running on port ${PORT}`);
+    app.listen(process.env.PORT || 3000, () => {
+      log.info(`Server is running on port ${process.env.PORT || 3000}`);
     });
-  } catch (error) {
-    log.error('Failed to start server', error);
+  } catch (err) {
+    log.error('Failed to connect to MongoDB', err);
     process.exit(1);
   }
 }
