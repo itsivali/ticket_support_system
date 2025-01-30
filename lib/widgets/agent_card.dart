@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/agent.dart';
 import '../providers/agent_provider.dart'; // Update import
 import '../screens/edit_agent_screen.dart';
+import '../screens/agent_details_screen.dart';
 
 class AgentCard extends StatelessWidget {
   final Agent agent;
@@ -90,13 +91,13 @@ class AgentCard extends StatelessWidget {
     return Card(
       elevation: 2,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => EditAgentScreen(agent: agent),
+            builder: (context) => AgentDetailsScreen(agent: agent),
           ),
         ),
+        borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
