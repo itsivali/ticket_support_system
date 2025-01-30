@@ -97,69 +97,78 @@ class AgentCard extends StatelessWidget {
             builder: (context) => AgentDetailsScreen(agent: agent),
           ),
         ),
-        borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
             children: [
-              Row(
+            CircleAvatar(
+              backgroundColor: Color(0xFFBBDEFB),  
+              child: Text(
+                agent.name.isNotEmpty ? agent.name[0].toUpperCase() : '?',
+                style: TextStyle(
+                  color: Colors.blue[900],
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    backgroundColor: agent.isAvailable ? Colors.green : Colors.grey,
-                    child: const Icon(Icons.person, color: Colors.white),
+                  Text(
+                    agent.name,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          agent.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          agent.email,
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 4),
+                  Text(
+                    agent.email,
+                    style: TextStyle(
+                      color: Colors.grey[600],
                     ),
                   ),
                 ],
               ),
-              const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Chip(
-                    label: Text(agent.role),
-                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    tooltip: 'Edit Agent',
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditAgentScreen(agent: agent),
-                      ),
+            ),
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'edit') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditAgentScreen(agent: agent),
                     ),
+                  );
+                } else if (value == 'delete') {
+                  _confirmDelete(context, agent);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'edit',
+                  child: Row(
+                    children: [
+                      Icon(Icons.edit),
+                      SizedBox(width: 8),
+                      Text('Edit'),
+                    ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.delete),
-                    tooltip: 'Delete Agent',
-                    color: Colors.red,
-                    onPressed: () => _confirmDelete(context, agent),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete),
+                      SizedBox(width: 8),
+                      Text('Delete'),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
+            )
             ],
           ),
         ),
