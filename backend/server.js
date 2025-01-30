@@ -19,9 +19,16 @@ const log = {
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use('/api/tickets', ticketRoutes);
+
+// Routes
 app.use('/api/agents', agentRoutes);
-app.use(errorHandler);
+app.use('/api/tickets', ticketRoutes);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
+});
 
 async function startServer() {
   try {

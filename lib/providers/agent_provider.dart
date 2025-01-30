@@ -51,6 +51,8 @@ class AgentProvider with ChangeNotifier {
 
       if (context.mounted) {
         // Show success dialog
+        if (!context.mounted) return;
+        
         await showDialog(
           context: context,
           builder: (context) => AlertDialog(
@@ -77,12 +79,14 @@ class AgentProvider with ChangeNotifier {
           ),
         );
 
-        UIHelpers.showCustomSnackBar(
-          context: context,
-          message: 'Agent created successfully!',
-          icon: Icons.person_add,
-          backgroundColor: Colors.green,
-        );
+        if (context.mounted) {
+          UIHelpers.showCustomSnackBar(
+            context: context,
+            message: 'Agent created successfully!',
+            icon: Icons.person_add,
+            backgroundColor: Colors.green,
+          );
+        }
       }
     } catch (e) {
       ConsoleLogger.error('Error creating agent', e);
@@ -113,14 +117,42 @@ class AgentProvider with ChangeNotifier {
         _agents[index] = updatedAgent;
       }
 
-      if (context.mounted) {
-        UIHelpers.showCustomSnackBar(
-          context: context,
-          message: 'Agent updated successfully!',
-          icon: Icons.check_circle,
-          backgroundColor: Colors.blue,
-        );
-      }
+      if (!context.mounted) return;
+
+      await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green[700]),
+              const SizedBox(width: 10),
+              const Text('Success'),
+            ],
+          ),
+          content: const Text('Agent has been successfully updated.'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.green,
+              ),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+
+      if (!context.mounted) return;
+
+      UIHelpers.showCustomSnackBar(
+        context: context,
+        message: 'Agent updated successfully',
+        icon: Icons.check_circle,
+        backgroundColor: Colors.blue,
+      );
     } catch (e) {
       ConsoleLogger.error('Error updating agent', e);
       _error = e.toString();
