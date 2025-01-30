@@ -26,19 +26,40 @@ class Agent {
   }
 
   factory Agent.fromJson(Map<String, dynamic> json) {
-    return Agent(
-      id: json['_id']?.toString() ?? '',
-      name: json['name']?.toString() ?? '',
-      email: json['email']?.toString() ?? '',
-      role: json['role']?.toString() ?? 'SUPPORT',
-      isAvailable: json['isAvailable'] ?? true,
-      isOnline: json['isOnline'] ?? false,
-      currentTickets: List<String>.from(json['currentTickets'] ?? []),
-      shiftSchedule: json['shiftSchedule'] != null 
-          ? ShiftSchedule.fromJson(json['shiftSchedule'])
-          : null,
-    );
+    try {
+      // Handle potential null values with null-aware operators
+      final id = json['_id']?.toString() ?? '';
+      final name = json['name']?.toString() ?? '';
+      final email = json['email']?.toString() ?? '';
+      final role = json['role']?.toString() ?? 'SUPPORT';
+
+      return Agent(
+        id: id,
+        name: name,
+        email: email,
+        role: role,
+        isAvailable: json['isAvailable'] ?? true,
+        isOnline: json['isOnline'] ?? false,
+        currentTickets: json['currentTickets'] != null 
+            ? List<String>.from(json['currentTickets'].map((id) => id.toString()))
+            : [],
+        shiftSchedule: json['shiftSchedule'] != null 
+            ? ShiftSchedule.fromJson(json['shiftSchedule'] as Map<String, dynamic>)
+            : null,
+      );
+    } catch (e) {
+      throw FormatException('Error parsing Agent from JSON: $e\nJSON: $json');
+    }
   }
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'email': email,
+    'role': role,
+    'isAvailable': isAvailable,
+    if (currentTickets.isNotEmpty) 'currentTickets': currentTickets,
+    if (shiftSchedule != null) 'shiftSchedule': shiftSchedule!.toJson(),
+  };
 }
 
 class ShiftSchedule {
@@ -53,10 +74,20 @@ class ShiftSchedule {
   });
 
   factory ShiftSchedule.fromJson(Map<String, dynamic> json) {
-    return ShiftSchedule(
-      startTime: DateTime.parse(json['startTime']),
-      endTime: DateTime.parse(json['endTime']),
-      weekdays: List<int>.from(json['weekdays']),
-    );
+    try {
+      return ShiftSchedule(
+        startTime: DateTime.parse(json['startTime'] as String),
+        endTime: DateTime.parse(json['endTime'] as String),
+        weekdays: List<int>.from(json['weekdays'] as List),
+      );
+    } catch (e) {
+      throw FormatException('Error parsing ShiftSchedule from JSON: $e\nJSON: $json');
+    }
   }
+
+  Map<String, dynamic> toJson() => {
+    'startTime': startTime.toIso8601String(),
+    'endTime': endTime.toIso8601String(),
+    'weekdays': weekdays,
+  };
 }
