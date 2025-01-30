@@ -103,16 +103,10 @@ class _AgentListScreenState extends State<AgentListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          ConsoleLogger.info(
-            'Navigating to Create Agent screen',
-            'Creating new agent from AgentListScreen'
-          );
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateAgentScreen()),
-          );
-        },
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CreateAgentScreen()),
+        ),
         icon: const Icon(Icons.person_add),
         label: const Text('New Agent'),
       ),

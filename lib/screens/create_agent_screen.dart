@@ -24,8 +24,8 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
   void initState() {
     super.initState();
     ConsoleLogger.info(
-      'CreateAgentScreen initialized', 
-      'Ready to create new agent'
+      'CreateAgentScreen initialized',
+      'Starting new agent creation process'
     );
   }
 
@@ -35,7 +35,7 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
       setState(() => _isLoading = true);
 
       ConsoleLogger.info(
-        'Creating new agent',
+        'Creating new agent from CreateAgentScreen',
         'Name: $_name\nEmail: $_email\nRole: $_role\nAvailable: $_isAvailable'
       );
 
@@ -54,14 +54,14 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
         if (!mounted) return;
         
         ConsoleLogger.info(
-          'Agent created successfully',
-          'Returning to agent list screen'
+          'Agent created successfully in CreateAgentScreen',
+          'New agent details: ${newAgent.toString()}'
         );
         
         Navigator.pop(context);
       } catch (error) {
         ConsoleLogger.error(
-          'Failed to create agent',
+          'Failed to create agent in CreateAgentScreen',
           error,
         );
         
