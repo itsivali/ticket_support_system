@@ -119,6 +119,8 @@ class AgentProvider with ChangeNotifier {
 
       if (!context.mounted) return;
 
+      if (!context.mounted) return;
+      
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
