@@ -10,6 +10,9 @@ router.post('/', ticketController.createTicket);
 router.put('/:id', ticketController.getTicketById, ticketController.updateTicket);
 router.delete('/:id', ticketController.deleteTicket);
 
+router.patch('/:id/assign', ticketController.assignTicket);
+router.post('/:id/claim', ticketController.claimTicket);
+
 module.exports = router;
 
 

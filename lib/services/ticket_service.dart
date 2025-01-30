@@ -161,7 +161,7 @@ class TicketService {
     }
   }
 
-  Future<void> assignTicket(String ticketId, String agentId) async {
+  Future<void> assignTicket(String ticketId, String? agentId) async {
     try {
       final response = await http.patch(
         Uri.parse('$baseUrl/tickets/$ticketId/assign'),
@@ -173,13 +173,33 @@ class TicketService {
       );
 
       if (response.statusCode != 200) {
-        ConsoleLogger.error('Failed to assign ticket: ${response.statusCode}',
-            'Response body: ${response.body}');
-        throw Exception('Failed to assign ticket: ${response.statusCode}');
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Failed to assign ticket');
       }
-    } catch (e, stack) {
-      ConsoleLogger.error('Network error', e, stack);
-      throw Exception('Network error: $e');
+    } catch (e) {
+      ConsoleLogger.error('Failed to assign ticket', e);
+      rethrow;
+    }
+  }
+
+  Future<void> claimTicket(String ticketId, String agentId) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/tickets/$ticketId/claim'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({'agentId': agentId}),
+      );
+
+      if (response.statusCode != 200) {
+        final errorData = json.decode(response.body);
+        throw Exception(errorData['message'] ?? 'Failed to claim ticket');
+      }
+    } catch (e) {
+      ConsoleLogger.error('Failed to claim ticket', e);
+      rethrow;
     }
   }
 
