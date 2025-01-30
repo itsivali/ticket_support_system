@@ -20,6 +20,12 @@ const log = {
 app.use(cors());
 app.use(express.json());
 
+// Add debug logging for routes
+app.use((req, res, next) => {
+  log.info(`${req.method} ${req.url}`);
+  next();
+});
+
 // Routes
 app.use('/api/agents', agentRoutes);
 app.use('/api/tickets', ticketRoutes);

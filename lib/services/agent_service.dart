@@ -41,10 +41,10 @@ class AgentService {
         'isAvailable': agent.isAvailable,
       };
       
-      ConsoleLogger.info('Creating agent', 'Payload: ${json.encode(payload)}');
+      ConsoleLogger.info('Creating agent', 'Endpoint: $baseUrl/agents\nPayload: ${json.encode(payload)}');
 
       final response = await http.post(
-        Uri.parse('$baseUrl/agents'), // Update endpoint path
+        Uri.parse('$baseUrl/agents'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -52,18 +52,13 @@ class AgentService {
         body: json.encode(payload),
       );
 
-      ConsoleLogger.info(
-        'Server response',
-        'Status: ${response.statusCode}\nBody: ${response.body}'
-      );
+      ConsoleLogger.info('Server response', 'Status: ${response.statusCode}\nBody: ${response.body}');
 
       if (response.statusCode == 201) {
         return Agent.fromJson(json.decode(response.body));
       }
       
-      final errorData = json.decode(response.body);
-      final message = errorData['message'] ?? 'Failed to create agent';
-      throw Exception(message);
+      throw Exception('Server error: ${response.statusCode}\n${response.body}');
     } catch (e, stack) {
       ConsoleLogger.error('Failed to create agent', e, stack);
       rethrow;
