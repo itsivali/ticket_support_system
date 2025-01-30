@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/agent_provider.dart';
 import '../widgets/agent_card.dart';
 import '../utils/console_logger.dart';
-
+import '../widgets/app_drawer.dart'; 
 
 class AgentListScreen extends StatefulWidget {
   const AgentListScreen({super.key});
@@ -36,6 +36,7 @@ class _AgentListScreenState extends State<AgentListScreen> {
           ),
         ],
       ),
+      drawer: const AppDrawer(), 
       body: Consumer<AgentProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {

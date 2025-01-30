@@ -5,6 +5,7 @@ import '../models/agent.dart';
 import '../providers/ticket_provider.dart';
 import '../providers/agent_provider.dart';
 import '../utils/ui_helpers.dart';
+import '../widgets/app_drawer.dart';
 
 class CreateTicketScreen extends StatefulWidget {
   const CreateTicketScreen({super.key});
@@ -140,6 +141,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             ),
         ],
       ),
+      drawer: const AppDrawer(), // Add common drawer
       body: Consumer<AgentProvider>(
         builder: (context, agentProvider, child) {
           return Padding(

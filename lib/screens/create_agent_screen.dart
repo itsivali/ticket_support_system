@@ -3,7 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:ticket_support_system/providers/agent_provider.dart';
 import '../models/agent.dart';
 import '../utils/ui_helpers.dart';
-import '../utils/console_logger.dart';  // Add this import
+import '../utils/console_logger.dart';
+import '../widgets/app_drawer.dart';  
 
 class CreateAgentScreen extends StatefulWidget {
   const CreateAgentScreen({super.key});
@@ -94,6 +95,7 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
             ),
         ],
       ),
+      drawer: const AppDrawer(), 
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(

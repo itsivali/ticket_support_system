@@ -4,6 +4,7 @@ import '../providers/ticket_provider.dart';
 import '../providers/agent_provider.dart';
 import '../widgets/ticket_card.dart';
 import '../screens/agent_list_screen.dart';
+import '../widgets/app_drawer.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -151,65 +152,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [colorScheme.primary, colorScheme.primaryContainer],
-                ),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    child: Icon(Icons.support_agent, size: 32),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'Ticket System',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.dashboard),
-              title: const Text('Dashboard'),
-              selected: true,
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.people),
-              title: const Text('Agents'),
-              onTap: () {
-                Navigator.pop(context); 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AgentListScreen(),
-                  ),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-              Navigator.pushNamed(context, '/settings');
-              },
-            ),
-          ],
-        ),
-      ),
+      drawer: const AppDrawer(), // Use common drawer
       body: Consumer<TicketProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
@@ -322,11 +265,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
-        icon: const Icon(Icons.add),
-        label: const Text('New Ticket'),
       ),
     );
   }
