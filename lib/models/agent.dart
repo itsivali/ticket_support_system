@@ -1,3 +1,5 @@
+import '../utils/console_logger.dart';
+
 class Agent {
   final String id;
   final String name;
@@ -27,7 +29,6 @@ class Agent {
 
   factory Agent.fromJson(Map<String, dynamic> json) {
     try {
-      // Handle potential null values with null-aware operators
       final id = json['_id']?.toString() ?? '';
       final name = json['name']?.toString() ?? '';
       final email = json['email']?.toString() ?? '';
@@ -75,13 +76,34 @@ class ShiftSchedule {
 
   factory ShiftSchedule.fromJson(Map<String, dynamic> json) {
     try {
+      // Set default times if not provided
+      final now = DateTime.now();
+      final startTime = json['startTime'] != null 
+          ? DateTime.parse(json['startTime'].toString())
+          : now;
+      final endTime = json['endTime'] != null 
+          ? DateTime.parse(json['endTime'].toString())
+          : now.add(const Duration(hours: 8));
+      
       return ShiftSchedule(
-        startTime: DateTime.parse(json['startTime'] as String),
-        endTime: DateTime.parse(json['endTime'] as String),
-        weekdays: List<int>.from(json['weekdays'] as List),
+        startTime: startTime,
+        endTime: endTime,
+        weekdays: json['weekdays'] != null 
+            ? List<int>.from(json['weekdays'])
+            : [],
       );
     } catch (e) {
-      throw FormatException('Error parsing ShiftSchedule from JSON: $e\nJSON: $json');
+      ConsoleLogger.error(
+        'Error parsing ShiftSchedule',
+        'JSON: $json\nError: $e'
+      );
+      // Return a default schedule instead of throwing
+      final now = DateTime.now();
+      return ShiftSchedule(
+        startTime: now,
+        endTime: now.add(const Duration(hours: 8)),
+        weekdays: [],
+      );
     }
   }
 
