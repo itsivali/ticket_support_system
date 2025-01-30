@@ -9,7 +9,7 @@ import '../utils/ui_helpers.dart';
 class EditTicketScreen extends StatefulWidget {
   final Ticket ticket;
 
-  const EditTicketScreen({Key? key, required this.ticket}) : super(key: key);
+  const EditTicketScreen({super.key, required this.ticket});
 
   @override
   State<EditTicketScreen> createState() => _EditTicketScreenState();

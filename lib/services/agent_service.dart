@@ -34,15 +34,14 @@ class AgentService {
 
   Future<Agent> createAgent(Agent agent) async {
     try {
-      // Log request details
-      ConsoleLogger.info(
-        'Creating agent - Endpoint: $baseUrl\nPayload: ${json.encode({
-          'name': agent.name,
-          'email': agent.email,
-          'role': agent.role,
-          'isAvailable': agent.isAvailable,
-        })}'
-      );
+      final payload = {
+        'name': agent.name,
+        'email': agent.email,
+        'role': agent.role,
+        'isAvailable': agent.isAvailable,
+      };
+      
+      ConsoleLogger.info('Creating agent', 'Payload: ${json.encode(payload)}');
 
       final response = await http.post(
         Uri.parse(baseUrl),
@@ -50,17 +49,12 @@ class AgentService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({
-          'name': agent.name,
-          'email': agent.email,
-          'role': agent.role,
-          'isAvailable': agent.isAvailable,
-        }),
+        body: json.encode(payload),
       );
 
-      // Log response details
       ConsoleLogger.info(
-        'Server response - Status: ${response.statusCode}\nBody: ${response.body}'
+        'Server response',
+        'Status: ${response.statusCode}\nBody: ${response.body}'
       );
 
       if (response.statusCode == 201) {

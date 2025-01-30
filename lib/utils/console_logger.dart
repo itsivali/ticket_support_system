@@ -1,19 +1,37 @@
-import 'package:flutter/foundation.dart';
+import 'package:logger/logger.dart';
 
 class ConsoleLogger {
-  static void info(String message) {
-    if (kDebugMode) print('📘 INFO: $message');
-  }
+  static final _logger = Logger();
 
-  static void error(String message, [Object? error, StackTrace? stack]) {
-    if (kDebugMode) {
-      print('❌ ERROR: $message');
-      if (error != null) print('Error details: $error');
-      if (stack != null) print('Stack trace: $stack');
+  static void info(String message, [String? details]) {
+    if (details != null) {
+      _logger.i('$message\n$details');
+    } else {
+      _logger.i(message);
     }
   }
 
-  static void warning(String message) {
-    if (kDebugMode) print('⚠️ WARNING: $message');
+  static void error(String message, [dynamic error, StackTrace? stackTrace]) {
+    if (error != null) {
+      _logger.e('$message\n$error', error: error, stackTrace: stackTrace);
+    } else {
+      _logger.e(message);
+    }
+  }
+
+  static void debug(String message, [String? details]) {
+    if (details != null) {
+      _logger.d('$message\n$details');
+    } else {
+      _logger.d(message);
+    }
+  }
+
+  static void warning(String message, [String? details]) {
+    if (details != null) {
+      _logger.w('$message\n$details');
+    } else {
+      _logger.w(message);
+    }
   }
 }
