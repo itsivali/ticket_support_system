@@ -60,74 +60,54 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create New Agent'),
-        actions: [
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Name',
-                    helperText: 'Enter agent\'s full name',
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter agent name';
-                    }
-                    if (value.length < 3) {
-                      return 'Name must be at least 3 characters';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) => _name = value!,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  prefixIcon: Icon(Icons.person),
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    helperText: 'Enter work email address',
-                    prefixIcon: Icon(Icons.email),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
-                  onSaved: (value) => _email = value!,
+                validator: (value) => value?.isEmpty ?? true 
+                  ? 'Please enter name' 
+                  : null,
+                onSaved: (value) => _name = value ?? '',
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
                 ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
+                validator: (value) => !value!.contains('@') 
+                  ? 'Invalid email' 
+                  : null,
+                onSaved: (value) => _email = value ?? '',
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: DropdownButtonFormField<String>(
                   value: _role,
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Role',
-                    helperText: 'Select agent role',
-                    prefixIcon: Icon(Icons.admin_panel_settings),
+                    prefixIcon: Icon(Icons.work),
+                    border: OutlineInputBorder(),
                   ),
                   items: [
                     DropdownMenuItem(
                       value: 'SUPPORT',
                       child: Row(
                         children: [
-                          Icon(Icons.headset_mic, color: Colors.blue[700]),
+                          Icon(Icons.support_agent, color: Colors.blue[700]),
                           const SizedBox(width: 8),
-                          const Text('Support Agent'),
+                          const Text('Support'),
                         ],
                       ),
                     ),
@@ -145,70 +125,74 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
                       value: 'ADMIN',
                       child: Row(
                         children: [
-                          Icon(Icons.security, color: Colors.orange[700]),
+                          Icon(Icons.admin_panel_settings, color: Colors.orange[700]),
                           const SizedBox(width: 8),
-                          const Text('Administrator'),
+                          const Text('Admin'),
                         ],
                       ),
                     ),
                   ],
-                  onChanged: (value) => setState(() => _role = value!),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _role = newValue ?? 'SUPPORT';
+                    });
+                  },
                 ),
-                const SizedBox(height: 16),
-                SwitchListTile(
-                  title: Row(
-                    children: [
-                      Icon(
-                        Icons.event_available,
-                        color: _isAvailable ? Colors.green : Colors.grey,
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('Available'),
-                    ],
-                  ),
-                  subtitle: const Text('Agent can be assigned to tickets'),
-                  value: _isAvailable,
-                  onChanged: (value) => setState(() => _isAvailable = value),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _isLoading ? null : _submitForm,
-                    icon: _isLoading 
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.person_add),
-                    label: Text(
-                      _isLoading ? 'CREATING...' : 'CREATE AGENT',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
+              ),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: Row(
+                  children: [
+                    Icon(
+                      Icons.event_available,
+                      color: _isAvailable ? Colors.green : Colors.grey,
                     ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 20,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 3,
+                    const SizedBox(width: 8),
+                    const Text('Available'),
+                  ],
+                ),
+                subtitle: const Text('Agent can be assigned to tickets'),
+                value: _isAvailable,
+                onChanged: (value) => setState(() => _isAvailable = value),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _isLoading ? null : _submitForm,
+                  icon: _isLoading 
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.person_add),
+                  label: Text(
+                    _isLoading ? 'CREATING...' : 'CREATE AGENT',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
                     ),
                   ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 20,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 3,
+                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
