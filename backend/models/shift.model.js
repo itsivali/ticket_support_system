@@ -12,18 +12,9 @@ const shiftSchema = new mongoose.Schema({
     max: 7,
     required: true
   }],
-  startTime: {
-    type: Date,
-    required: true
-  },
-  endTime: {
-    type: Date,
-    required: true
-  },
-  isActive: {
-    type: Boolean,
-    default: true
-  }
+  startTime: { type: Date, required: true },
+  endTime: { type: Date, required: true },
+  isActive: { type: Boolean, default: true }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Shift', shiftSchema);
