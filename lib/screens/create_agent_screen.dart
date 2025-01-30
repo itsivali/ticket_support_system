@@ -15,7 +15,7 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
   final _formKey = GlobalKey<FormState>();
   String _name = '';
   String _email = '';
-  String _role = 'SUPPORT';
+  String _role = 'SUPPORT';  // Default role
   bool _isAvailable = true;
   bool _isLoading = false;
 
@@ -117,24 +117,55 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
                   value: _role,
                   decoration: const InputDecoration(
                     labelText: 'Role',
-                    helperText: 'Select agent\'s role',
-                    prefixIcon: Icon(Icons.work),
+                    helperText: 'Select agent role',
+                    prefixIcon: Icon(Icons.admin_panel_settings),
                   ),
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: 'SUPPORT',
-                      child: Text('Support Agent'),
+                      child: Row(
+                        children: [
+                          Icon(Icons.headset_mic, color: Colors.blue[700]),
+                          const SizedBox(width: 8),
+                          const Text('Support Agent'),
+                        ],
+                      ),
                     ),
                     DropdownMenuItem(
                       value: 'SUPERVISOR',
-                      child: Text('Supervisor'),
+                      child: Row(
+                        children: [
+                          Icon(Icons.supervisor_account, color: Colors.green[700]),
+                          const SizedBox(width: 8),
+                          const Text('Supervisor'),
+                        ],
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'ADMIN',
+                      child: Row(
+                        children: [
+                          Icon(Icons.security, color: Colors.orange[700]),
+                          const SizedBox(width: 8),
+                          const Text('Administrator'),
+                        ],
+                      ),
                     ),
                   ],
                   onChanged: (value) => setState(() => _role = value!),
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(
-                  title: const Text('Available'),
+                  title: Row(
+                    children: [
+                      Icon(
+                        Icons.event_available,
+                        color: _isAvailable ? Colors.green : Colors.grey,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('Available'),
+                    ],
+                  ),
                   subtitle: const Text('Agent can be assigned to tickets'),
                   value: _isAvailable,
                   onChanged: (value) => setState(() => _isAvailable = value),

@@ -5,13 +5,19 @@ class Agent {
   final String role;
   final bool isAvailable;
 
+  static const List<String> validRoles = ['SUPPORT', 'SUPERVISOR', 'ADMIN'];
+
   Agent({
     required this.id,
     required this.name,
     required this.email,
     required this.role,
     required this.isAvailable,
-  });
+  }) {
+    if (!validRoles.contains(role)) {
+      throw ArgumentError('Invalid role: $role');
+    }
+  }
 
   factory Agent.fromJson(Map<String, dynamic> json) {
     return Agent(
