@@ -1,57 +1,70 @@
+import 'ticket.dart';
+
 class WorkloadTracker {
   final Map<String, AgentWorkload> _workloads = {};
-  static const int MAX_TICKETS = 3;
-  static const double MAX_HOURS = 8.0;
+  static const double maxHoursPerDay = 8.0;
+
+  AgentWorkload getAgentWorkload(String agentId) {
+    return _workloads.putIfAbsent(
+      agentId,
+      () => AgentWorkload(agentId: agentId),
+    );
+  }
 
   bool canAcceptTicket(String agentId) {
     final workload = _workloads[agentId];
     if (workload == null) return true;
-    return workload.currentTickets < MAX_TICKETS && 
-           workload.allocatedHours < MAX_HOURS;
-  }
-
-  double getCurrentWorkload(String agentId) {
-    return _workloads[agentId]?.utilizationPercentage ?? 0.0;
+    return workload.canAcceptMore;
   }
 
   Future<void> addTicket(String agentId, Ticket ticket) async {
-    if (!_workloads.containsKey(agentId)) {
-      _workloads[agentId] = AgentWorkload(agentId: agentId);
-    }
-    _workloads[agentId]!.addTicket(ticket);
+    final workload = getAgentWorkload(agentId);
+    workload.addTicket(ticket);
+  }
+
+  Future<void> removeTicket(String agentId, String ticketId) async {
+    final workload = _workloads[agentId];
+    workload?.removeTicket(ticketId);
   }
 
   WorkloadMetrics getMetrics(String agentId) {
     final workload = _workloads[agentId];
-    if (workload == null) {
-      return WorkloadMetrics.empty(agentId);
-    }
+    if (workload == null) return WorkloadMetrics.empty(agentId);
     return workload.metrics;
   }
 }
 
 class AgentWorkload {
   final String agentId;
-  final List<Ticket> tickets = [];
-  double allocatedHours = 0.0;
+  final List<Ticket> _tickets = [];
+  double _allocatedHours = 0.0;
 
   AgentWorkload({required this.agentId});
 
+  bool get canAcceptMore =>
+      _tickets.length < 3 &&
+      _allocatedHours < WorkloadTracker.maxHoursPerDay;
+
   void addTicket(Ticket ticket) {
-    tickets.add(ticket);
-    allocatedHours += ticket.estimatedHours;
+    if (!canAcceptMore) {
+      throw StateError('Agent workload limit exceeded');
+    }
+    _tickets.add(ticket);
+    _allocatedHours += ticket.estimatedHours;
   }
 
-  int get currentTickets => tickets.length;
-  double get utilizationPercentage => 
-      (allocatedHours / WorkloadTracker.MAX_HOURS) * 100;
+  void removeTicket(String ticketId) {
+    final ticket = _tickets.firstWhere((t) => t.id == ticketId);
+    _tickets.remove(ticket);
+    _allocatedHours -= ticket.estimatedHours;
+  }
 
   WorkloadMetrics get metrics => WorkloadMetrics(
-    agentId: agentId,
-    ticketCount: currentTickets,
-    allocatedHours: allocatedHours,
-    utilization: utilizationPercentage
-  );
+        agentId: agentId,
+        ticketCount: _tickets.length,
+        allocatedHours: _allocatedHours,
+        utilization: _allocatedHours / WorkloadTracker.maxHoursPerDay * 100,
+      );
 }
 
 class WorkloadMetrics {
@@ -68,9 +81,9 @@ class WorkloadMetrics {
   });
 
   factory WorkloadMetrics.empty(String agentId) => WorkloadMetrics(
-    agentId: agentId,
-    ticketCount: 0,
-    allocatedHours: 0.0,
-    utilization: 0.0,
-  );
+        agentId: agentId,
+        ticketCount: 0,
+        allocatedHours: 0.0,
+        utilization: 0.0,
+      );
 }
