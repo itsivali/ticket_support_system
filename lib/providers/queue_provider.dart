@@ -1,7 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import '../models/queue_manager.dart';
 import '../models/ticket.dart';
+import '../models/agent.dart';
 import '../services/queue_service.dart';
 import '../utils/console_logger.dart';
 
@@ -33,6 +34,7 @@ class QueueProvider with ChangeNotifier {
 
     try {
       _queueManager = await _queueService.getQueueStatus();
+      _error = null;
     } catch (e) {
       _error = e.toString();
       ConsoleLogger.error('Error fetching queue status', e);
@@ -42,7 +44,39 @@ class QueueProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> assignTicket(String ticketId, String? agentId) async {
+  void _startAutoAssignment() {
+    _autoAssignmentTimer = Timer.periodic(
+      const Duration(minutes: 1),
+      (_) => _processAutoAssignment(),
+    );
+  }
+
+  Future<void> _processAutoAssignment() async {
+    if (_queueManager == null || !_queueManager!.settings.autoAssignEnabled) {
+      return;
+    }
+
+    try {
+      final agents = await _queueService.getAvailableAgents();
+      final ticket = _queueManager!.getNextTicket();
+
+      if (ticket != null) {
+        final potentialAgents = _queueManager!.getPotentialAgents(
+          ticket.ticket,
+          agents,
+        );
+
+        if (potentialAgents.isNotEmpty) {
+          final agent = potentialAgents.first;
+          await assignTicket(ticket.ticket.id, agent.id);
+        }
+      }
+    } catch (e) {
+      ConsoleLogger.error('Error in auto assignment', e);
+    }
+  }
+
+  Future<bool> assignTicket(String ticketId, String agentId) async {
     try {
       final success = await _queueService.assignTicket(ticketId, agentId);
       if (success) {
@@ -68,52 +102,13 @@ class QueueProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateSettings(QueueSettings settings) async {
-    try {
-      await _queueService.updateSettings(settings);
-      await fetchQueueStatus();
-    } catch (e) {
-      ConsoleLogger.error('Error updating queue settings', e);
-    }
-  }
-
-  void _startAutoAssignment() {
-    _autoAssignmentTimer = Timer.periodic(
-      const Duration(minutes: 1),
-      (_) => _checkQueueAssignments(),
-    );
-  }
-
-  Future<void> _checkQueueAssignments() async {
-    if (_queueManager?.settings.autoAssignEnabled != true) return;
-    await fetchQueueStatus();
-  if (_queueManager == null) return;
-
-  final unassignedTickets = _queueManager!.tickets
-    .where((ticket) => ticket.status == TicketStatus.unassigned)
-    .toList();
-
-  final availableAgents = _queueManager!.agents
-    .where((agent) => agent.isAvailable && agent.isOnline)
-    .toList();
-
-  if (unassignedTickets.isEmpty || availableAgents.isEmpty) return;
-
-  for (final ticket in unassignedTickets) {
-    final agent = _findLeastLoadedAgent(availableAgents);
-    if (agent != null) {
-    await assignTicket(ticket.id, agent.id);
-    }
-  }
-  }
-
-  Agent? _findLeastLoadedAgent(List<Agent> agents) {
-    if (agents.isEmpty) return null;
-    
-    return agents.reduce((a, b) {
-      final aCount = _queueManager?.agentAssignments[a.id]?.length ?? 0;
-      final bCount = _queueManager?.agentAssignments[b.id]?.length ?? 0;
-      return aCount <= bCount ? a : b;
-    });
+  Map<String, int> getQueueMetrics() {
+    return _queueManager?.getQueueStats() ?? {
+      'total': 0,
+      'high': 0,
+      'medium': 0,
+      'low': 0,
+      'urgent': 0,
+    };
   }
 }
