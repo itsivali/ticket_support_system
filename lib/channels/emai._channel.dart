@@ -1,4 +1,5 @@
 import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 import 'base_channel.dart';
 
 class EmailChannel implements NotificationChannel {

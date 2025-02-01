@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
 import '../providers/agent_provider.dart';
 import '../widgets/ticket_card.dart';
-import '../screens/agent_list_screen.dart';
 import '../widgets/app_drawer.dart';
 
 class DashboardScreen extends StatefulWidget {

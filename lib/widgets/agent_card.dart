@@ -102,7 +102,7 @@ class AgentCard extends StatelessWidget {
           child: Row(
             children: [
             CircleAvatar(
-              backgroundColor: Color(0xFFBBDEFB),  
+              backgroundColor: const Color(0xFFBBDEFB),  
               child: Text(
                 agent.name.isNotEmpty ? agent.name[0].toUpperCase() : '?',
                 style: TextStyle(
@@ -111,7 +111,7 @@ class AgentCard extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

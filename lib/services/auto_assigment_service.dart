@@ -1,8 +1,5 @@
-import 'package:flutter/foundation.dart';
-import '../models/queue_manager.dart';
 import '../models/agent.dart';
 import '../models/ticket.dart';
-import '../utils/console_logger.dart';
 
 class AutoAssignmentService {
   static const int MAX_TICKETS_PER_AGENT = 3;

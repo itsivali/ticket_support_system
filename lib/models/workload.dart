@@ -1,6 +1,5 @@
 import '../models/agent.dart';
 import '../models/ticket.dart';
-import '../utils/console_logger.dart';
 
 class WorkloadManager {
   static const int MAX_WORKLOAD = 24; // hours

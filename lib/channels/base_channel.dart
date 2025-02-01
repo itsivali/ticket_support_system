@@ -1,3 +1,5 @@
+import '../models/notification.dart';
+
 abstract class NotificationChannel {
   String get channelType;
   Future<bool> send(Notification notification);

@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import '../screens/dashboard_screen.dart';
-import '../screens/agent_list_screen.dart';
-import '../screens/create_agent_screen.dart';
-import '../screens/create_ticket_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});

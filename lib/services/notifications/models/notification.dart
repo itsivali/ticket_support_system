@@ -15,8 +15,8 @@ class Notification {
     required this.type,
     bool? isDelivered,
   }) : 
-    this.createdAt = DateTime.now(),
-    this.isDelivered = isDelivered ?? false;
+    createdAt = DateTime.now(),
+    isDelivered = isDelivered ?? false;
 
   Map<String, dynamic> toJson() => {
     'id': id,
