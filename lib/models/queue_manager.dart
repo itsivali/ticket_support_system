@@ -138,4 +138,31 @@ class QueueManager {
     pendingTickets.removeAt(index);
     return true;
   }
+
+  factory QueueManager.fromJson(Map<String, dynamic> json) {
+    return QueueManager(
+      id: json['id'] as String,
+      settings: QueueSettings(
+        autoAssignEnabled: json['settings']['autoAssignEnabled'] as bool,
+        maxTicketsPerAgent: json['settings']['maxTicketsPerAgent'] as int,
+        priorityWeights: Map<String, int>.from(json['settings']['priorityWeights']),
+      ),
+      pendingTickets: (json['pendingTickets'] as List)
+          .map((ticketJson) => QueuedTicket(
+                id: ticketJson['id'] as String,
+                ticket: Ticket(
+                  id: ticketJson['ticket']['id'] as String,
+                  priority: ticketJson['ticket']['priority'] as String,
+                  dueDate: DateTime.parse(ticketJson['ticket']['dueDate'] as String),
+                  createdAt: DateTime.parse(ticketJson['ticket']['createdAt'] as String),
+                  assignedTo: ticketJson['ticket']['assignedTo'] as String?,
+                  status: ticketJson['ticket']['status'] as String,
+                ),
+                priority: ticketJson['priority'] as double,
+                addedAt: DateTime.parse(ticketJson['addedAt'] as String),
+              ))
+          .toList(),
+      agentAssignments: Map<String, List<String>>.from(json['agentAssignments']),
+    );
+  }
 }

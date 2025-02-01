@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/queue_manager.dart';
 import '../utils/console_logger.dart';
+import '../models/agent.dart';
 
 class QueueService {
   final String baseUrl = 'http://localhost:3000/api';
@@ -74,5 +75,11 @@ class QueueService {
       ConsoleLogger.error('Error updating queue settings', e);
       rethrow;
     }
+  }
+
+  Future<List<Agent>> getAvailableAgents() async {
+    // Implement the logic to get available agents
+    // For now, return an empty list
+    return [];
   }
 }
