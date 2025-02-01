@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/queue_manager.dart';
-import '../models/ticket.dart';
-import '../models/agent.dart';
 import '../services/queue_service.dart';
 import '../utils/console_logger.dart';
 
