@@ -1,14 +1,42 @@
-import 'package:flutter/foundation.dart';
-import '../models/ticket.dart';
 import '../models/agent.dart';
+import '../models/ticket.dart';
+import '../utils/console_logger.dart';
+
+class QueuedTicket {
+  final String id;
+  final Ticket ticket;
+  final DateTime addedAt;
+  double priority;
+
+  QueuedTicket({
+    required this.id,
+    required this.ticket,
+    required this.priority,
+    DateTime? addedAt,
+  }) : this.addedAt = addedAt ?? DateTime.now();
+}
+
+class QueueSettings {
+  final bool autoAssignEnabled;
+  final int maxTicketsPerAgent;
+  final Map<String, int> priorityWeights;
+
+  const QueueSettings({
+    this.autoAssignEnabled = true,
+    this.maxTicketsPerAgent = 3,
+    this.priorityWeights = const {
+      'HIGH': 3,
+      'MEDIUM': 2,
+      'LOW': 1,
+    },
+  });
+}
 
 class QueueManager {
   final String id;
   final List<QueuedTicket> pendingTickets;
-  final Map<String, List<String>> agentAssignments; // agentId -> ticketIds
+  final Map<String, List<String>> agentAssignments;
   final QueueSettings settings;
-
-  final List<Ticket> _queue = [];
 
   QueueManager({
     required this.id,
@@ -17,14 +45,22 @@ class QueueManager {
     required this.settings,
   });
 
+  int get size => pendingTickets.length;
+
   bool canAssignTicketTo(Agent agent, Ticket ticket) {
-    if (!agent.isAvailable || !agent.isOnline) return false;
+    if (!agent.isAvailable || !agent.isOnline) {
+      return false;
+    }
     
     final currentAssignments = agentAssignments[agent.id]?.length ?? 0;
-    if (currentAssignments >= settings.maxTicketsPerAgent) return false;
+    if (currentAssignments >= settings.maxTicketsPerAgent) {
+      return false;
+    }
 
     if (agent.shiftSchedule != null) {
-      if (!agent.shiftSchedule!.isWorkingAt(ticket.dueDate)) return false;
+      if (!agent.shiftSchedule!.isWorkingAt(ticket.dueDate)) {
+        return false;
+      }
     }
 
     return true;
@@ -36,85 +72,55 @@ class QueueManager {
         .toList();
   }
 
-  QueuedTicket? getNextTicketForAgent(Agent agent) {
-    if (!agent.isAvailable) return null;
-
-    return pendingTickets
-        .where((ticket) => canAssignTicketTo(agent, ticket.ticket))
-        .firstOrNull;
-  }
-
-  factory QueueManager.fromJson(Map<String, dynamic> json) {
-    return QueueManager(
-      id: json['_id'] ?? '',
-      pendingTickets: (json['pendingTickets'] as List?)
-          ?.map((t) => QueuedTicket.fromJson(t))
-          .toList() ?? [],
-      agentAssignments: Map<String, List<String>>.from(
-        json['agentAssignments']?.map(
-          (k, v) => MapEntry(k, List<String>.from(v))
-        ) ?? {}
-      ),
-      settings: QueueSettings.fromJson(json['settings'] ?? {}),
+  void addTicket(Ticket ticket) {
+    final queuedTicket = QueuedTicket(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      ticket: ticket,
+      priority: _calculatePriority(ticket),
     );
+    pendingTickets.add(queuedTicket);
+    _sortQueue();
   }
 
-  Map<String, dynamic> toJson() => {
-    'pendingTickets': pendingTickets.map((t) => t.toJson()).toList(),
-    'agentAssignments': agentAssignments,
-    'settings': settings.toJson(),
-  };
+  double _calculatePriority(Ticket ticket) {
+    double priority = settings.priorityWeights[ticket.priority]?.toDouble() ?? 1.0;
+    
+    final waitingTime = DateTime.now().difference(ticket.createdAt).inHours;
+    priority += (waitingTime / 24.0);
+    
+    final timeUntilDue = ticket.dueDate.difference(DateTime.now()).inHours;
+    if (timeUntilDue < 24) {
+      priority *= 1.5;
+    }
+    
+    return priority;
+  }
+
+  void _sortQueue() {
+    pendingTickets.sort((a, b) => b.priority.compareTo(a.priority));
+  }
 
   Map<String, int> getQueueStats() {
     return {
-      'high': pendingTickets.where((ticket) => ticket.ticket.priority == 'HIGH').length,
-      'medium': pendingTickets.where((ticket) => ticket.ticket.priority == 'MEDIUM').length,
-      'low': pendingTickets.where((ticket) => ticket.ticket.priority == 'LOW').length,
       'total': pendingTickets.length,
+      'high': pendingTickets.where((qt) => qt.ticket.priority == 'HIGH').length,
+      'medium': pendingTickets.where((qt) => qt.ticket.priority == 'MEDIUM').length,
+      'low': pendingTickets.where((qt) => qt.ticket.priority == 'LOW').length,
+      'urgent': pendingTickets.where((qt) => 
+        qt.ticket.dueDate.difference(DateTime.now()).inHours < 24).length,
     };
   }
 
-  int get size => _queue.length;
-}
-
-class QueueSettings {
-  final bool autoAssignEnabled;
-  final int maxTicketsPerAgent;
-  final Duration reassignmentDelay;
-  final Map<String, int> priorityWeights;
-
-  const QueueSettings({
-    this.autoAssignEnabled = true,
-    this.maxTicketsPerAgent = 3,
-    this.reassignmentDelay = const Duration(minutes: 15),
-    this.priorityWeights = const {
-      'HIGH': 3,
-      'MEDIUM': 2,
-      'LOW': 1
-    },
-  });
-
-  factory QueueSettings.fromJson(Map<String, dynamic> json) {
-    return QueueSettings(
-      autoAssignEnabled: json['autoAssignEnabled'] ?? true,
-      maxTicketsPerAgent: json['maxTicketsPerAgent'] ?? 3,
-      reassignmentDelay: Duration(
-        minutes: json['reassignmentDelayMinutes'] ?? 15
-      ),
-      priorityWeights: Map<String, int>.from(
-        json['priorityWeights'] ?? const {
-          'HIGH': 3, 
-          'MEDIUM': 2,
-          'LOW': 1
-        }
-      ),
-    );
+  QueuedTicket? getNextTicket() {
+    return pendingTickets.isNotEmpty ? pendingTickets.first : null;
   }
 
-  Map<String, dynamic> toJson() => {
-    'autoAssignEnabled': autoAssignEnabled,
-    'maxTicketsPerAgent': maxTicketsPerAgent,
-    'reassignmentDelayMinutes': reassignmentDelay.inMinutes,
-    'priorityWeights': priorityWeights,
-  };
+  bool assignTicket(String ticketId, String agentId) {
+    final index = pendingTickets.indexWhere((qt) => qt.ticket.id == ticketId);
+    if (index == -1) return false;
+
+    agentAssignments.putIfAbsent(agentId, () => []).add(ticketId);
+    pendingTickets.removeAt(index);
+    return true;
+  }
 }

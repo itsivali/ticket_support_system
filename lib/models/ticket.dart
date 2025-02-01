@@ -7,6 +7,7 @@ class Ticket {
   final String status;
   final String priority;
   final String? assignedTo;
+  final DateTime createdAt;
 
   Ticket({
     required this.id,
@@ -17,6 +18,7 @@ class Ticket {
     required this.status,
     required this.priority,
     this.assignedTo,
+    required this.createdAt,
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
@@ -31,6 +33,9 @@ class Ticket {
       status: json['status']?.toString() ?? 'OPEN',
       priority: json['priority']?.toString() ?? 'MEDIUM',
       assignedTo: json['assignedTo']?.toString(),
+      createdAt: json['createdAt'] != null 
+          ? DateTime.parse(json['createdAt'].toString())
+          : DateTime.now(),
     );
   }
 
@@ -42,5 +47,6 @@ class Ticket {
     'status': status,
     'priority': priority,
     if (assignedTo != null) 'assignedTo': assignedTo,
+    'createdAt': createdAt.toIso8601String(),
   };
 }

@@ -39,4 +39,12 @@ class ShiftSchedule {
            time.isAfter(startTime) &&
            time.isBefore(endTime);
   }
+
+  bool isWorkingAtDateTime(DateTime dateTime) {
+
+    return isActive &&
+         weekdays.contains(dateTime.weekday) &&
+         dateTime.isAfter(DateTime(dateTime.year, dateTime.month, dateTime.day, startTime.hour, startTime.minute)) &&
+         dateTime.isBefore(DateTime(dateTime.year, dateTime.month, dateTime.day, endTime.hour, endTime.minute));
+  }
 }
