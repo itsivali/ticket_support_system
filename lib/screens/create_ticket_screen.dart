@@ -43,7 +43,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
       try {
         final newTicket = Ticket(
-          id: '', // ID will be assigned by backend
+          id: '', 
           title: _title,
           description: _description,
           dueDate: _dueDate,
@@ -51,6 +51,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           status: _status,
           priority: _priority,
           assignedTo: _assignedTo,
+          createdAt: DateTime.now(), 
         );
 
         await Provider.of<TicketProvider>(context, listen: false)
