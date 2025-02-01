@@ -1,81 +1,123 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../models/notification.dart';
+import '../utils/console_logger.dart';
 import 'base_channel.dart';
 
 class PushChannel implements NotificationChannel {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final Map<String, String> _tokenCache = {};
+  bool _isInitialized = false;
 
   @override
   String get channelType => 'push';
 
   Future<void> initialize() async {
-    await Firebase.initializeApp();
-    await _fcm.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    
-    FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+    if (_isInitialized) return;
+
+    try {
+      await Firebase.initializeApp();
+      
+      final settings = await _fcm.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+        FirebaseMessaging.onBackgroundMessage(_handleBackgroundMessage);
+        FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+        _isInitialized = true;
+      }
+    } catch (e) {
+      ConsoleLogger.error('Failed to initialize Firebase', e);
+      rethrow;
+    }
   }
 
   @override
   Future<bool> send(Notification notification) async {
+    if (!_isInitialized) await initialize();
+
     try {
       final token = await _getDeviceToken(notification.recipientId);
-      if (token == null) return false;
+      if (token == null) {
+        ConsoleLogger.error('No token found for recipient', notification.recipientId);
+        return false;
+      }
 
-      await _fcm.send(RemoteMessage(
-        token: token,
-        notification: RemoteNotification(
-          title: notification.title,
-          body: notification.message,
-        ),
+      await _fcm.sendMessage(
+        to: token,
         data: {
           'id': notification.id,
           'type': notification.type.toString(),
           ...notification.metadata ?? {},
         },
-      ));
+        messageId: notification.id,
+        messageType: 'notification',
+        ttl: 3600,
+      );
       
       return true;
     } catch (e) {
-      ConsoleLogger.error('Push notification failed', e);
+      ConsoleLogger.error('Failed to send push notification', e);
       return false;
     }
   }
 
   Future<String?> _getDeviceToken(String userId) async {
-    if (_tokenCache.containsKey(userId)) {
-      return _tokenCache[userId];
+    try {
+      if (_tokenCache.containsKey(userId)) {
+        return _tokenCache[userId];
+      }
+      
+      final token = await _fcm.getToken();
+      if (token != null) {
+        _tokenCache[userId] = token;
+        await _saveTokenToBackend(userId, token);
+      }
+      return token;
+    } catch (e) {
+      ConsoleLogger.error('Failed to get device token', e);
+      return null;
     }
-    
-    final token = await _fcm.getToken();
-    if (token != null) {
-      _tokenCache[userId] = token;
-    }
-    return token;
   }
 
-  static Future<void> _handleBackgroundMessage(RemoteMessage message) async {
-    // Handle background message
-  }
-
-  void _handleForegroundMessage(RemoteMessage message) {
-    // Handle foreground message
+  Future<void> _saveTokenToBackend(String userId, String token) async {
+    // Implement token storage in backend
   }
 
   @override
   Future<bool> isDelivered(String notificationId) async {
-    // Implementation depends on FCM delivery receipts
+    // FCM doesn't provide reliable delivery tracking
     return true;
   }
 
   @override
   Future<void> markAsRead(String notificationId) async {
-    // Update read status in backend
+    // Not applicable for push notifications
+  }
+
+  static Future<void> _handleBackgroundMessage(RemoteMessage message) async {
+    ConsoleLogger.info(
+      'Background message received',
+      'MessageId: ${message.messageId}'
+    );
+  }
+
+  void _handleForegroundMessage(RemoteMessage message) {
+    ConsoleLogger.info(
+      'Foreground message received',
+      'MessageId: ${message.messageId}'
+    );
+  }
+
+  void clearTokenCache() {
+    _tokenCache.clear();
+  }
+
+  Future<void> refreshToken(String userId) async {
+    _tokenCache.remove(userId);
+    await _getDeviceToken(userId);
   }
 }

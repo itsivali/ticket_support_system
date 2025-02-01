@@ -2,6 +2,7 @@ import 'package:mailer/mailer.dart' as mailer;
 import 'package:mailer/smtp_server.dart';
 import '../utils/console_logger.dart';
 import 'base_channel.dart';
+import '../models/notification.dart';
 
 class EmailNotification {
   final String id;
@@ -32,6 +33,18 @@ class DeliveryStatus {
 }
 
 class EmailChannel implements NotificationChannel {
+  @override
+  Future<bool> isDelivered(String notificationId) async {
+    final status = _deliveryTracker[notificationId];
+    return status?.sent ?? false;
+  }
+
+  @override
+  Future<void> markAsRead(String notificationId) async {
+    // Implementation for marking email as read
+    // Note: This is a basic implementation, modify according to your needs
+    return;
+  }
   final SmtpServer _server;
   final Map<String, DeliveryStatus> _deliveryTracker = {};
 
@@ -67,25 +80,23 @@ class EmailChannel implements NotificationChannel {
         ..recipients.add(emailNotification.recipientEmail)
         ..subject = emailNotification.title
         ..html = _buildEmailTemplate(emailNotification);
-        ..html = _buildEmailTemplate(notification);
 
-      final sendReport = await mailer.send(emailMessage, _server);
+    try {
+      await mailer.send(emailMessage, _server);
       _deliveryTracker[emailNotification.id] = DeliveryStatus(
-      _deliveryTracker[notification.id] = DeliveryStatus(
         sent: true,
         timestamp: DateTime.now(),
       );
       
       ConsoleLogger.info(
-        'Email sent successfully',
-        'Message ID: ${sendReport.messageid}'
+        'Email sent successfully'
       );
 
       return true;
     } catch (e, stack) {
       ConsoleLogger.error('Failed to send email', e, stack);
       
-      _deliveryTracker[notification.id] = DeliveryStatus(
+      _deliveryTracker[emailNotification.id] = DeliveryStatus(
         sent: false,
         timestamp: DateTime.now(),
         error: e.toString(),
@@ -93,18 +104,5 @@ class EmailChannel implements NotificationChannel {
       
       return false;
     }
-  }
-
-  @override
-  Future<bool> isDelivered(String notificationId) async {
-    final status = _deliveryTracker[notificationId];
-    return status?.sent ?? false;
-  }
-
-  @override
-  Future<void> markAsRead(String notificationId) async {
-    // Implementation for marking email as read
-    // Note: This is a basic implementation, modify according to your needs
-    return;
   }
 }
