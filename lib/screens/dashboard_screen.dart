@@ -5,7 +5,6 @@ import '../providers/agent_provider.dart';
 import '../providers/queue_provider.dart';
 import '../providers/shift_provider.dart';
 import '../widgets/app_drawer.dart';
-import '../utils/console_logger.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -46,21 +45,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
       drawer: const AppDrawer(),
       body: RefreshIndicator(
         onRefresh: _refreshData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+        child: const SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _StatusOverview(),
-              const SizedBox(height: 24),
-              const _QuickActions(),
-              const SizedBox(height: 24),
-              const _TicketMetrics(),
-              const SizedBox(height: 24),
-              const _AgentStatus(),
-              const SizedBox(height: 24),
-              const _QueueOverview(),
+              _StatusOverview(),
+              SizedBox(height: 24),
+              _QuickActions(),
+              SizedBox(height: 24),
+              _TicketMetrics(),
+              SizedBox(height: 24),
+              _AgentStatus(),
+              SizedBox(height: 24),
+              _QueueOverview(),
             ],
           ),
         ),

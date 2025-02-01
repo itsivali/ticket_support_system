@@ -8,6 +8,8 @@ class QueueManager {
   final Map<String, List<String>> agentAssignments; // agentId -> ticketIds
   final QueueSettings settings;
 
+  final List<Ticket> _queue = [];
+
   QueueManager({
     required this.id,
     this.pendingTickets = const [],
@@ -71,6 +73,8 @@ class QueueManager {
       'total': pendingTickets.length,
     };
   }
+
+  int get size => _queue.length;
 }
 
 class QueueSettings {
