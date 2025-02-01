@@ -1,6 +1,35 @@
-import 'package:mailer/mailer.dart';
+import 'package:mailer/mailer.dart' as mailer;
 import 'package:mailer/smtp_server.dart';
+import '../utils/console_logger.dart';
 import 'base_channel.dart';
+
+class Notification {
+  final String id;
+  final String? sender;
+  final String recipientEmail;
+  final String title;
+  final String message;
+
+  Notification({
+    required this.id,
+    this.sender,
+    required this.recipientEmail,
+    required this.title,
+    required this.message,
+  });
+}
+
+class DeliveryStatus {
+  final bool sent;
+  final DateTime timestamp;
+  final String? error;
+
+  DeliveryStatus({
+    required this.sent,
+    required this.timestamp,
+    this.error,
+  });
+}
 
 class EmailChannel implements NotificationChannel {
   final SmtpServer _server;
@@ -11,64 +40,70 @@ class EmailChannel implements NotificationChannel {
   @override
   String get channelType => 'email';
 
+  String _buildEmailTemplate(Notification notification) {
+    return '''
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2196F3;">${notification.title}</h2>
+        <div style="padding: 20px; background-color: #f5f5f5; border-radius: 4px;">
+          ${notification.message}
+        </div>
+        <p style="color: #666; font-size: 12px; margin-top: 20px;">
+          This is an automated message from the Support System
+        </p>
+      </div>
+    ''';
+  }
+
   @override
   Future<bool> send(Notification notification) async {
     try {
-      final message = Message()
-        ..from = Address(notification.sender ?? 'system@support.com')
+      ConsoleLogger.info(
+        'Sending email notification',
+        'To: ${notification.recipientEmail}\nSubject: ${notification.title}'
+      );
+
+      final emailMessage = mailer.Message()
+        ..from = mailer.Address(notification.sender ?? 'system@support.com')
         ..recipients.add(notification.recipientEmail)
         ..subject = notification.title
         ..html = _buildEmailTemplate(notification);
 
-      final sendReport = await send(message, _server);
+      final sendReport = await mailer.send(emailMessage, _server);
+      
       _deliveryTracker[notification.id] = DeliveryStatus(
         sent: true,
         timestamp: DateTime.now(),
       );
       
+      ConsoleLogger.info(
+        'Email sent successfully',
+        'Message ID: ${sendReport.messageid}'
+      );
+
       return true;
-    } catch (e) {
+    } catch (e, stack) {
+      ConsoleLogger.error('Failed to send email', e, stack);
+      
       _deliveryTracker[notification.id] = DeliveryStatus(
         sent: false,
-        error: e.toString(),
         timestamp: DateTime.now(),
+        error: e.toString(),
       );
+      
       return false;
     }
   }
 
   @override
   Future<bool> isDelivered(String notificationId) async {
-    return _deliveryTracker[notificationId]?.sent ?? false;
+    final status = _deliveryTracker[notificationId];
+    return status?.sent ?? false;
   }
 
   @override
   Future<void> markAsRead(String notificationId) async {
-    // Email notifications are considered read once delivered
+    // Implementation for marking email as read
+    // Note: This is a basic implementation, modify according to your needs
     return;
   }
-
-  String _buildEmailTemplate(Notification notification) {
-    // Template implementation
-    return '''
-      <html>
-        <body>
-          <h1>${notification.title}</h1>
-          <p>${notification.message}</p>
-        </body>
-      </html>
-    ''';
-  }
-}
-
-class DeliveryStatus {
-  final bool sent;
-  final String? error;
-  final DateTime timestamp;
-
-  DeliveryStatus({
-    required this.sent,
-    this.error,
-    required this.timestamp,
-  });
 }

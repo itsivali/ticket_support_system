@@ -9,65 +9,60 @@ class QueueService {
   Future<QueueManager> getQueueStatus() async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/queue'),
+        Uri.parse('$baseUrl/queue/status'),
         headers: {'Accept': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         return QueueManager.fromJson(json.decode(response.body));
       }
-      throw Exception('Failed to fetch queue status');
+      
+      throw Exception('Failed to get queue status: ${response.statusCode}');
     } catch (e) {
-      ConsoleLogger.error('Error fetching queue status', e);
+      ConsoleLogger.error('Error getting queue status', e);
       rethrow;
     }
   }
 
   Future<bool> assignTicket(String ticketId, String? agentId) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/queue/assign'),
+      final response = await http.patch(
+        Uri.parse('$baseUrl/tickets/$ticketId/assign'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({
-          'ticketId': ticketId,
-          'agentId': agentId,
-        }),
+        body: json.encode({'assignedTo': agentId}),
       );
 
       return response.statusCode == 200;
     } catch (e) {
       ConsoleLogger.error('Error assigning ticket', e);
-      rethrow;
+      return false;
     }
   }
 
   Future<bool> claimTicket(String ticketId, String agentId) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/queue/claim'),
+        Uri.parse('$baseUrl/tickets/$ticketId/claim'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({
-          'ticketId': ticketId,
-          'agentId': agentId,
-        }),
+        body: json.encode({'agentId': agentId}),
       );
 
       return response.statusCode == 200;
     } catch (e) {
       ConsoleLogger.error('Error claiming ticket', e);
-      rethrow;
+      return false;
     }
   }
 
-  Future<QueueSettings> updateSettings(QueueSettings settings) async {
+  Future<void> updateSettings(QueueSettings settings) async {
     try {
-      final response = await http.put(
+      await http.put(
         Uri.parse('$baseUrl/queue/settings'),
         headers: {
           'Content-Type': 'application/json',
@@ -75,11 +70,6 @@ class QueueService {
         },
         body: json.encode(settings.toJson()),
       );
-
-      if (response.statusCode == 200) {
-        return QueueSettings.fromJson(json.decode(response.body));
-      }
-      throw Exception('Failed to update queue settings');
     } catch (e) {
       ConsoleLogger.error('Error updating queue settings', e);
       rethrow;

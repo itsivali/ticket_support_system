@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:async';
 import '../models/queue_manager.dart';
 import '../models/ticket.dart';
 import '../services/queue_service.dart';
@@ -104,5 +105,15 @@ class QueueProvider with ChangeNotifier {
     await assignTicket(ticket.id, agent.id);
     }
   }
+  }
+
+  Agent? _findLeastLoadedAgent(List<Agent> agents) {
+    if (agents.isEmpty) return null;
+    
+    return agents.reduce((a, b) {
+      final aCount = _queueManager?.agentAssignments[a.id]?.length ?? 0;
+      final bCount = _queueManager?.agentAssignments[b.id]?.length ?? 0;
+      return aCount <= bCount ? a : b;
+    });
   }
 }
