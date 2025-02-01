@@ -11,6 +11,7 @@ class AppDrawer extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
+          // Drawer Header
           DrawerHeader(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -24,15 +25,15 @@ class AppDrawer extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 32,
-                  backgroundColor: colorScheme.onPrimary.withAlpha((0.2 * 255).round()),
+                  backgroundColor: colorScheme.onPrimary.withAlpha((0.2 * 255).toInt()),
                   child: Icon(Icons.support_agent, 
                     size: 32, 
-                    color: colorScheme.onPrimary
+                    color: colorScheme.onPrimary,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Ticket System',
+                  'Support System',
                   style: TextStyle(
                     color: colorScheme.onPrimary,
                     fontSize: 24,
@@ -42,23 +43,27 @@ class AppDrawer extends StatelessWidget {
               ],
             ),
           ),
-          // Dashboard
+
+          // Dashboard Section
           ListTile(
-            leading: const Icon(Icons.dashboard),
+            leading: const Icon(Icons.dashboard_outlined),
             title: const Text('Dashboard'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/');
             },
           ),
           const Divider(),
+
           // Ticket Management Section
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text('TICKET MANAGEMENT', 
+            child: Text(
+              'TICKET MANAGEMENT',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
+                letterSpacing: 1.2,
               ),
             ),
           ),
@@ -77,18 +82,21 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.assignment),
             title: const Text('Manage Tickets'),
-            subtitle: const Text('View and manage all tickets'),
+            subtitle: const Text('View and manage tickets'),
             onTap: () => Navigator.pushNamed(context, '/manage-tickets'),
           ),
           const Divider(),
+
           // Agent Management Section
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text('AGENT MANAGEMENT', 
+            child: Text(
+              'AGENT MANAGEMENT',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
+                letterSpacing: 1.2,
               ),
             ),
           ),
@@ -111,21 +119,24 @@ class AppDrawer extends StatelessWidget {
             onTap: () => Navigator.pushNamed(context, '/shift-management'),
           ),
           const Divider(),
+
           // Queue Management Section
           const Padding(
             padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text('QUEUE MANAGEMENT', 
+            child: Text(
+              'QUEUE MANAGEMENT',
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
+                letterSpacing: 1.2,
               ),
             ),
           ),
           ListTile(
             leading: const Icon(Icons.sync),
             title: const Text('Auto Assignment'),
-            subtitle: const Text('Manage ticket auto-assignment'),
+            subtitle: const Text('Configure auto-assignment'),
             onTap: () => Navigator.pushNamed(context, '/auto-assignment'),
           ),
           ListTile(

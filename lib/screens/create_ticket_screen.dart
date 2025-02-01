@@ -18,17 +18,18 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   final _formKey = GlobalKey<FormState>();
   String _title = '';
   String _description = '';
-  DateTime _dueDate = DateTime.now().add(const Duration(days: 1));
+  final DateTime _dueDate = DateTime.now().add(const Duration(days: 1));
   final double _estimatedHours = 1.0;
   final String _status = 'OPEN';
   String _priority = 'MEDIUM';
   String? _assignedTo;
   bool _isLoading = false;
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    // Fetch agents if needed
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (context.read<AgentProvider>().agents.isEmpty) {
         context.read<AgentProvider>().fetchAgents();
@@ -38,7 +39,8 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
 
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
+      _title = _titleController.text;
+      _description = _descriptionController.text;
       setState(() => _isLoading = true);
 
       try {
@@ -129,175 +131,102 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     );
   }
 
+  Widget _buildPrioritySelector() {
+    return DropdownButtonFormField<String>(
+      value: _priority,
+      decoration: const InputDecoration(
+        labelText: 'Priority',
+        helperText: 'Select ticket priority',
+        prefixIcon: Icon(Icons.priority_high),
+      ),
+      items: const [
+        DropdownMenuItem(
+          value: 'LOW',
+          child: Text('Low'),
+        ),
+        DropdownMenuItem(
+          value: 'MEDIUM',
+          child: Text('Medium'),
+        ),
+        DropdownMenuItem(
+          value: 'HIGH',
+          child: Text('High'),
+        ),
+      ],
+      onChanged: (String? newValue) {
+        setState(() {
+          _priority = newValue!;
+        });
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create New Ticket'),
-        actions: [
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
-        ],
+        title: const Text('Create Ticket'),
       ),
-      drawer: const AppDrawer(), // Add common drawer
-      body: Consumer<AgentProvider>(
-        builder: (context, agentProvider, child) {
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'Title',
-                        helperText: 'At least 3 characters',
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a title';
-                        }
-                        if (value.length < 3) {
-                          return 'Title must be at least 3 characters';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) => _title = value!,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      decoration: const InputDecoration(
-                        labelText: 'Description',
-                        helperText: 'At least 10 characters',
-                      ),
-                      maxLines: 3,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a description';
-                        }
-                        if (value.length < 10) {
-                          return 'Description must be at least 10 characters';
-                        }
-                        return null;
-                      },
-                      onSaved: (value) => _description = value!,
-                    ),
-                    const SizedBox(height: 16),
-                    ListTile(
-                      title: const Text('Due Date'),
-                      subtitle: Text('${_dueDate.toLocal()}'.split(' ')[0]),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () async {
-                        final DateTime? picked = await showDatePicker(
-                          context: context,
-                          initialDate: _dueDate,
-                          firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                        );
-                        if (picked != null && picked != _dueDate) {
-                          setState(() {
-                            _dueDate = picked;
-                          });
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField<String>(
-                      value: _priority,
-                      decoration: const InputDecoration(
-                        labelText: 'Priority',
-                        helperText: 'Ticket priority level',
-                        prefixIcon: Icon(Icons.flag),
-                      ),
-                      items: [
-                        DropdownMenuItem(
-                          value: 'LOW',
-                          child: Row(
-                            children: [
-                              Icon(Icons.arrow_downward, color: Colors.green[700]),
-                              const SizedBox(width: 8),
-                              const Text('Low'),
-                            ],
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 'MEDIUM',
-                          child: Row(
-                            children: [
-                              Icon(Icons.remove, color: Colors.orange[700]),
-                              const SizedBox(width: 8),
-                              const Text('Medium'),
-                            ],
-                          ),
-                        ),
-                        DropdownMenuItem(
-                          value: 'HIGH',
-                          child: Row(
-                            children: [
-                              Icon(Icons.arrow_upward, color: Colors.red[700]),
-                              const SizedBox(width: 8),
-                              const Text('High'),
-                            ],
-                          ),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _priority = value!;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    _buildAgentDropdown(agentProvider.agents),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _isLoading ? null : _submitForm,
-                        icon: _isLoading 
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.add),
-                        label: Text(
-                          _isLoading ? 'CREATING...' : 'CREATE TICKET',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 20,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 3,
-                        ),
-                      ),
-                    ),
-                  ],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                controller: _titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  helperText: 'Enter ticket title',
+                  prefixIcon: Icon(Icons.title),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a title';
+                  }
+                  return null;
+                },
               ),
-            ),
-          );
-        },
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _descriptionController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  helperText: 'Enter ticket description',
+                  prefixIcon: Icon(Icons.description),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a description';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              Consumer<AgentProvider>(
+                builder: (context, provider, child) {
+                  return _buildAgentDropdown(provider.agents);
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildPrioritySelector(),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _submitForm,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Create Ticket'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
+
 }
