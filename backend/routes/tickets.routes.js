@@ -3,16 +3,11 @@ const router = express.Router();
 const ticketController = require('../controllers/ticket.controller');
 
 router.get('/', ticketController.getAllTickets);
-router.get('/:id', ticketController.getTicketById, (req, res) => {
-  res.json(res.ticket);
-});
 router.post('/', ticketController.createTicket);
-router.put('/:id', ticketController.getTicketById, ticketController.updateTicket);
+router.get('/queue', ticketController.getQueuedTickets);
+router.post('/:id/claim', ticketController.claimTicket);
+router.patch('/:id/assign', ticketController.assignTicket);
+router.put('/:id', ticketController.updateTicket);
 router.delete('/:id', ticketController.deleteTicket);
 
-router.patch('/:id/assign', ticketController.assignTicket);
-router.post('/:id/claim', ticketController.claimTicket);
-
 module.exports = router;
-
-

@@ -62,6 +62,15 @@ class QueueManager {
     'agentAssignments': agentAssignments,
     'settings': settings.toJson(),
   };
+
+  Map<String, int> getQueueStats() {
+    return {
+      'high': pendingTickets.where((ticket) => ticket.ticket.priority == 'HIGH').length,
+      'medium': pendingTickets.where((ticket) => ticket.ticket.priority == 'MEDIUM').length,
+      'low': pendingTickets.where((ticket) => ticket.ticket.priority == 'LOW').length,
+      'total': pendingTickets.length,
+    };
+  }
 }
 
 class QueueSettings {

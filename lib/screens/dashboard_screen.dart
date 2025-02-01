@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/ticket_provider.dart';
 import '../providers/agent_provider.dart';
-import '../widgets/ticket_card.dart';
+import '../providers/queue_provider.dart';
+import '../providers/shift_provider.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/console_logger.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -13,113 +15,138 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  String _statusFilter = 'all';
-  String _priorityFilter = 'all';
-
-  void _showFilterDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Filter Tickets'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DropdownButtonFormField<String>(
-            decoration: const InputDecoration(labelText: 'Status'),
-            value: _statusFilter,
-            items: const [
-              DropdownMenuItem(value: 'all', child: Text('All')),
-              DropdownMenuItem(value: 'OPEN', child: Text('Open')),
-              DropdownMenuItem(value: 'IN_PROGRESS', child: Text('In Progress')),
-              DropdownMenuItem(value: 'CLOSED', child: Text('Closed')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _statusFilter = value!;
-              });
-            },
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            decoration: const InputDecoration(labelText: 'Priority'),
-            value: _priorityFilter,
-            items: const [
-              DropdownMenuItem(value: 'all', child: Text('All')),
-              DropdownMenuItem(value: 'HIGH', child: Text('High')),
-              DropdownMenuItem(value: 'MEDIUM', child: Text('Medium')),
-              DropdownMenuItem(value: 'LOW', child: Text('Low')),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _priorityFilter = value!;
-              });
-            },
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            context.read<TicketProvider>().applyFilters(_statusFilter, _priorityFilter);
-            Navigator.pop(context);
-          },
-          child: const Text('Apply'),
-        ),
-      ],
-    ),
-  );
-  }
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TicketProvider>().fetchTickets();
-      context.read<AgentProvider>().fetchAgents();
-    });
+    _refreshData();
   }
 
-  Widget _buildStatCard(String title, int count, IconData icon, Color color) {
-    return Card(
-      elevation: 2,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: LinearGradient(
-            colors: [color.withAlpha(204), color.withAlpha(153)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+  Future<void> _refreshData() async {
+    await Future.wait([
+      context.read<TicketProvider>().fetchTickets(),
+      context.read<AgentProvider>().fetchAgents(),
+      context.read<QueueProvider>().fetchQueueStatus(),
+      context.read<ShiftProvider>().fetchCurrentShifts(),
+    ]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Support Dashboard'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refreshData,
+            tooltip: 'Refresh Data',
+          ),
+        ],
+      ),
+      drawer: const AppDrawer(),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _StatusOverview(),
+              const SizedBox(height: 24),
+              const _QuickActions(),
+              const SizedBox(height: 24),
+              const _TicketMetrics(),
+              const SizedBox(height: 24),
+              const _AgentStatus(),
+              const SizedBox(height: 24),
+              const _QueueOverview(),
+            ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _StatusOverview extends StatelessWidget {
+  const _StatusOverview();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      childAspectRatio: 1.5,
+      children: [
+        _StatusCard(
+          title: 'Open Tickets',
+          value: context.select((TicketProvider p) => 
+            p.tickets.where((t) => t.status == 'OPEN').length.toString()),
+          icon: Icons.confirmation_number,
+          color: theme.colorScheme.primary,
+        ),
+        _StatusCard(
+          title: 'Available Agents',
+          value: context.select((AgentProvider p) => 
+            p.agents.where((a) => a.isAvailable && a.isOnline).length.toString()),
+          icon: Icons.people,
+          color: theme.colorScheme.secondary,
+        ),
+        _StatusCard(
+          title: 'Queue Size',
+          value: context.select((QueueProvider p) => 
+            p.queueManager?.size.toString() ?? '0'),
+          icon: Icons.queue,
+          color: theme.colorScheme.tertiary,
+        ),
+        _StatusCard(
+          title: 'Active Shifts',
+          value: context.select((ShiftProvider p) => 
+            p.currentShifts.length.toString()),
+          icon: Icons.schedule,
+          color: theme.colorScheme.error,
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _StatusCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Icon(icon, color: Colors.white, size: 32),
-                Text(
-                  count.toString(),
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
+            Icon(icon, size: 32, color: color),
             const SizedBox(height: 8),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 4),
             Text(
-              title,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
+              value,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: color,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
@@ -127,143 +154,282 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+}
+
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Support Dashboard'),
-        centerTitle: true,
-        elevation: 0,
-        scrolledUnderElevation: 2,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () => _showFilterDialog(context),
-            tooltip: 'Filter Tickets',
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Quick Actions',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _ActionButton(
+                  label: 'Create Ticket',
+                  icon: Icons.add,
+                  onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
+                ),
+                _ActionButton(
+                  label: 'Assign Tickets',
+                  icon: Icons.assignment_ind,
+                  onPressed: () => Navigator.pushNamed(context, '/ticket-queue'),
+                ),
+                _ActionButton(
+                  label: 'Manage Agents',
+                  icon: Icons.people,
+                  onPressed: () => Navigator.pushNamed(context, '/agents'),
+                ),
+                _ActionButton(
+                  label: 'View Queue',
+                  icon: Icons.queue,
+                  onPressed: () => Navigator.pushNamed(context, '/manage-tickets'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _ActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      ),
+    );
+  }
+}
+
+class _TicketMetrics extends StatelessWidget {
+  const _TicketMetrics();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Ticket Metrics',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            Consumer<TicketProvider>(
+              builder: (context, provider, child) {
+                final tickets = provider.tickets;
+                return Column(
+                  children: [
+                    _MetricRow(
+                      label: 'Open',
+                      value: tickets.where((t) => t.status == 'OPEN').length,
+                      color: Colors.blue,
+                    ),
+                    _MetricRow(
+                      label: 'In Progress',
+                      value: tickets.where((t) => t.status == 'IN_PROGRESS').length,
+                      color: Colors.orange,
+                    ),
+                    _MetricRow(
+                      label: 'Closed',
+                      value: tickets.where((t) => t.status == 'CLOSED').length,
+                      color: Colors.green,
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MetricRow extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color color;
+
+  const _MetricRow({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<TicketProvider>().fetchTickets(),
-            tooltip: 'Refresh',
+          const SizedBox(width: 8),
+          Text(label),
+          const Spacer(),
+          Text(
+            value.toString(),
+            style: Theme.of(context).textTheme.titleMedium,
           ),
         ],
       ),
-      drawer: const AppDrawer(), // Use common drawer
-      body: Consumer<TicketProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+    );
+  }
+}
 
-          if (provider.error != null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, 
-                    size: 48, 
-                    color: colorScheme.error
-                  ),
-                  const SizedBox(height: 16),
-                  Text(provider.error!),
-                  const SizedBox(height: 16),
-                  FilledButton.icon(
-                    onPressed: () => provider.fetchTickets(),
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
+class _AgentStatus extends StatelessWidget {
+  const _AgentStatus();
 
-          final openCount = provider.tickets
-              .where((ticket) => ticket.status == 'OPEN')
-              .length;
-          final inProgressCount = provider.tickets
-              .where((ticket) => ticket.status == 'IN_PROGRESS')
-              .length;
-          final closedCount = provider.tickets
-              .where((ticket) => ticket.status == 'CLOSED')
-              .length;
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Agent Status',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/agents'),
+                  child: const Text('View All'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Consumer<AgentProvider>(
+              builder: (context, provider, child) {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: provider.agents.take(5).length,
+                  itemBuilder: (context, index) {
+                    final agent = provider.agents[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: agent.isOnline 
+                            ? Colors.green 
+                            : Colors.grey,
+                        child: const Icon(Icons.person, color: Colors.white),
+                      ),
+                      title: Text(agent.name),
+                      subtitle: Text('${agent.currentTickets.length} active tickets'),
+                      trailing: Icon(
+                        Icons.circle,
+                        size: 12,
+                        color: agent.isAvailable ? Colors.green : Colors.grey,
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-          return Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
+class _QueueOverview extends StatelessWidget {
+  const _QueueOverview();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Queue Overview',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/ticket-queue'),
+                  child: const Text('Manage Queue'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Consumer<QueueProvider>(
+              builder: (context, provider, child) {
+                final stats = provider.queueManager?.getQueueStats() ?? {};
+                return Column(
                   children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        'Open', 
-                        openCount, 
-                        Icons.fiber_new,
-                        Colors.orange,
-                      ),
+                    _MetricRow(
+                      label: 'High Priority',
+                      value: stats['high'] ?? 0,
+                      color: Colors.red,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildStatCard(
-                        'In Progress', 
-                        inProgressCount,
-                        Icons.trending_up, 
-                        Colors.blue,
-                      ),
+                    _MetricRow(
+                      label: 'Medium Priority',
+                      value: stats['medium'] ?? 0,
+                      color: Colors.orange,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildStatCard(
-                        'Closed', 
-                        closedCount,
-                        Icons.check_circle, 
-                        Colors.green,
-                      ),
+                    _MetricRow(
+                      label: 'Low Priority',
+                      value: stats['low'] ?? 0,
+                      color: Colors.green,
+                    ),
+                    const Divider(),
+                    _MetricRow(
+                      label: 'Total in Queue',
+                      value: stats['total'] ?? 0,
+                      color: Colors.blue,
                     ),
                   ],
-                ),
-              ),
-              Expanded(
-                child: provider.tickets.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.inbox, 
-                              size: 64, 
-                              color: Colors.grey[400]
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'No tickets available',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(16),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          childAspectRatio: 1.2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                        itemCount: provider.tickets.length,
-                        itemBuilder: (context, index) {
-                          final ticket = provider.tickets[index];
-                          return TicketCard(ticket: ticket);
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
