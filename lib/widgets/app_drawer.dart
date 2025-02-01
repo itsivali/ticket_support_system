@@ -5,147 +5,151 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          // Drawer Header
-          DrawerHeader(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [colorScheme.primary, colorScheme.primaryContainer],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: colorScheme.onPrimary.withAlpha((0.2 * 255).toInt()),
-                  child: Icon(Icons.support_agent, 
-                    size: 32, 
-                    color: colorScheme.onPrimary,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Support System',
-                  style: TextStyle(
-                    color: colorScheme.onPrimary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Dashboard Section
-          ListTile(
-            leading: const Icon(Icons.dashboard_outlined),
-            title: const Text('Dashboard'),
-            onTap: () {
-              Navigator.pushReplacementNamed(context, '/');
-            },
-          ),
+          _buildHeader(context),
+          _buildDashboardSection(context),
           const Divider(),
-
-          // Ticket Management Section
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text(
-              'TICKET MANAGEMENT',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.add_task),
-            title: const Text('Create Ticket'),
-            subtitle: const Text('Create new support ticket'),
-            onTap: () => Navigator.pushNamed(context, '/create-ticket'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.queue),
-            title: const Text('Ticket Queue'),
-            subtitle: const Text('View unassigned tickets'),
-            onTap: () => Navigator.pushNamed(context, '/ticket-queue'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.assignment),
-            title: const Text('Manage Tickets'),
-            subtitle: const Text('View and manage tickets'),
-            onTap: () => Navigator.pushNamed(context, '/manage-tickets'),
-          ),
+          _buildTicketSection(context),
           const Divider(),
-
-          // Agent Management Section
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text(
-              'AGENT MANAGEMENT',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.person_add),
-            title: const Text('Create Agent'),
-            subtitle: const Text('Add new support agent'),
-            onTap: () => Navigator.pushNamed(context, '/create-agent'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.people),
-            title: const Text('Manage Agents'),
-            subtitle: const Text('View and manage agents'),
-            onTap: () => Navigator.pushNamed(context, '/agents'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.schedule),
-            title: const Text('Shift Management'),
-            subtitle: const Text('Manage agent schedules'),
-            onTap: () => Navigator.pushNamed(context, '/shift-management'),
-          ),
+          _buildAgentSection(context),
           const Divider(),
+          _buildQueueSection(context),
+        ],
+      ),
+    );
+  }
 
-          // Queue Management Section
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text(
-              'QUEUE MANAGEMENT',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-                letterSpacing: 1.2,
-              ),
+  Widget _buildHeader(BuildContext context) {
+    return DrawerHeader(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Theme.of(context).colorScheme.primary,
+            Theme.of(context).colorScheme.primaryContainer,
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: Theme.of(context).colorScheme.onPrimary.withAlpha((0.2 * 255).toInt()),
+            child: Icon(Icons.support_agent, 
+              size: 32,
+              color: Theme.of(context).colorScheme.onPrimary,
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.sync),
-            title: const Text('Auto Assignment'),
-            subtitle: const Text('Configure auto-assignment'),
-            onTap: () => Navigator.pushNamed(context, '/auto-assignment'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.person_search),
-            title: const Text('Claim Tickets'),
-            subtitle: const Text('Manually claim tickets'),
-            onTap: () => Navigator.pushNamed(context, '/claim-tickets'),
+          const SizedBox(height: 16),
+          Text(
+            'Support System',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onPrimary,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDashboardSection(BuildContext context) {
+    return ListTile(
+      leading: const Icon(Icons.dashboard_outlined),
+      title: const Text('Dashboard'),
+      onTap: () => Navigator.pushReplacementNamed(context, '/'),
+    );
+  }
+
+  Widget _buildTicketSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'TICKET MANAGEMENT'),
+        ListTile(
+          leading: const Icon(Icons.add_task),
+          title: const Text('Create Ticket'),
+          onTap: () => Navigator.pushNamed(context, '/create-ticket'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.queue),
+          title: const Text('Ticket Queue'),
+          onTap: () => Navigator.pushNamed(context, '/ticket-queue'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.assignment),
+          title: const Text('Manage Tickets'),
+          onTap: () => Navigator.pushNamed(context, '/manage-tickets'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAgentSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'AGENT MANAGEMENT'),
+        ListTile(
+          leading: const Icon(Icons.person_add),
+          title: const Text('Create Agent'),
+          onTap: () => Navigator.pushNamed(context, '/create-agent'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.people),
+          title: const Text('Manage Agents'),
+          onTap: () => Navigator.pushNamed(context, '/agents'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.schedule),
+          title: const Text('Shift Management'),
+          onTap: () => Navigator.pushNamed(context, '/shift-management'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQueueSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionHeader(title: 'QUEUE MANAGEMENT'),
+        ListTile(
+          leading: const Icon(Icons.sync),
+          title: const Text('Auto Assignment'),
+          onTap: () => Navigator.pushNamed(context, '/auto-assignment'),
+        ),
+        ListTile(
+          leading: const Icon(Icons.person_search),
+          title: const Text('Claim Tickets'),
+          onTap: () => Navigator.pushNamed(context, '/claim-tickets'),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+
+  const _SectionHeader({required this.title});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+          color: Colors.grey,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }

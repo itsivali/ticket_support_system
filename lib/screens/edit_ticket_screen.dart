@@ -61,6 +61,7 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
           status: _status,
           priority: _priority,
           assignedTo: _assignedTo,
+          createdAt: widget.ticket.createdAt,
         );
 
         await Provider.of<TicketProvider>(context, listen: false)

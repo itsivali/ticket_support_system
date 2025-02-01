@@ -11,12 +11,8 @@ class ConsoleLogger {
     }
   }
 
-  static void error(String message, [dynamic error, StackTrace? stackTrace]) {
-    if (error != null) {
-      _logger.e('$message\n$error', error: error, stackTrace: stackTrace);
-    } else {
-      _logger.e(message);
-    }
+  static void error(String message, String details) {
+    _logger.e('$message\n$details');
   }
 
   static void debug(String message, [String? details]) {

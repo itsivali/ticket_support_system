@@ -1,27 +1,25 @@
 class Notification {
   final String id;
+  final String recipientId;
   final String title;
   final String message;
-  final String recipientId;
-  final String? recipientEmail;
-  final String? sender;
-  final NotificationType type;
+  final String type;
   final Map<String, dynamic>? metadata;
-  bool isRead;
   final DateTime createdAt;
+  bool isRead;
 
   Notification({
     required this.id,
+    required this.recipientId,
     required this.title,
     required this.message,
-    required this.recipientId,
-    this.recipientEmail,
-    this.sender,
     required this.type,
     this.metadata,
-    this.isRead = false,
+    bool? isRead,
     DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+  }) : 
+    isRead = isRead ?? false,
+    createdAt = createdAt ?? DateTime.now();
 
   factory Notification.fromJson(Map<String, dynamic> json) {
     return Notification(
@@ -29,12 +27,7 @@ class Notification {
       title: json['title'],
       message: json['message'],
       recipientId: json['recipientId'],
-      recipientEmail: json['recipientEmail'],
-      sender: json['sender'],
-      type: NotificationType.values.firstWhere(
-        (e) => e.toString() == json['type'],
-        orElse: () => NotificationType.general,
-      ),
+      type: json['type'],
       metadata: json['metadata'],
       isRead: json['isRead'] ?? false,
       createdAt: DateTime.parse(json['createdAt']),
@@ -46,19 +39,9 @@ class Notification {
     'title': title,
     'message': message,
     'recipientId': recipientId,
-    'recipientEmail': recipientEmail,
-    'sender': sender,
-    'type': type.toString(),
+    'type': type,
     'metadata': metadata,
     'isRead': isRead,
     'createdAt': createdAt.toIso8601String(),
   };
-}
-
-enum NotificationType {
-  general,
-  ticketAssigned,
-  ticketUpdated,
-  shiftReminder,
-  queueAlert
 }
