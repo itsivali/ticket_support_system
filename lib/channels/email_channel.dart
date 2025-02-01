@@ -3,14 +3,14 @@ import 'package:mailer/smtp_server.dart';
 import '../utils/console_logger.dart';
 import 'base_channel.dart';
 
-class Notification {
+class EmailNotification {
   final String id;
   final String? sender;
   final String recipientEmail;
   final String title;
   final String message;
 
-  Notification({
+  EmailNotification({
     required this.id,
     this.sender,
     required this.recipientEmail,
@@ -40,7 +40,7 @@ class EmailChannel implements NotificationChannel {
   @override
   String get channelType => 'email';
 
-  String _buildEmailTemplate(Notification notification) {
+  String _buildEmailTemplate(EmailNotification notification) {
     return '''
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #2196F3;">${notification.title}</h2>
@@ -56,20 +56,21 @@ class EmailChannel implements NotificationChannel {
 
   @override
   Future<bool> send(Notification notification) async {
-    try {
+    final emailNotification = notification as EmailNotification;
       ConsoleLogger.info(
         'Sending email notification',
-        'To: ${notification.recipientEmail}\nSubject: ${notification.title}'
+        'To: ${emailNotification.recipientEmail}\nSubject: ${emailNotification.title}'
       );
 
       final emailMessage = mailer.Message()
-        ..from = mailer.Address(notification.sender ?? 'system@support.com')
-        ..recipients.add(notification.recipientEmail)
-        ..subject = notification.title
+        ..from = mailer.Address(emailNotification.sender ?? 'system@support.com')
+        ..recipients.add(emailNotification.recipientEmail)
+        ..subject = emailNotification.title
+        ..html = _buildEmailTemplate(emailNotification);
         ..html = _buildEmailTemplate(notification);
 
       final sendReport = await mailer.send(emailMessage, _server);
-      
+      _deliveryTracker[emailNotification.id] = DeliveryStatus(
       _deliveryTracker[notification.id] = DeliveryStatus(
         sent: true,
         timestamp: DateTime.now(),

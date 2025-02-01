@@ -10,7 +10,7 @@ class EmailChannel implements NotificationChannel {
   @override
   Future<void> send(Notification notification) async {
     final message = Message()
-      ..from = Address('support@system.com')
+      ..from = const Address('support@system.com')
       ..recipients.add(notification.recipientEmail)
       ..subject = notification.title
       ..text = notification.message;
