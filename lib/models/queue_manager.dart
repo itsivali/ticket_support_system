@@ -1,6 +1,22 @@
 import '../models/agent.dart';
-import '../models/ticket.dart';
-import '../utils/console_logger.dart';
+
+class Ticket {
+  final String id;
+  final String priority;
+  final DateTime dueDate;
+  final DateTime createdAt;
+  String? assignedTo;
+  String status;
+
+  Ticket({
+    required this.id,
+    required this.priority,
+    required this.dueDate,
+    DateTime? createdAt,
+    this.assignedTo,
+    this.status = 'OPEN',
+  }) : createdAt = createdAt ?? DateTime.now();
+}
 
 class QueuedTicket {
   final String id;
@@ -13,7 +29,7 @@ class QueuedTicket {
     required this.ticket,
     required this.priority,
     DateTime? addedAt,
-  }) : this.addedAt = addedAt ?? DateTime.now();
+  }) : addedAt = addedAt ?? DateTime.now();
 }
 
 class QueueSettings {
@@ -58,9 +74,8 @@ class QueueManager {
     }
 
     if (agent.shiftSchedule != null) {
-      if (!agent.shiftSchedule!.isWorkingAt(ticket.dueDate)) {
-        return false;
-      }
+      final shiftEnd = agent.shiftSchedule!.endTime;
+      if (ticket.dueDate.isAfter(shiftEnd)) return false;
     }
 
     return true;

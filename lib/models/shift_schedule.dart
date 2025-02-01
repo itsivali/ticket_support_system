@@ -13,7 +13,14 @@ class ShiftSchedule {
     required this.startTime,
     required this.endTime,
     this.isActive = true,
-  });
+  }) {
+    if (startTime.isAfter(endTime)) {
+      throw ArgumentError('Start time must be before end time');
+    }
+    if (weekdays.any((day) => day < 1 || day > 7)) {
+      throw ArgumentError('Weekdays must be between 1 and 7');
+    }
+  }
 
   factory ShiftSchedule.fromJson(Map<String, dynamic> json) {
     return ShiftSchedule(
@@ -34,17 +41,50 @@ class ShiftSchedule {
     'isActive': isActive,
   };
 
-  bool isWorkingAt(DateTime time) {
-    return weekdays.contains(time.weekday) &&
-           time.isAfter(startTime) &&
-           time.isBefore(endTime);
+  bool isWorkingAt(DateTime dateTime) {
+    if (!isActive) return false;
+    if (!weekdays.contains(dateTime.weekday)) return false;
+
+    final shiftStart = DateTime(
+      dateTime.year,
+      dateTime.month,
+      dateTime.day,
+      startTime.hour,
+      startTime.minute,
+    );
+
+    final shiftEnd = DateTime(
+      dateTime.year,
+      dateTime.month,
+      dateTime.day,
+      endTime.hour,
+      endTime.minute,
+    );
+
+    return dateTime.isAfter(shiftStart) && 
+           dateTime.isBefore(shiftEnd);
   }
 
-  bool isWorkingAtDateTime(DateTime dateTime) {
+  Duration getTimeUntilNextShift(DateTime fromTime) {
+    if (isWorkingAt(fromTime)) return Duration.zero;
 
-    return isActive &&
-         weekdays.contains(dateTime.weekday) &&
-         dateTime.isAfter(DateTime(dateTime.year, dateTime.month, dateTime.day, startTime.hour, startTime.minute)) &&
-         dateTime.isBefore(DateTime(dateTime.year, dateTime.month, dateTime.day, endTime.hour, endTime.minute));
+    var nextDate = fromTime;
+    while (!weekdays.contains(nextDate.weekday)) {
+      nextDate = nextDate.add(const Duration(days: 1));
+    }
+
+    final nextShiftStart = DateTime(
+      nextDate.year,
+      nextDate.month,
+      nextDate.day,
+      startTime.hour,
+      startTime.minute,
+    );
+
+    if (nextShiftStart.isBefore(fromTime)) {
+      nextDate = nextDate.add(const Duration(days: 1));
+    }
+
+    return nextShiftStart.difference(fromTime);
   }
 }
