@@ -2,13 +2,13 @@ import '../models/agent.dart';
 import '../models/ticket.dart';
 
 class WorkloadManager {
-  static const int MAX_WORKLOAD = 24; // hours
-  static const int MAX_TICKETS = 3;
+  static const int maxWorkload = 24; // hours
+  static const int maxTickets = 3;
 
   bool canAssignTicket(Agent agent, Ticket ticket) {
     // Current workload check
     final currentWorkload = agent.currentTickets.length;
-    if (currentWorkload >= MAX_TICKETS) return false;
+    if (currentWorkload >= maxTickets) return false;
 
     // Shift validation
     if (agent.shiftSchedule != null) {
@@ -28,7 +28,7 @@ class WorkloadManager {
     double score = 0;
     
     // Base workload score
-    score += (agent.currentTickets.length / MAX_TICKETS) * 100;
+    score += (agent.currentTickets.length / maxTickets) * 100;
     
     // Shift time remaining factor
     if (agent.shiftSchedule != null) {

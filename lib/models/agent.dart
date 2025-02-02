@@ -121,4 +121,10 @@ class ShiftSchedule {
     // For example, check if the ticket's creation time falls within the agent's shift hours
     return true;
   }
+
+  bool isWorkingAt(String dateTime) {
+    final date = DateTime.parse(dateTime);
+    // Implement your shift schedule logic here
+    return true; // Default implementation
+  }
 }

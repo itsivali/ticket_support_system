@@ -4,7 +4,7 @@ class Ticket {
   final String description;
   final String? assignedTo;
   final String status;
-  final String dueDate;
+  final DateTime dueDate;
   final double estimatedHours;
   final String priority;
   final String createdAt;
@@ -28,7 +28,7 @@ class Ticket {
       id: json['_id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      dueDate: json['dueDate']?.toString() ?? '',
+      dueDate: DateTime.parse(json['dueDate']?.toString() ?? ''),
       estimatedHours: (json['estimatedHours'] as num?)?.toDouble() ?? 0.0,
       status: json['status']?.toString() ?? 'OPEN',
       priority: json['priority']?.toString() ?? 'MEDIUM',
@@ -41,7 +41,7 @@ class Ticket {
   Map<String, dynamic> toJson() => {
     'title': title,
     'description': description,
-    'dueDate': dueDate,
+    'dueDate': dueDate.toIso8601String(),
     'estimatedHours': estimatedHours,
     'status': status,
     'priority': priority,

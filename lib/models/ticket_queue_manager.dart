@@ -44,7 +44,7 @@ class TicketQueueManager {
     priority += (waitingHours / 24.0); // Increase priority with wait time
     
     // Factor in due date proximity
-    final hoursUntilDue = DateTime.parse(ticket.dueDate).difference(DateTime.now()).inHours;
+    final hoursUntilDue = ticket.dueDate.difference(DateTime.now()).inHours;
     if (hoursUntilDue < 24) {
       priority *= 1.5; // Urgent multiplier
     }
@@ -59,7 +59,7 @@ class TicketQueueManager {
     if (currentAssignments >= 3) return false;
 
     if (agent.shiftSchedule != null) {
-      if (!agent.shiftSchedule!.isWorkingAt(ticket.dueDate)) {
+      if (!agent.shiftSchedule!.isWorkingAt(ticket.dueDate.toIso8601String())) {
         return false;
       }
     }
