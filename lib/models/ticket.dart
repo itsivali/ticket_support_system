@@ -9,6 +9,7 @@ class Ticket {
   final String priority;
   final String createdAt;
   final String? lastUpdated;
+  final List<String> requiredSkills;
 
   Ticket({
     required this.id,
@@ -21,6 +22,7 @@ class Ticket {
     required this.priority,
     required this.createdAt,
     this.lastUpdated,
+    required this.requiredSkills,
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class Ticket {
       assignedTo: json['assignedTo']?.toString(),
       createdAt: json['createdAt']?.toString() ?? '',
       lastUpdated: json['lastUpdated']?.toString(),
+      requiredSkills: (json['requiredSkills'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 
@@ -48,5 +51,6 @@ class Ticket {
     if (assignedTo != null) 'assignedTo': assignedTo,
     'createdAt': createdAt,
     if (lastUpdated != null) 'lastUpdated': lastUpdated,
+    'requiredSkills': requiredSkills,
   };
 }

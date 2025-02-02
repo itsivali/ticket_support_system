@@ -5,6 +5,7 @@ import '../providers/ticket_provider.dart';
 import '../providers/agent_provider.dart';
 import '../utils/validators.dart';
 import '../widgets/loading_overlay.dart';
+import '../widgets/skill_selector.dart';
 
 class CreateTicketScreen extends StatefulWidget {
   const CreateTicketScreen({super.key});
@@ -22,6 +23,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   String _priority = 'MEDIUM';
   String? _assignedTo;
   bool _isLoading = false;
+  List<String> _requiredSkills = [];
 
   @override
   void initState() {
@@ -49,19 +51,20 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final newTicket = Ticket(
+      final ticket = Ticket(
         id: '',
         title: _titleController.text,
         description: _descriptionController.text,
         dueDate: _dueDate,
         estimatedHours: _estimatedHours,
-        status: 'OPEN',
         priority: _priority,
+        status: 'OPEN',
         assignedTo: _assignedTo,
+        requiredSkills: _requiredSkills,
         createdAt: DateTime.now().toIso8601String(),
       );
 
-      await context.read<TicketProvider>().createTicket(newTicket, context);
+      await context.read<TicketProvider>().createTicket(ticket, context);
 
       if (mounted) {
         Navigator.pop(context);
@@ -69,7 +72,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating ticket: ${e.toString()}')),
+          SnackBar(content: Text('Error creating ticket: $e')),
         );
       }
     } finally {
@@ -94,24 +97,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: 'Title',
-                    prefixIcon: Icon(Icons.title),
-                  ),
-                  validator: (value) => Validators.required(value, 'Title'),
-                ),
+                _buildTitleField(),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _descriptionController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    prefixIcon: Icon(Icons.description),
-                  ),
-                  validator: (value) => Validators.required(value, 'Description'),
-                ),
+                _buildDescriptionField(),
                 const SizedBox(height: 16),
                 _buildPrioritySelector(),
                 const SizedBox(height: 16),
@@ -120,6 +108,8 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                 _buildDueDatePicker(),
                 const SizedBox(height: 16),
                 _buildHoursEstimation(),
+                const SizedBox(height: 16),
+                _buildSkillSelector(),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _submitForm,
@@ -130,6 +120,29 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTitleField() {
+    return TextFormField(
+      controller: _titleController,
+      decoration: const InputDecoration(
+        labelText: 'Title',
+        prefixIcon: Icon(Icons.title),
+      ),
+      validator: (value) => Validators.required(value, 'Title'),
+    );
+  }
+
+  Widget _buildDescriptionField() {
+    return TextFormField(
+      controller: _descriptionController,
+      maxLines: 3,
+      decoration: const InputDecoration(
+        labelText: 'Description',
+        prefixIcon: Icon(Icons.description),
+      ),
+      validator: (value) => Validators.required(value, 'Description'),
     );
   }
 
@@ -152,7 +165,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
   Widget _buildAgentDropdown() {
     return Consumer<AgentProvider>(
       builder: (context, provider, child) {
-        final agents = provider.getAvailableAgents();
+        final agents = provider.agents;
         return DropdownButtonFormField<String?>(
           value: _assignedTo,
           decoration: const InputDecoration(
@@ -211,6 +224,13 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         ),
         Text('${_estimatedHours.toStringAsFixed(1)}h'),
       ],
+    );
+  }
+
+  Widget _buildSkillSelector() {
+    return SkillSelector(
+      selectedSkills: _requiredSkills,
+      onChanged: (skills) => setState(() => _requiredSkills = skills),
     );
   }
 }
