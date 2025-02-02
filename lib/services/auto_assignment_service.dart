@@ -1,6 +1,5 @@
 import '../models/ticket.dart';
 import '../models/agent.dart';
-import '../models/shift_schedule.dart';
 import '../utils/console_logger.dart';
 import './ticket_service.dart';
 import './agent_service.dart';
@@ -68,7 +67,7 @@ class AutoAssignmentService {
       email: agent.email,
       role: agent.role,
       currentTickets: updatedTickets,
-      lastAssignment: DateTime.now().toIso8601String(),
+      lastAssignment: DateTime.now(),
       isAvailable: agent.isAvailable,
       isOnline: agent.isOnline,
       shiftSchedule: agent.shiftSchedule,

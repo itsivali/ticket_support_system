@@ -123,7 +123,7 @@ class ShiftSchedule {
     // Check if ticket due date is within shift hours
     if (!isActive) return false;
     
-    final dueDate = ticket.dueDate;
+    final dueDate = DateTime.parse(ticket.dueDate);
     if (!weekdays.contains(dueDate.weekday)) return false;
 
     // Calculate time needed to complete ticket
