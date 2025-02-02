@@ -33,7 +33,7 @@ class AutoAssignmentService {
       return false;
     }
 
-    if (agent.currentTickets.length >= MAX_TICKETS_PER_AGENT) {
+    if (agent.currentTickets.length >= maxTicketsPerAgent) {
       return false;
     }
 

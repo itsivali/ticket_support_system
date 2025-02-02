@@ -1,3 +1,5 @@
+import './ticket.dart';
+
 class ShiftSchedule {
   final String id;
   final String agentId;
@@ -86,5 +88,10 @@ class ShiftSchedule {
     }
 
     return nextShiftStart.difference(fromTime);
+  }
+
+  bool canHandleTicket(Ticket ticket) {
+    final now = DateTime.now();
+    return now.isAfter(startTime) && now.isBefore(endTime);
   }
 }
