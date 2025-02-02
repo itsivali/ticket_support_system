@@ -58,6 +58,7 @@ class AutoAssignmentService {
       priority: ticket.priority,
       createdAt: ticket.createdAt,
       lastUpdated: DateTime.now().toIso8601String(),
+      requiredSkills: ticket.requiredSkills,
     );
 
     final List<String> updatedTickets = List.from(agent.currentTickets)..add(ticket.id);
