@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:collection';
-import '../models/notification.dart';
-import './interfaces/notification_channel.dart';
+import '../models/notification.dart' as model;
+import '../interfaces/notification_channel.dart' as channel;
 import '../utils/console_logger.dart';
 
 class NotificationService {
-  static const int MAX_RETRIES = 3;
-  static const Duration RETRY_INTERVAL = Duration(minutes: 1);
+  static const int maxRetries = 3;
+  static const Duration retryInterval = Duration(minutes: 1);
   
-  final Map<String, NotificationChannel> _channels = {};
+  final Map<String, channel.NotificationChannel> _channels = {};
   final Queue<NotificationItem> _queue = Queue();
   Timer? _processTimer;
 
@@ -16,7 +16,7 @@ class NotificationService {
     _startQueueProcessing();
   }
 
-  void registerChannel(String type, NotificationChannel channel) {
+  void registerChannel(String type, channel.NotificationChannel channel) {
     _channels[type] = channel;
   }
 
@@ -31,7 +31,7 @@ class NotificationService {
       throw ArgumentError('No channel registered for type: $type');
     }
 
-    final notification = Notification(
+    final notification = model.Notification(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       recipientId: recipientId,
       title: title,
@@ -60,13 +60,21 @@ class NotificationService {
     
     if (channel != null) {
       try {
-        final success = await channel.send(item.notification);
-        if (!success && item.retryCount < MAX_RETRIES) {
+        final channelNotification = channel.notification(
+          id: item.notification.id,
+          recipientId: item.notification.recipientId,
+          title: item.notification.title,
+          message: item.notification.message,
+          type: item.notification.type,
+          metadata: item.notification.metadata,
+        );
+        final success = await channel.send(channelNotification);
+        if (!success && item.retryCount < maxRetries) {
           _scheduleRetry(item);
         }
       } catch (e) {
-        ConsoleLogger.error('Delivery failed', e);
-        if (item.retryCount < MAX_RETRIES) {
+        ConsoleLogger.error('Delivery failed', e.toString());
+        if (item.retryCount < maxRetries) {
           _scheduleRetry(item);
         }
       }
@@ -76,7 +84,7 @@ class NotificationService {
   void _scheduleRetry(NotificationItem item) {
     item.retryCount++;
     Future.delayed(
-      RETRY_INTERVAL * item.retryCount,
+      retryInterval * item.retryCount,
       () => _queue.add(item)
     );
   }
@@ -88,7 +96,7 @@ class NotificationService {
 }
 
 class NotificationItem {
-  final Notification notification;
+  final model.Notification notification;
   int retryCount;
 
   NotificationItem({

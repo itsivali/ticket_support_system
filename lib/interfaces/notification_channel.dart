@@ -1,5 +1,21 @@
 abstract class NotificationChannel {
 
+  Notification notification({
+
+    required String id,
+
+    required String recipientId,
+
+    required String title,
+
+    required String message,
+
+    required String type,
+
+    Map<String, dynamic>? metadata,
+
+  });
+
   Future<bool> send(Notification notification);
 
   Future<bool> isDelivered(String notificationId);
