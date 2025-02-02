@@ -42,6 +42,7 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
         isAvailable: _isAvailable,
         isOnline: true,
         currentTickets: [],
+        skills: ['Communication', 'Problem Solving', 'Technical Support'], // Default skills
       );
 
       final success = await context.read<AgentProvider>().createAgent(newAgent);

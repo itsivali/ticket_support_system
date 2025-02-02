@@ -9,6 +9,7 @@ class Agent {
   final bool isAvailable;
   final bool isOnline;
   final List<String> currentTickets;
+  final List<String> skills;
   final ShiftSchedule? shiftSchedule;
   final DateTime? lastAssignment;
 
@@ -22,6 +23,7 @@ class Agent {
     required this.currentTickets,
     required this.isAvailable,
     required this.isOnline,
+    required this.skills,
     this.shiftSchedule,
     this.lastAssignment,
   }) {
@@ -47,6 +49,9 @@ class Agent {
         currentTickets: json['currentTickets'] != null 
             ? List<String>.from(json['currentTickets'].map((id) => id.toString()))
             : [],
+        skills: json['skills'] != null 
+            ? List<String>.from(json['skills'].map((skill) => skill.toString()))
+            : [],
         shiftSchedule: json['shiftSchedule'] != null 
             ? ShiftSchedule.fromJson(json['shiftSchedule'] as Map<String, dynamic>)
             : null,
@@ -62,6 +67,7 @@ class Agent {
     'role': role,
     'isAvailable': isAvailable,
     if (currentTickets.isNotEmpty) 'currentTickets': currentTickets,
+    if (skills.isNotEmpty) 'skills': skills,
     if (shiftSchedule != null) 'shiftSchedule': shiftSchedule!.toJson(),
   };
 }

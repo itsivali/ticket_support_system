@@ -71,6 +71,7 @@ class AutoAssignmentService {
       isAvailable: agent.isAvailable,
       isOnline: agent.isOnline,
       shiftSchedule: agent.shiftSchedule,
+      skills: agent.skills,
     );
 
     await Future.wait([
