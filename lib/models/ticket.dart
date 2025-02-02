@@ -2,23 +2,25 @@ class Ticket {
   final String id;
   final String title;
   final String description;
-  final DateTime dueDate;
-  final double estimatedHours;
-  final String status;
-  final String priority;
   final String? assignedTo;
-  final DateTime createdAt;
+  final String status;
+  final String dueDate;
+  final double estimatedHours;
+  final String priority;
+  final String createdAt;
+  final String? lastUpdated;
 
   Ticket({
     required this.id,
     required this.title,
     required this.description,
+    this.assignedTo,
+    required this.status,
     required this.dueDate,
     required this.estimatedHours,
-    required this.status,
     required this.priority,
-    this.assignedTo,
     required this.createdAt,
+    this.lastUpdated,
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
@@ -26,27 +28,25 @@ class Ticket {
       id: json['_id']?.toString() ?? '',
       title: json['title']?.toString() ?? '',
       description: json['description']?.toString() ?? '',
-      dueDate: json['dueDate'] != null 
-          ? DateTime.parse(json['dueDate'].toString())
-          : DateTime.now(),
+      dueDate: json['dueDate']?.toString() ?? '',
       estimatedHours: (json['estimatedHours'] as num?)?.toDouble() ?? 0.0,
       status: json['status']?.toString() ?? 'OPEN',
       priority: json['priority']?.toString() ?? 'MEDIUM',
       assignedTo: json['assignedTo']?.toString(),
-      createdAt: json['createdAt'] != null 
-          ? DateTime.parse(json['createdAt'].toString())
-          : DateTime.now(),
+      createdAt: json['createdAt']?.toString() ?? '',
+      lastUpdated: json['lastUpdated']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() => {
     'title': title,
     'description': description,
-    'dueDate': dueDate.toIso8601String(),
+    'dueDate': dueDate,
     'estimatedHours': estimatedHours,
     'status': status,
     'priority': priority,
     if (assignedTo != null) 'assignedTo': assignedTo,
-    'createdAt': createdAt.toIso8601String(),
+    'createdAt': createdAt,
+    if (lastUpdated != null) 'lastUpdated': lastUpdated,
   };
 }

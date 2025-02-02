@@ -1,4 +1,5 @@
 import '../utils/console_logger.dart';
+import './ticket.dart';
 
 class Agent {
   final String id;
@@ -9,6 +10,7 @@ class Agent {
   final bool isOnline;
   final List<String> currentTickets;
   final ShiftSchedule? shiftSchedule;
+  final DateTime? lastAssignment;
 
   static const List<String> validRoles = ['SUPPORT', 'SUPERVISOR', 'ADMIN'];
 
@@ -17,10 +19,11 @@ class Agent {
     required this.name,
     required this.email,
     required this.role,
-    this.isAvailable = true,
-    this.isOnline = false,
-    this.currentTickets = const [],
+    required this.currentTickets,
+    required this.isAvailable,
+    required this.isOnline,
     this.shiftSchedule,
+    this.lastAssignment,
   }) {
     if (!validRoles.contains(role)) {
       throw ArgumentError('Invalid role: $role');
@@ -112,4 +115,10 @@ class ShiftSchedule {
     'endTime': endTime.toIso8601String(),
     'weekdays': weekdays,
   };
+
+  bool canHandleTicket(Ticket ticket) {
+    // Add your shift schedule validation logic here
+    // For example, check if the ticket's creation time falls within the agent's shift hours
+    return true;
+  }
 }

@@ -1,5 +1,6 @@
 import '../models/ticket.dart';
 import '../models/agent.dart';
+import '../models/shift_schedule.dart';
 import '../utils/console_logger.dart';
 import './ticket_service.dart';
 import './agent_service.dart';
@@ -47,27 +48,35 @@ class AutoAssignmentService {
   }
 
   Future<void> _processAssignment(Ticket ticket, Agent agent) async {
-    final updates = {
-      'assignedTo': agent.id,
-      'status': 'IN_PROGRESS',
-      'lastUpdated': DateTime.now().toIso8601String(),
-    };
+    final updatedTicket = Ticket(
+      id: ticket.id,
+      title: ticket.title,
+      description: ticket.description,
+      assignedTo: agent.id,
+      status: 'IN_PROGRESS',
+      dueDate: ticket.dueDate,
+      estimatedHours: ticket.estimatedHours,
+      priority: ticket.priority,
+      createdAt: ticket.createdAt,
+      lastUpdated: DateTime.now().toIso8601String(),
+    );
 
-    final agentUpdates = {
-      'currentTickets': [...agent.currentTickets, ticket.id],
-      'lastAssignment': DateTime.now().toIso8601String(),
-    };
-
-    ticket.assignedTo = agent.id;
-    ticket.status = 'IN_PROGRESS';
-    ticket.lastUpdated = DateTime.now().toIso8601String();
-
-    agent.currentTickets.add(ticket.id);
-    agent.lastAssignment = DateTime.now().toIso8601String();
+    final List<String> updatedTickets = List.from(agent.currentTickets)..add(ticket.id);
+    final updatedAgent = Agent(
+      id: agent.id,
+      name: agent.name,
+      email: agent.email,
+      role: agent.role,
+      currentTickets: updatedTickets,
+      lastAssignment: DateTime.now().toIso8601String(),
+      isAvailable: agent.isAvailable,
+      isOnline: agent.isOnline,
+      shiftSchedule: agent.shiftSchedule,
+    );
 
     await Future.wait([
-      _ticketService.updateTicket(ticket),
-      _agentService.updateAgent(agent),
+      _ticketService.updateTicket(updatedTicket),
+      _agentService.updateAgent(updatedAgent.id, updatedAgent),
     ]);
   }
 
