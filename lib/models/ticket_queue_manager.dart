@@ -1,11 +1,12 @@
 import '../models/ticket.dart';
-import '../utils/priority_queue.dart';
 import '../models/agent.dart';
+import '../utils/priority_queue.dart';
 
 class TicketQueueManager {
   final PriorityQueue<Ticket> _queue;
+  final Map<String, List<String>> _agentAssignments = {};
   
-  static const Map<String, double> PRIORITY_WEIGHTS = {
+  static const Map<String, double> priorityWeights = {
     'HIGH': 3.0,
     'MEDIUM': 2.0,
     'LOW': 1.0
@@ -13,8 +14,8 @@ class TicketQueueManager {
 
   TicketQueueManager() : _queue = PriorityQueue<Ticket>((a, b) {
     // First compare priorities
-    final priorityDiff = (PRIORITY_WEIGHTS[b.priority] ?? 1.0)
-        .compareTo(PRIORITY_WEIGHTS[a.priority] ?? 1.0);
+    final priorityDiff = (priorityWeights[b.priority] ?? 1.0)
+        .compareTo(priorityWeights[a.priority] ?? 1.0);
     
     if (priorityDiff != 0) return priorityDiff;
     
@@ -36,14 +37,14 @@ class TicketQueueManager {
   int get size => _queue.length;
 
   double _calculatePriority(Ticket ticket) {
-    double priority = PRIORITY_WEIGHTS[ticket.priority] ?? 1.0;
+    double priority = priorityWeights[ticket.priority] ?? 1.0;
     
     // Factor in waiting time
-    final waitingHours = DateTime.now().difference(ticket.createdAt).inHours;
+    final waitingHours = DateTime.now().difference(DateTime.parse(ticket.createdAt)).inHours;
     priority += (waitingHours / 24.0); // Increase priority with wait time
     
     // Factor in due date proximity
-    final hoursUntilDue = ticket.dueDate.difference(DateTime.now()).inHours;
+    final hoursUntilDue = DateTime.parse(ticket.dueDate).difference(DateTime.now()).inHours;
     if (hoursUntilDue < 24) {
       priority *= 1.5; // Urgent multiplier
     }
@@ -53,20 +54,16 @@ class TicketQueueManager {
 
   bool canAssignToAgent(Ticket ticket, Agent agent) {
     if (!agent.isAvailable || !agent.isOnline) return false;
-    if (agent.currentTickets.length >= 3) return false;
     
-    // Check shift schedule
+    final currentAssignments = _agentAssignments[agent.id]?.length ?? 0;
+    if (currentAssignments >= 3) return false;
+
     if (agent.shiftSchedule != null) {
-      final shiftEnd = agent.shiftSchedule!.endTime;
-      
-      // Ensure ticket due date is within shift
-      if (ticket.dueDate.isAfter(shiftEnd)) return false;
-      
-      // Ensure enough time to complete ticket
-      final remainingHours = shiftEnd.difference(DateTime.now()).inHours;
-      if (remainingHours < ticket.estimatedHours) return false;
+      if (!agent.shiftSchedule!.isWorkingAt(ticket.dueDate)) {
+        return false;
+      }
     }
-    
+
     return true;
   }
 
@@ -77,22 +74,26 @@ class TicketQueueManager {
 
     if (eligibleAgents.isEmpty) return null;
 
-    // Sort by workload and return agent with least load
-    eligibleAgents.sort((a, b) => 
-      a.currentTickets.length.compareTo(b.currentTickets.length));
+    eligibleAgents.sort((a, b) {
+      final aLoad = _agentAssignments[a.id]?.length ?? 0;
+      final bLoad = _agentAssignments[b.id]?.length ?? 0;
+      return aLoad.compareTo(bLoad);
+    });
     
     return eligibleAgents.first;
   }
 
-  Map<String, dynamic> getQueueStats() {
-    final tickets = getPendingTickets();
+  Map<String, int> getQueueStats() {
+    final tickets = _queue.items;
+    final now = DateTime.now();
+    
     return {
       'total': tickets.length,
       'high': tickets.where((t) => t.priority == 'HIGH').length,
       'medium': tickets.where((t) => t.priority == 'MEDIUM').length,
       'low': tickets.where((t) => t.priority == 'LOW').length,
       'urgent': tickets.where((t) => 
-        t.dueDate.difference(DateTime.now()).inHours < 24).length,
+        t.dueDate.difference(now).inHours < 24).length,
     };
   }
 }

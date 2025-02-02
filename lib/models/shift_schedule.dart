@@ -88,6 +88,11 @@ class ShiftSchedule {
            !timeToCheck.isAfter(shiftEnd);
   }
 
+  bool parseAndCheckWorkingAt(String dateTime) {
+    final date = DateTime.parse(dateTime);
+    return isWorkingAt(date);
+  }
+
   Duration getTimeUntilNextShift(DateTime fromTime) {
     if (isWorkingAt(fromTime)) return Duration.zero;
 
