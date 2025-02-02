@@ -5,24 +5,15 @@ import 'providers/agent_provider.dart';
 import 'providers/queue_provider.dart';
 import 'providers/shift_provider.dart';
 import 'screens/dashboard_screen.dart';
-import 'screens/create_ticket_screen.dart';
-import 'screens/edit_ticket_screen.dart';
-import 'screens/agent_list_screen.dart';
-import 'screens/create_agent_screen.dart';
-import 'screens/agent_details_screen.dart';
-import 'screens/ticket_queue_screen.dart';
-import 'screens/manage_tickets_screen.dart';
-import 'screens/shift_management_screen.dart';
-import 'screens/auto_assignment_screen.dart';
-import 'screens/claim_tickets_screen.dart';
+import 'screens/ticket_screens.dart';
+import 'screens/agent_screens.dart';
+import 'screens/queue_screens.dart';
+import 'screens/shift_screens.dart';
 import 'models/ticket.dart';
 import 'models/agent.dart';
 import 'theme/app_theme.dart';
-import 'utils/console_logger.dart';
 
 void main() {
-  ConsoleLogger.info('Application starting', 'Initializing providers and services');
-  
   runApp(
     MultiProvider(
       providers: [
@@ -42,42 +33,48 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Ticket Support System',
+      title: 'Support System',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      home: const DashboardScreen(),
       routes: {
-        '/': (context) => const DashboardScreen(),
+        '/tickets': (context) => const TicketListScreen(),
         '/create-ticket': (context) => const CreateTicketScreen(),
         '/agents': (context) => const AgentListScreen(),
         '/create-agent': (context) => const CreateAgentScreen(),
-        '/ticket-queue': (context) => const TicketQueueScreen(),
-        '/manage-tickets': (context) => const ManageTicketsScreen(),
-        '/shift-management': (context) => const ShiftManagementScreen(),
-        '/auto-assignment': (context) => const AutoAssignmentScreen(),
-        '/claim-tickets': (context) => const ClaimTicketsScreen(),
+        '/queue': (context) => const QueueScreen(),
+        '/shifts': (context) => const ShiftManagementScreen(),
       },
       onGenerateRoute: (settings) {
-        if (settings.name == '/edit-ticket') {
-          final ticket = settings.arguments as Ticket;
-          return MaterialPageRoute(
-            builder: (context) => EditTicketScreen(ticket: ticket),
-          );
+        switch (settings.name) {
+          case '/edit-ticket':
+            return MaterialPageRoute(
+              builder: (context) => EditTicketScreen(
+                ticket: settings.arguments as Ticket,
+              ),
+            );
+          case '/edit-agent':
+            return MaterialPageRoute(
+              builder: (context) => EditAgentScreen(
+                agent: settings.arguments as Agent,
+              ),
+            );
+          case '/agent-details':
+            return MaterialPageRoute(
+              builder: (context) => AgentDetailsScreen(
+                agent: settings.arguments as Agent,
+              ),
+            );
+          default:
+            return null;
         }
-        if (settings.name == '/agent-details') {
-          final agent = settings.arguments as Agent;
-          return MaterialPageRoute(
-            builder: (context) => AgentDetailsScreen(agent: agent),
-          );
-        }
-        return null;
       },
       builder: (context, child) {
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(1.0),
+            textScaler: const TextScaler.linear(1.0),
           ),
           child: child!,
         );

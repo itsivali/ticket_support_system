@@ -1,178 +1,196 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../models/agent.dart';
-import '../providers/agent_provider.dart'; // Update import
-import '../screens/edit_agent_screen.dart';
-import '../screens/agent_details_screen.dart';
 
 class AgentCard extends StatelessWidget {
   final Agent agent;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
+  final ValueChanged<bool>? onStatusChanged;
 
-  const AgentCard({super.key, required this.agent});
+  const AgentCard({
+    super.key,
+    required this.agent,
+    this.onEdit,
+    this.onDelete,
+    this.onStatusChanged,
+  });
 
-  void _confirmDelete(BuildContext context, Agent agent) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange[700]),
-            const SizedBox(width: 10),
-            const Text('Delete Agent'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Are you sure you want to delete this agent?',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Name: ${agent.name}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Text('Email: ${agent.email}'),
-          ],
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey[600],
-            ),
-            child: const Text('CANCEL'),
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: InkWell(
+        onTap: onEdit,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(context),
+              const Divider(),
+              _buildStatusSection(),
+              if (agent.skills.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                _buildSkillsSection(),
+              ],
+              const SizedBox(height: 8),
+              _buildActionButtons(context),
+            ],
           ),
-          FilledButton.icon(
-            icon: const Icon(Icons.delete_forever),
-            label: const Text('DELETE'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
+        ),
+      ),
+    );
+  }
 
-              try {
-                await Provider.of<AgentProvider>(context, listen: false)
-                    .deleteAgent(agent.id, context);
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Failed to delete agent: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
+  Widget _buildHeader(BuildContext context) {
+    return Row(
+      children: [
+        CircleAvatar(
+          backgroundColor: Theme.of(context).primaryColor,
+          child: Text(
+            agent.name.substring(0, 1).toUpperCase(),
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                agent.name,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(
+                agent.role,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+        _buildStatusIndicator(),
+      ],
+    );
+  }
+
+  Widget _buildStatusIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: agent.isOnline ? Colors.green[100] : Colors.grey[200],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.circle,
+            size: 12,
+            color: agent.isOnline ? Colors.green : Colors.grey,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            agent.isOnline ? 'Online' : 'Offline',
+            style: TextStyle(
+              fontSize: 12,
+              color: agent.isOnline ? Colors.green[700] : Colors.grey[700],
+            ),
           ),
         ],
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        onTap: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AgentDetailsScreen(agent: agent),
-          ),
+  Widget _buildStatusSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        _buildStatusItem(
+          icon: Icons.assignment,
+          label: 'Tickets',
+          value: agent.currentTickets.length.toString(),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-            CircleAvatar(
-              backgroundColor: const Color(0xFFBBDEFB),  
-              child: Text(
-                agent.name.isNotEmpty ? agent.name[0].toUpperCase() : '?',
-                style: TextStyle(
-                  color: Colors.blue[900],
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    agent.name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    agent.email,
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            PopupMenuButton<String>(
-              onSelected: (value) {
-                if (value == 'edit') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditAgentScreen(agent: agent),
-                    ),
-                  );
-                } else if (value == 'delete') {
-                  _confirmDelete(context, agent);
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: 'edit',
-                  child: Row(
-                    children: [
-                      Icon(Icons.edit),
-                      SizedBox(width: 8),
-                      Text('Edit'),
-                    ],
-                  ),
-                ),
-                const PopupMenuItem(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete),
-                      SizedBox(width: 8),
-                      Text('Delete'),
-                    ],
-                  ),
-                ),
-              ],
-            )
-            ],
-          ),
+        _buildStatusItem(
+          icon: Icons.access_time,
+          label: 'Available',
+          value: agent.isAvailable ? 'Yes' : 'No',
         ),
-      ),
+      ],
+    );
+  }
+
+  Widget _buildStatusItem({
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 16),
+        const SizedBox(width: 4),
+        Text('$label: $value'),
+      ],
+    );
+  }
+
+  Widget _buildSkillsSection() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: agent.skills.map((skill) {
+        return Chip(
+          label: Text(
+            skill,
+            style: const TextStyle(fontSize: 12),
+          ),
+          padding: const EdgeInsets.all(4),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildActionButtons(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        if (onStatusChanged != null)
+          Switch(
+            value: agent.isAvailable,
+            onChanged: onStatusChanged,
+          ),
+        if (onEdit != null)
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: onEdit,
+          ),
+        if (onDelete != null)
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Delete Agent'),
+                  content: Text('Are you sure you want to delete ${agent.name}?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        onDelete?.call();
+                      },
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
     );
   }
 }

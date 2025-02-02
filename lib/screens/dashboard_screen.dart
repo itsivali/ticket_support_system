@@ -4,7 +4,11 @@ import '../providers/ticket_provider.dart';
 import '../providers/agent_provider.dart';
 import '../providers/queue_provider.dart';
 import '../providers/shift_provider.dart';
+import '../models/agent.dart';
+import '../models/shift.dart';
+import '../models/ticket.dart';
 import '../widgets/app_drawer.dart';
+import '../utils/console_logger.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -14,6 +18,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -21,12 +27,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _refreshData() async {
-    await Future.wait([
-      context.read<TicketProvider>().fetchTickets(),
-      context.read<AgentProvider>().fetchAgents(),
-      context.read<QueueProvider>().fetchQueueStatus(),
-      context.read<ShiftProvider>().fetchCurrentShifts(),
-    ]);
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      await Future.wait([
+        context.read<TicketProvider>().fetchTickets(),
+        context.read<AgentProvider>().fetchAgents(),
+        context.read<QueueProvider>().fetchQueueStatus(),
+        context.read<ShiftProvider>().fetchCurrentShifts(),
+      ]);
+    } catch (e) {
+      ConsoleLogger.error('Failed to refresh dashboard', e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to refresh data')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -35,31 +58,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Support Dashboard'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshData,
-            tooltip: 'Refresh Data',
-          ),
+          if (_isLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _refreshData,
+              tooltip: 'Refresh Data',
+            ),
         ],
       ),
       drawer: const AppDrawer(),
       body: RefreshIndicator(
         onRefresh: _refreshData,
-        child: const SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.all(16),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _StatusOverview(),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               _QuickActions(),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               _TicketMetrics(),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               _AgentStatus(),
-              SizedBox(height: 24),
-              _QueueOverview(),
+              const SizedBox(height: 24),
+              _ShiftOverview(),
+              const SizedBox(height: 24),
+              _AutoAssignmentStatus(),
             ],
           ),
         ),
@@ -372,8 +409,8 @@ class _AgentStatus extends StatelessWidget {
   }
 }
 
-class _QueueOverview extends StatelessWidget {
-  const _QueueOverview();
+class _ShiftOverview extends StatelessWidget {
+  const _ShiftOverview();
 
   @override
   Widget build(BuildContext context) {
@@ -387,43 +424,75 @@ class _QueueOverview extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Queue Overview',
+                  'Current Shifts',
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
                 TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/ticket-queue'),
-                  child: const Text('Manage Queue'),
+                  onPressed: () => Navigator.pushNamed(context, '/shift-management'),
+                  child: const Text('Manage Shifts'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Consumer<ShiftProvider>(
+              builder: (context, provider, child) {
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: provider.currentShifts.take(3).length,
+                  itemBuilder: (context, index) {
+                    final shift = provider.currentShifts[index];
+                    return ListTile(
+                      leading: const Icon(Icons.schedule),
+                      title: Text(shift.agentName),
+                      subtitle: Text('${shift.startTime.format(context)} - ${shift.endTime.format(context)}'),
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AutoAssignmentStatus extends StatelessWidget {
+  const _AutoAssignmentStatus();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Auto Assignment',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(context, '/auto-assignment'),
+                  child: const Text('Configure'),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Consumer<QueueProvider>(
               builder: (context, provider, child) {
-                final stats = provider.queueManager?.getQueueStats() ?? {};
-                return Column(
-                  children: [
-                    _MetricRow(
-                      label: 'High Priority',
-                      value: stats['high'] ?? 0,
-                      color: Colors.red,
-                    ),
-                    _MetricRow(
-                      label: 'Medium Priority',
-                      value: stats['medium'] ?? 0,
-                      color: Colors.orange,
-                    ),
-                    _MetricRow(
-                      label: 'Low Priority',
-                      value: stats['low'] ?? 0,
-                      color: Colors.green,
-                    ),
-                    const Divider(),
-                    _MetricRow(
-                      label: 'Total in Queue',
-                      value: stats['total'] ?? 0,
-                      color: Colors.blue,
-                    ),
-                  ],
+                final isEnabled = provider.queueManager?.settings.autoAssignEnabled ?? false;
+                return SwitchListTile(
+                  title: const Text('Auto Assignment'),
+                  subtitle: Text(isEnabled ? 'Enabled' : 'Disabled'),
+                  value: isEnabled,
+                  onChanged: (value) {
+                    // Update auto-assignment setting
+                  },
                 );
               },
             ),
