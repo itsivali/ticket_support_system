@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/queue_manager.dart';
+import '../models/agent.dart';
 import '../utils/console_logger.dart';
 
 class QueueService {
@@ -82,6 +83,26 @@ class QueueService {
     } catch (e) {
       ConsoleLogger.error('Error getting queue metrics', e.toString());
       return {};
+    }
+  }
+
+  Future<List<Agent>> getAvailableAgents() async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/agents/available'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return (json.decode(response.body) as List)
+            .map((agent) => Agent.fromJson(agent))
+            .toList();
+      }
+
+      throw _handleError(response);
+    } catch (e) {
+      ConsoleLogger.error('Error getting available agents', e.toString());
+      return [];
     }
   }
 

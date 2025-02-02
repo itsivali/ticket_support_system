@@ -22,9 +22,9 @@ class TicketProvider with ChangeNotifier {
       notifyListeners();
 
       _tickets = await _ticketService.getTickets();
-    } catch (e) {
- ConsoleLogger.error('Error in auto assignment', e.toString());
-      _error = e.toString();
+} catch (e) {
+  ConsoleLogger.error('Error fetching tickets', e.toString());
+  _error = e.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -145,7 +145,7 @@ class TicketProvider with ChangeNotifier {
         throw Exception('Description must be at least 10 characters');
       }
 
-      final updated = await _ticketService.updateTicket(ticket);
+      final updated = await _ticketService.updateTicket(ticket.id, ticket.toJson());
       final index = _tickets.indexWhere((t) => t.id == updated.id);
       if (index != -1) {
         _tickets[index] = updated;

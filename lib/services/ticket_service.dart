@@ -30,6 +30,36 @@ class TicketService {
     }
   }
 
+  Future<List<Ticket>> getTickets({
+    String? status,
+    String? priority,
+    String? assignedTo
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (status != null) queryParams['status'] = status;
+      if (priority != null) queryParams['priority'] = priority;
+      if (assignedTo != null) queryParams['assignedTo'] = assignedTo;
+
+      final uri = Uri.parse('$baseUrl/tickets').replace(queryParameters: queryParams);
+      
+      final response = await _client.get(
+        uri,
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonData = json.decode(response.body);
+        return jsonData.map((json) => Ticket.fromJson(json)).toList();
+      }
+      
+      throw _handleError(response);
+    } catch (e) {
+      ConsoleLogger.error('Error fetching tickets', e.toString());
+      rethrow;
+    }
+  }
+
   Future<Ticket> createTicket(Ticket ticket) async {
     try {
       final response = await _client.post(
