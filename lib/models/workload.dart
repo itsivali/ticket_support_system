@@ -34,7 +34,7 @@ class WorkloadManager {
     if (agent.shiftSchedule != null) {
       final remainingHours = agent.shiftSchedule!.endTime
           .difference(DateTime.now()).inHours;
-      score += ((MAX_WORKLOAD - remainingHours) / MAX_WORKLOAD) * 50;
+      score += ((maxWorkload - remainingHours) / maxWorkload) * 50;
     }
 
     return score;

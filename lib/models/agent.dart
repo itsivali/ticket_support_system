@@ -124,7 +124,14 @@ class ShiftSchedule {
 
   bool isWorkingAt(String dateTime) {
     final date = DateTime.parse(dateTime);
-    // Implement your shift schedule logic here
-    return true; // Default implementation
+    // Check if the date falls on a working weekday
+    if (!weekdays.contains(date.weekday)) return false;
+    
+    // Create DateTime objects for comparison with the same date
+    final todayStart = DateTime(date.year, date.month, date.day, startTime.hour, startTime.minute);
+    final todayEnd = DateTime(date.year, date.month, date.day, endTime.hour, endTime.minute);
+    
+    // Check if the date falls within working hours
+    return date.isAfter(todayStart) && date.isBefore(todayEnd);
   }
 }
