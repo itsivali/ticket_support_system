@@ -63,7 +63,7 @@ class _CreateAgentScreenState extends State<CreateAgentScreen> {
       } catch (error) {
         ConsoleLogger.error(
           'Failed to create agent in CreateAgentScreen',
-          error,
+          error.toString(),
         );
         
         if (!mounted) return;

@@ -1,7 +1,6 @@
-import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server.dart';
-import '../utils/console_logger.dart';
-import 'base_channel.dart';
+import 'package:mailer/mailer.dart' as mailer;
+import 'package:mailer/smtp_server.dart' as mailer;
+import 'package:ticket_support_system/utils/console_logger.dart';
 
 class EmailNotification {
   final String id;
@@ -31,13 +30,12 @@ class DeliveryStatus {
   });
 }
 
-class EmailChannel implements NotificationChannel {
-  final SmtpServer _server;
+class EmailChannel {
+  final mailer.SmtpServer _server;
   final Map<String, DeliveryStatus> _deliveryTracker = {};
 
   EmailChannel(this._server);
 
-  @override
   String get channelType => 'email';
 
   String _buildEmailTemplate(EmailNotification notification) {
@@ -54,7 +52,6 @@ class EmailChannel implements NotificationChannel {
     ''';
   }
 
-  @override
   Future<bool> send(EmailNotification notification) async {
     try {
       ConsoleLogger.info(
@@ -62,13 +59,13 @@ class EmailChannel implements NotificationChannel {
         'To: ${notification.recipientEmail}\nSubject: ${notification.title}'
       );
 
-      final message = Message()
-        ..from = Address(notification.sender ?? 'support@system.com')
+      final message = mailer.Message()
+        ..from = mailer.Address(notification.sender ?? 'support@system.com')
         ..recipients.add(notification.recipientEmail)
         ..subject = notification.title
         ..html = _buildEmailTemplate(notification);
 
-      final sendReport = await mailer.send(message, _server);
+      await mailer.send(message, _server);
       
       _deliveryTracker[notification.id] = DeliveryStatus(
         sent: true,
@@ -77,12 +74,12 @@ class EmailChannel implements NotificationChannel {
       
       ConsoleLogger.info(
         'Email sent successfully',
-        'Message ID: ${sendReport.messageid}'
+        'Email sent successfully'
       );
 
       return true;
-    } catch (e, stack) {
-      ConsoleLogger.error('Failed to send email', e, stack);
+    } catch (e) {
+      ConsoleLogger.error('Failed to send email', e.toString());
       
       _deliveryTracker[notification.id] = DeliveryStatus(
         sent: false,
@@ -94,16 +91,9 @@ class EmailChannel implements NotificationChannel {
     }
   }
 
-  @override
   Future<bool> isDelivered(String notificationId) async {
     final status = _deliveryTracker[notificationId];
     return status?.sent ?? false;
-  }
-
-  @override
-  Future<void> markAsRead(String notificationId) async {
-    // Email notifications don't need read status tracking
-    return;
   }
 
   DeliveryStatus? getDeliveryStatus(String notificationId) {
@@ -115,12 +105,30 @@ class EmailChannel implements NotificationChannel {
   }
 }
 
-class NotificationException implements Exception {
-  final String message;
-  final dynamic error;
+void main() async {
+  final smtpServer = mailer.SmtpServer(
+    'smtp.example.com',
+    username: 'your_username',
+    password: 'your_password',
+    port: 587,
+    ssl: true,
+  );
 
-  NotificationException(this.message, [this.error]);
+  final emailChannel = EmailChannel(smtpServer);
 
-  @override
-  String toString() => 'NotificationException: $message${error != null ? '\nCause: $error' : ''}';
+  final notification = EmailNotification(
+    id: 'unique_id',
+    recipientEmail: 'recipient@example.com',
+    title: 'Test Notification',
+    message: 'This is a test notification',
+  );
+
+  try {
+    final sent = await emailChannel.send(notification);
+    if (sent) {
+      ConsoleLogger.info('Email sent successfully', 'Notification ID: ${notification.id}');
+    }
+  } catch (e) {
+    ConsoleLogger.error('Failed to send email', e.toString());
+  }
 }

@@ -4,6 +4,8 @@ abstract class NotificationChannel {
 
   Future<bool> isDelivered(String notificationId);
 
+  Future<void> markAsRead(String notificationId);
+
 }
 
 
