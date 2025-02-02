@@ -5,129 +5,110 @@ import '../utils/console_logger.dart';
 
 class AgentService {
   final String baseUrl = 'http://localhost:3000/api';
+  final http.Client _client = http.Client();
 
   Future<List<Agent>> getAgents() async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse('$baseUrl/agents'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Accept': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);
         return jsonData.map((json) => Agent.fromJson(json)).toList();
       }
-      
-      ConsoleLogger.error(
-        'Failed to load agents: ${response.statusCode}',
-        'Response body: ${response.body}'
-      );
-      throw Exception('Failed to load agents: ${response.statusCode}');
-    } catch (e, stack) {
-      ConsoleLogger.error('Network error', e, stack);
-      throw Exception('Network error: $e');
+      throw _handleError(response);
+    } catch (e) {
+      ConsoleLogger.error('Failed to get agents', e.toString());
+      rethrow;
     }
   }
 
   Future<Agent> createAgent(Agent agent) async {
     try {
-      final payload = {
-        'name': agent.name,
-        'email': agent.email,
-        'role': agent.role,
-        'isAvailable': agent.isAvailable,
-      };
-      
-      ConsoleLogger.info('Creating agent', 'Endpoint: $baseUrl/agents\nPayload: ${json.encode(payload)}');
-
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('$baseUrl/agents'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode(payload),
+        body: json.encode(agent.toJson()),
       );
-
-      ConsoleLogger.info('Server response', 'Status: ${response.statusCode}\nBody: ${response.body}');
 
       if (response.statusCode == 201) {
         return Agent.fromJson(json.decode(response.body));
       }
-      
-      throw Exception('Server error: ${response.statusCode}\n${response.body}');
-    } catch (e, stack) {
-      ConsoleLogger.error('Failed to create agent', e, stack);
+      throw _handleError(response);
+    } catch (e) {
+      ConsoleLogger.error('Failed to get agents', e.toString());
       rethrow;
     }
   }
 
-  Future<Agent> updateAgent(Agent agent) async {
+  Future<Agent> updateAgent(String id, Agent agent) async {
     try {
-      final payload = {
-        'name': agent.name,
-        'email': agent.email,
-        'role': agent.role,
-        'isAvailable': agent.isAvailable,
-      };
-      
-      ConsoleLogger.info('Updating agent', 'Payload: ${json.encode(payload)}');
-
-      final response = await http.put(
-        Uri.parse('$baseUrl/agents/${agent.id}'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode(payload),
-      );
-
-      ConsoleLogger.info(
-        'Server response',
-        'Status: ${response.statusCode}\nBody: ${response.body}'
-      );
-
-      if (response.statusCode == 200) {
-        return Agent.fromJson(json.decode(response.body));
-      }
-      
-      final errorData = json.decode(response.body);
-      final message = errorData['message'] ?? 'Failed to update agent';
-      throw Exception(message);
-    } catch (e, stack) {
-      ConsoleLogger.error('Failed to update agent', e, stack);
-      rethrow;
-    }
-  }
-
-  Future<void> deleteAgent(String id) async {
-    try {
-      ConsoleLogger.info('Deleting agent', 'Agent ID: $id');
-
-      final response = await http.delete(
+      final response = await _client.put(
         Uri.parse('$baseUrl/agents/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        body: json.encode(agent.toJson()),
       );
 
-      ConsoleLogger.info(
-        'Server response',
-        'Status: ${response.statusCode}\nBody: ${response.body}'
-      );
-
-      if (response.statusCode != 204) {
-        final errorData = json.decode(response.body);
-        final message = errorData['message'] ?? 'Failed to delete agent';
-        throw Exception(message);
+      if (response.statusCode == 200) {
+        return Agent.fromJson(json.decode(response.body));
       }
-    } catch (e, stack) {
-      ConsoleLogger.error('Failed to delete agent', e, stack);
+      throw _handleError(response);
+    } catch (e) {
+      ConsoleLogger.error('Failed to get agents', e.toString());
       rethrow;
     }
+  }
+
+  Future<bool> deleteAgent(String id) async {
+    try {
+      final response = await _client.delete(
+        Uri.parse('$baseUrl/agents/$id'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      return response.statusCode == 204;
+    } catch (e) {
+      ConsoleLogger.error('Failed to get agents', e.toString());
+      rethrow;
+    }
+  }
+
+  Future<bool> updateAgentStatus(String id, bool isAvailable) async {
+    try {
+      final response = await _client.patch(
+        Uri.parse('$baseUrl/agents/$id/status'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({'isAvailable': isAvailable}),
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      ConsoleLogger.error('Failed to get agents', e.toString());
+      rethrow;
+    }
+  }
+
+  Exception _handleError(http.Response response) {
+    try {
+      final error = json.decode(response.body)['error'];
+      return Exception(error ?? 'Unknown error');
+    } catch (_) {
+      return Exception('Request failed: ${response.statusCode}');
+    }
+  }
+
+  void dispose() {
+    _client.close();
   }
 }
