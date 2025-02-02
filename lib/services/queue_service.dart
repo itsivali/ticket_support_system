@@ -2,14 +2,20 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/queue_manager.dart';
 import '../utils/console_logger.dart';
-import '../models/agent.dart';
 
 class QueueService {
-  final String baseUrl = 'http://localhost:3000/api';
+  final String baseUrl;
+  final http.Client _client;
+  static const int maxRetries = 3;
+
+  QueueService({
+    this.baseUrl = 'http://localhost:3000/api',
+    http.Client? client,
+  }) : _client = client ?? http.Client();
 
   Future<QueueManager> getQueueStatus() async {
     try {
-      final response = await http.get(
+      final response = await _client.get(
         Uri.parse('$baseUrl/queue/status'),
         headers: {'Accept': 'application/json'},
       );
@@ -18,34 +24,34 @@ class QueueService {
         return QueueManager.fromJson(json.decode(response.body));
       }
       
-      throw Exception('Failed to get queue status: ${response.statusCode}');
+      throw _handleError(response);
     } catch (e) {
-      ConsoleLogger.error('Error getting queue status', e);
+      ConsoleLogger.error('Error getting queue status', e.toString());
       rethrow;
     }
   }
 
   Future<bool> assignTicket(String ticketId, String? agentId) async {
     try {
-      final response = await http.patch(
+      final response = await _client.patch(
         Uri.parse('$baseUrl/tickets/$ticketId/assign'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode({'assignedTo': agentId}),
+        body: json.encode({'agentId': agentId}),
       );
 
       return response.statusCode == 200;
     } catch (e) {
-      ConsoleLogger.error('Error assigning ticket', e);
+      ConsoleLogger.error('Error assigning ticket', e.toString());
       return false;
     }
   }
 
   Future<bool> claimTicket(String ticketId, String agentId) async {
     try {
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('$baseUrl/tickets/$ticketId/claim'),
         headers: {
           'Content-Type': 'application/json',
@@ -56,30 +62,39 @@ class QueueService {
 
       return response.statusCode == 200;
     } catch (e) {
-      ConsoleLogger.error('Error claiming ticket', e);
+      ConsoleLogger.error('Error claiming ticket', e.toString());
       return false;
     }
   }
 
-  Future<void> updateSettings(QueueSettings settings) async {
+  Future<Map<String, int>> getQueueMetrics() async {
     try {
-      await http.put(
-        Uri.parse('$baseUrl/queue/settings'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: json.encode(settings.toJson()),
+      final response = await _client.get(
+        Uri.parse('$baseUrl/queue/metrics'),
+        headers: {'Accept': 'application/json'},
       );
+
+      if (response.statusCode == 200) {
+        return Map<String, int>.from(json.decode(response.body));
+      }
+      
+      throw _handleError(response);
     } catch (e) {
-      ConsoleLogger.error('Error updating queue settings', e);
-      rethrow;
+      ConsoleLogger.error('Error getting queue metrics', e.toString());
+      return {};
     }
   }
 
-  Future<List<Agent>> getAvailableAgents() async {
-    // Implement the logic to get available agents
-    // For now, return an empty list
-    return [];
+  Exception _handleError(http.Response response) {
+    try {
+      final error = json.decode(response.body)['error'];
+      return Exception(error ?? 'Unknown error');
+    } catch (_) {
+      return Exception('Request failed: ${response.statusCode}');
+    }
+  }
+
+  void dispose() {
+    _client.close();
   }
 }
