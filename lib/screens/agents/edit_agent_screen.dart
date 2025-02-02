@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/agent_provider.dart';
-import '../utils/validators.dart';
-import '../widgets/loading_overlay.dart';
+import '../../providers/agent_provider.dart';
+import '../../utils/validators.dart';
+import '../../widgets/loading_overlay.dart';
 
 class EditAgentScreen extends StatefulWidget {
   final String agentId;

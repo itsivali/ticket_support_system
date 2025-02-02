@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/agent.dart';
-import '../providers/ticket_provider.dart';
-import '../widgets/ticket_card.dart';
-import '../widgets/app_drawer.dart';
+import '../../models/agent.dart';
+import '../../providers/ticket_provider.dart';
+import '../../widgets/ticket_card.dart';
+import '../../widgets/app_drawer.dart';
 
 class AgentDetailsScreen extends StatelessWidget {
   final Agent agent;
