@@ -99,6 +99,11 @@ class AgentService {
     }
   }
 
+  Future<Agent> getAgent(String agentId) async {
+    // TODO: Implement agent retrieval logic
+    throw UnimplementedError('getAgent method needs to be implemented');
+  }
+
   Exception _handleError(http.Response response) {
     try {
       final error = json.decode(response.body)['error'];
