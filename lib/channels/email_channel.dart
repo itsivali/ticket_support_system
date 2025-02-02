@@ -94,7 +94,7 @@ class EmailChannel implements NotificationChannel {
 
       return true;
     } catch (e, stack) {
-      ConsoleLogger.error('Failed to send email', e, stack);
+      ConsoleLogger.error('Failed to send email', '$e\n$stack');
       
       _deliveryTracker[emailNotification.id] = DeliveryStatus(
         sent: false,

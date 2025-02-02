@@ -30,7 +30,7 @@ class PushChannel implements NotificationChannel {
         _isInitialized = true;
       }
     } catch (e) {
-      ConsoleLogger.error('Failed to initialize Firebase', e);
+      ConsoleLogger.error('Failed to initialize Firebase', e.toString());
       rethrow;
     }
   }
@@ -46,21 +46,13 @@ class PushChannel implements NotificationChannel {
         return false;
       }
 
-      await _fcm.sendMessage(
-        to: token,
-        data: {
-          'id': notification.id,
-          'type': notification.type.toString(),
-          ...notification.metadata ?? {},
-        },
-        messageId: notification.id,
-        messageType: 'notification',
-        ttl: 3600,
+      // Note: This should be implemented on the server side using FCM HTTP v1 API
+      // Client-side message sending is being deprecated
+      throw UnimplementedError(
+        'Direct device-to-device messaging is deprecated. Implement server-side FCM HTTP v1 API instead.'
       );
-      
-      return true;
     } catch (e) {
-      ConsoleLogger.error('Failed to send push notification', e);
+      ConsoleLogger.error('Failed to send push notifications', e.toString());
       return false;
     }
   }
@@ -78,7 +70,7 @@ class PushChannel implements NotificationChannel {
       }
       return token;
     } catch (e) {
-      ConsoleLogger.error('Failed to get device token', e);
+  ConsoleLogger.error('Failed to get devoce tokens', e.toString());
       return null;
     }
   }

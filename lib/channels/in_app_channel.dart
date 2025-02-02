@@ -37,7 +37,7 @@ class InAppChannel implements NotificationChannel {
       
       return success;
     } catch (e) {
-      ConsoleLogger.error('In-app notification failed', e);
+      ConsoleLogger.error('Error getting all notifications', e.toString());
       return false;
     }
   }
@@ -48,7 +48,7 @@ class InAppChannel implements NotificationChannel {
       final notifications = await _getAllStoredNotifications();
       return notifications.any((n) => n.id == notificationId);
     } catch (e) {
-      ConsoleLogger.error('Error checking delivery status', e);
+      ConsoleLogger.error('Error getting all notifications', e.toString());
       return false;
     }
   }
@@ -64,7 +64,7 @@ class InAppChannel implements NotificationChannel {
         await _saveNotifications(notifications);
       }
     } catch (e) {
-      ConsoleLogger.error('Error marking notification as read', e);
+      ConsoleLogger.error('Error getting all notifications', e.toString());
     }
   }
 
@@ -78,7 +78,7 @@ class InAppChannel implements NotificationChannel {
           .map((item) => Notification.fromJson(item))
           .toList();
     } catch (e) {
-      ConsoleLogger.error('Error getting stored notifications', e);
+      ConsoleLogger.error('Error getting all stored notifications', e.toString());
       return [];
     }
   }
@@ -99,7 +99,7 @@ class InAppChannel implements NotificationChannel {
       
       return allNotifications;
     } catch (e) {
-      ConsoleLogger.error('Error getting all notifications', e);
+      ConsoleLogger.error('Error getting all stored notifications', e.toString());
       return [];
     }
   }
@@ -123,7 +123,7 @@ class InAppChannel implements NotificationChannel {
         );
       }
     } catch (e) {
-      ConsoleLogger.error('Error saving notifications', e);
+      ConsoleLogger.error('Error getting all notifications', e.toString());
     }
   }
 
