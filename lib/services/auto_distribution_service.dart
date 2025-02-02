@@ -82,9 +82,9 @@ class AutoDistributionService {
     
     // Skills matching
     final skillsMatch = agent.skills.where(
-      (skill) => ticket.requiredSkills.contains(skill)
+      (skill) => agent.skills.contains(skill)
     ).length;
-    score += (skillsMatch / ticket.requiredSkills.length) * skillsMatchBonus;
+    score += (skillsMatch / agent.skills.length) * skillsMatchBonus;
     
     // Time availability
     if (agent.shiftSchedule != null) {

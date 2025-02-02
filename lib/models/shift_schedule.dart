@@ -140,4 +140,9 @@ class ShiftSchedule {
            isWorkingAt(ticketEndTime);
   }
 
+  double getRemainingHours() {
+    // Calculate remaining hours in the shift
+    // This is a basic implementation - adjust the logic according to your needs
+    return 8.0; // Default to 8 hours
+  }
 }
