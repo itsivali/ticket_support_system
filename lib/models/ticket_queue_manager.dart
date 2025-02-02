@@ -59,7 +59,7 @@ class TicketQueueManager {
     if (currentAssignments >= 3) return false;
 
     if (agent.shiftSchedule != null) {
-      if (!agent.shiftSchedule!.isWorkingAt(ticket.dueDate.toIso8601String())) {
+      if (!agent.shiftSchedule!.isWorkingAt(ticket.dueDate)) {
         return false;
       }
     }

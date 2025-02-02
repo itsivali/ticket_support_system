@@ -11,27 +11,35 @@ class AutoDistributionService {
   static const double workloadWeight = 20.0;
   static const double skillsMatchBonus = 30.0;
   static const double hoursRemainingWeight = 5.0;
+  static const double maxWorkload = 1.0;
   
   AutoDistributionService(this._workloadTracker, this._notificationService);
 
   Future<bool> distributeTicket(Ticket ticket, List<Agent> availableAgents) async {
     try {
-      if (availableAgents.isEmpty) {
-        ConsoleLogger.info('No available agents for ticket distribution');
+      if (!_isValidTicket(ticket) || availableAgents.isEmpty) {
+        ConsoleLogger.info('Invalid ticket or no available agents');
         return false;
       }
 
       final scoredAgents = await _scoreAgents(ticket, availableAgents);
-      if (scoredAgents.isEmpty) return false;
+      if (scoredAgents.isEmpty) {
+        ConsoleLogger.info('No eligible agents found for ticket');
+        return false;
+      }
 
       final bestAgent = scoredAgents.first;
-      await _assignTicket(ticket, bestAgent.agent);
-      
-      return true;
+      return await _assignTicket(ticket, bestAgent.agent);
     } catch (e) {
-      ConsoleLogger.error('Error distributing ticket', e.toString());
+      ConsoleLogger.error('Distribution failed', e.toString());
       return false;
     }
+  }
+
+  bool _isValidTicket(Ticket ticket) {
+    return ticket.estimatedHours > 0 && 
+           ticket.priority.isNotEmpty && 
+           ticket.status == 'OPEN';
   }
 
   Future<List<ScoredAgent>> _scoreAgents(
@@ -55,11 +63,10 @@ class AutoDistributionService {
     if (!agent.isAvailable || !agent.isOnline) return false;
     
     final currentWorkload = _workloadTracker.getCurrentWorkload(agent.id);
-    if (currentWorkload >= 1.0) return false;
+    if (currentWorkload >= maxWorkload) return false;
 
     if (agent.shiftSchedule != null) {
-      final remainingHours = agent.shiftSchedule!.endTime
-          .difference(DateTime.now()).inHours;
+      final remainingHours = agent.shiftSchedule!.getRemainingHours();
       if (remainingHours < ticket.estimatedHours) return false;
     }
 
@@ -69,35 +76,41 @@ class AutoDistributionService {
   double _calculateAssignmentScore(Agent agent, Ticket ticket) {
     double score = 100.0;
     
-    // Workload factor
-    score -= _workloadTracker.getCurrentWorkload(agent.id) * workloadWeight;
+    // Workload impact
+    final workloadImpact = _workloadTracker.getCurrentWorkload(agent.id);
+    score -= workloadImpact * workloadWeight;
     
-    // Skills match
-    if (agent.skills.any((s) => ticket.requiredSkills.contains(s))) {
-      score += SKILLS_MATCH_BONUS;
-    }
+    // Skills matching
+    final skillsMatch = agent.skills.where(
+      (skill) => ticket.requiredSkills.contains(skill)
+    ).length;
+    score += (skillsMatch / ticket.requiredSkills.length) * skillsMatchBonus;
     
-    // Shift time remaining
+    // Time availability
     if (agent.shiftSchedule != null) {
-      final hoursLeft = agent.shiftSchedule!.endTime
-          .difference(DateTime.now()).inHours;
-      score += (hoursLeft - ticket.estimatedHours) * HOURS_REMAINING_WEIGHT;
+      final hoursLeft = agent.shiftSchedule!.getRemainingHours();
+      final timeScore = (hoursLeft - ticket.estimatedHours) * hoursRemainingWeight;
+      score += timeScore.clamp(0.0, hoursRemainingWeight * 8);
     }
     
     return score.clamp(0.0, 100.0);
   }
 
-  Future<void> _assignTicket(Ticket ticket, Agent agent) async {
+  Future<bool> _assignTicket(Ticket ticket, Agent agent) async {
     try {
-      await _workloadTracker.addTicket(agent.id, ticket);
-      await _notificationService.notifyAgent(
-        agent.id,
-        'New ticket assigned',
-        'Ticket: ${ticket.title}\nPriority: ${ticket.priority}',
-      );
+      if (await _workloadTracker.addTicket(agent.id, ticket)) {
+        await _notificationService.notify(
+          recipientId: agent.id,
+          title: 'New Ticket Assigned',
+          message: 'Ticket ${ticket.id} has been assigned to you',
+          type: 'ASSIGNMENT',
+        );
+        return true;
+      }
+      return false;
     } catch (e) {
-      ConsoleLogger.error('Error assigning ticket', e.toString());
-      rethrow;
+      ConsoleLogger.error('Assignment failed', e.toString());
+      return false;
     }
   }
 }
@@ -106,5 +119,8 @@ class ScoredAgent {
   final Agent agent;
   final double score;
 
-  ScoredAgent({required this.agent, required this.score});
+  const ScoredAgent({
+    required this.agent, 
+    required this.score,
+  });
 }
