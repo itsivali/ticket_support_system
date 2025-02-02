@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/agent.dart';
 import '../providers/agent_provider.dart';
-import '../utils/ui_helpers.dart';
+import '../utils/validators.dart';
+import '../widgets/loading_overlay.dart';
 
 class EditAgentScreen extends StatefulWidget {
-  final Agent agent;
+  final String agentId;
 
-  const EditAgentScreen({super.key, required this.agent});
+  const EditAgentScreen({
+    super.key,
+    required this.agentId,
+  });
 
   @override
   State<EditAgentScreen> createState() => _EditAgentScreenState();
@@ -15,81 +18,60 @@ class EditAgentScreen extends StatefulWidget {
 
 class _EditAgentScreenState extends State<EditAgentScreen> {
   final _formKey = GlobalKey<FormState>();
-  late String _name;
-  late String _email;
-  late String _role;
-  late bool _isAvailable;
+  String _name = '';
+  String _email = '';
+  String _role = 'SUPPORT';
+  bool _isAvailable = true;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _name = widget.agent.name;
-    _email = widget.agent.email;
-    _role = widget.agent.role;
-    _isAvailable = widget.agent.isAvailable;
+    _loadAgentData();
+  }
+
+  Future<void> _loadAgentData() async {
+    final agent = context.read<AgentProvider>().getAgentById(widget.agentId);
+    if (agent != null) {
+      setState(() {
+        _name = agent.name;
+        _email = agent.email;
+        _role = agent.role;
+        _isAvailable = agent.isAvailable;
+      });
+    }
   }
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      _formKey.currentState!.save();
-      setState(() => _isLoading = true);
+    if (!_formKey.currentState!.validate()) return;
+    _formKey.currentState!.save();
 
-      try {
-        final updatedAgent = Agent(
-          id: widget.agent.id,
-          name: _name,
-          email: _email,
-          role: _role,
-          isAvailable: _isAvailable,
-        );
+    setState(() => _isLoading = true);
 
-        await Provider.of<AgentProvider>(context, listen: false)
-            .updateAgent(updatedAgent, context);
+    try {
+      final updates = {
+        'name': _name,
+        'email': _email,
+        'role': _role,
+        'isAvailable': _isAvailable,
+      };
 
-        if (!mounted) return;
+      final success = await context
+          .read<AgentProvider>()
+          .updateAgent(widget.agentId, updates);
 
-        await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.green[700]),
-                const SizedBox(width: 10),
-                const Text('Success'),
-              ],
-            ),
-            content: const Text('Agent updated successfully'),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
-            actions: [
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.green,
-                ),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-
-        if (!mounted) return;
+      if (success && mounted) {
         Navigator.pop(context);
-      } catch (error) {
-        if (!mounted) return;
-
-        UIHelpers.showCustomSnackBar(
-          context: context,
-          message: 'Failed to update agent: $error',
-          icon: Icons.error_outline,
-          backgroundColor: Colors.red,
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating agent: ${e.toString()}')),
         );
-      } finally {
-        if (mounted) {
-          setState(() => _isLoading = false);
-        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -100,20 +82,20 @@ class _EditAgentScreenState extends State<EditAgentScreen> {
       appBar: AppBar(
         title: const Text('Edit Agent'),
         actions: [
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
+          IconButton(
+            icon: const Icon(Icons.save),
+            onPressed: _isLoading ? null : _submitForm,
+          ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
+      body: LoadingOverlay(
+        isLoading: _isLoading,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TextFormField(
                   initialValue: _name,
@@ -122,8 +104,7 @@ class _EditAgentScreenState extends State<EditAgentScreen> {
                     helperText: 'Full name of the agent',
                     prefixIcon: Icon(Icons.person),
                   ),
-                  validator: (value) =>
-                      value == null || value.isEmpty ? 'Please enter agent name' : null,
+                  validator: (value) => Validators.required(value, 'Name'),
                   onSaved: (value) => _name = value!,
                 ),
                 const SizedBox(height: 16),
@@ -134,15 +115,7 @@ class _EditAgentScreenState extends State<EditAgentScreen> {
                     helperText: 'Work email address',
                     prefixIcon: Icon(Icons.email),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter email';
-                    }
-                    if (!value.contains('@')) {
-                      return 'Please enter a valid email';
-                    }
-                    return null;
-                  },
+                  validator: Validators.email,
                   onSaved: (value) => _email = value!,
                 ),
                 const SizedBox(height: 16),
@@ -167,47 +140,10 @@ class _EditAgentScreenState extends State<EditAgentScreen> {
                 ),
                 const SizedBox(height: 16),
                 SwitchListTile(
-                  title: const Text('Available'),
-                  subtitle: const Text('Agent can be assigned to tickets'),
+                  title: const Text('Available for Assignment'),
+                  subtitle: Text(_isAvailable ? 'Active' : 'Inactive'),
                   value: _isAvailable,
                   onChanged: (value) => setState(() => _isAvailable = value),
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _isLoading ? null : _submitForm,
-                    icon: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.update),
-                    label: Text(
-                      _isLoading ? 'UPDATING...' : 'UPDATE',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 20,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 3,
-                    ),
-                  ),
                 ),
               ],
             ),
