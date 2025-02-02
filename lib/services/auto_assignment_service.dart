@@ -75,7 +75,7 @@ class AutoAssignmentService {
     );
 
     await Future.wait([
-      _ticketService.updateTicket(updatedTicket),
+      _ticketService.updateTicket(updatedTicket.id, updatedTicket.toJson()),
       _agentService.updateAgent(updatedAgent.id, updatedAgent),
     ]);
   }
