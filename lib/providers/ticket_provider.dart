@@ -23,7 +23,7 @@ class TicketProvider with ChangeNotifier {
 
       _tickets = await _ticketService.getTickets();
     } catch (e) {
-      ConsoleLogger.error('Error fetching tickets', e);
+ ConsoleLogger.error('Error in auto assignment', e.toString());
       _error = e.toString();
     } finally {
       _isLoading = false;
@@ -68,16 +68,18 @@ class TicketProvider with ChangeNotifier {
           ),
         );
         
-        // Show snackbar for additional feedback
-        UIHelpers.showCustomSnackBar(
-          context: context,
-          message: 'Ticket deleted successfully',
-          icon: Icons.delete_forever,
-          backgroundColor: Colors.green,
-        );
+        if (context.mounted) {
+          // Show snackbar for additional feedback
+          UIHelpers.showCustomSnackBar(
+            context: context,
+            message: 'Ticket deleted successfully',
+            icon: Icons.delete_forever,
+            backgroundColor: Colors.green,
+          );
+        }
       }
     } catch (e, stack) {
-      ConsoleLogger.error('Error deleting ticket: $e\n$stack');
+      ConsoleLogger.error('Error deleting ticket', '${e.toString()}\nStack trace:\n${stack.toString()}');
       _error = 'Failed to delete ticket: ${e.toString()}';
       if (context.mounted) {
         UIHelpers.showCustomSnackBar(
@@ -102,22 +104,26 @@ class TicketProvider with ChangeNotifier {
       final newTicket = await _ticketService.createTicket(ticket);
       _tickets.add(newTicket);
       
-      UIHelpers.showCustomSnackBar(
-        context: context,
-        message: 'Ticket created successfully!',
-        icon: Icons.check_circle,
-        backgroundColor: Colors.green,
-      );
+      if (context.mounted) {
+        UIHelpers.showCustomSnackBar(
+          context: context,
+          message: 'Ticket created successfully!',
+          icon: Icons.check_circle,
+          backgroundColor: Colors.green,
+        );
+      }
       
     } catch (e) {
-      ConsoleLogger.error('Error creating ticket', e);
+      ConsoleLogger.error('Error creating ticket', e.toString());
       _error = e.toString();
-      UIHelpers.showCustomSnackBar(
-        context: context,
-        message: 'Failed to create ticket: ${e.toString()}',
-        icon: Icons.error_outline,
-        backgroundColor: Colors.red,
-      );
+      if (context.mounted) {
+        UIHelpers.showCustomSnackBar(
+          context: context,
+          message: 'Failed to create ticket: ${e.toString()}',
+          icon: Icons.error_outline,
+          backgroundColor: Colors.red,
+        );
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -142,22 +148,26 @@ class TicketProvider with ChangeNotifier {
       final index = _tickets.indexWhere((t) => t.id == updated.id);
       if (index != -1) {
         _tickets[index] = updated;
-        UIHelpers.showCustomSnackBar(
-          context: context,
-          message: 'Ticket updated successfully!',
-          icon: Icons.check_circle,
-          backgroundColor: Colors.blue,
-        );
+        if (context.mounted) {
+          UIHelpers.showCustomSnackBar(
+            context: context,
+            message: 'Ticket updated successfully!',
+            icon: Icons.check_circle,
+            backgroundColor: Colors.blue,
+          );
+        }
       }
     } catch (e) {
-      ConsoleLogger.error('Error updating ticket', e);
+      ConsoleLogger.error('Error in auto assignment', e.toString());
       _error = e.toString();
-      UIHelpers.showCustomSnackBar(
-        context: context,
-        message: 'Failed to update ticket: ${e.toString()}',
-        icon: Icons.error_outline,
-        backgroundColor: Colors.red,
-      );
+      if (context.mounted) {
+        UIHelpers.showCustomSnackBar(
+          context: context,
+          message: 'Failed to update ticket: ${e.toString()}',
+          icon: Icons.error_outline,
+          backgroundColor: Colors.red,
+        );
+      }
     } finally {
       _isLoading = false;
       notifyListeners();

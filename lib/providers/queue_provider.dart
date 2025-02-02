@@ -35,7 +35,7 @@ class QueueProvider with ChangeNotifier {
       _error = null;
     } catch (e) {
       _error = e.toString();
-      ConsoleLogger.error('Error fetching queue status', e);
+      ConsoleLogger.error('Error fetching queue status', e.toString());
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -70,7 +70,7 @@ class QueueProvider with ChangeNotifier {
         }
       }
     } catch (e) {
-      ConsoleLogger.error('Error in auto assignment', e);
+      ConsoleLogger.error('Error in auto assignment', e.toString());
     }
   }
 
@@ -82,7 +82,7 @@ class QueueProvider with ChangeNotifier {
       }
       return success;
     } catch (e) {
-      ConsoleLogger.error('Error assigning ticket', e);
+       ConsoleLogger.error('Error in auto assignment', e.toString());
       return false;
     }
   }
@@ -95,7 +95,7 @@ class QueueProvider with ChangeNotifier {
       }
       return success;
     } catch (e) {
-      ConsoleLogger.error('Error claiming ticket', e);
+      ConsoleLogger.error('Error in auto assignment', e.toString());
       return false;
     }
   }
