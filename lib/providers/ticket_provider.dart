@@ -111,6 +111,7 @@ class TicketProvider with ChangeNotifier {
           icon: Icons.check_circle,
           backgroundColor: Colors.green,
         );
+        Navigator.pop(context);
       }
       
     } catch (e) {
