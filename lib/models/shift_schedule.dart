@@ -7,6 +7,7 @@ class ShiftSchedule {
   final DateTime startTime;
   final DateTime endTime;
   final bool isActive;
+  final double hoursPerDay;
 
   ShiftSchedule({
     required this.id,
@@ -15,6 +16,7 @@ class ShiftSchedule {
     required this.startTime,
     required this.endTime,
     this.isActive = true,
+    required this.hoursPerDay,
   }) {
     // Validate schedule data
     if (weekdays.any((day) => day < 1 || day > 7)) {
@@ -50,6 +52,7 @@ class ShiftSchedule {
         startTime: startTime,
         endTime: endTime,
         isActive: json['isActive'] ?? true,
+        hoursPerDay: json['hoursPerDay'] ?? 8.0,
       );
     } catch (e) {
       throw FormatException('Error parsing ShiftSchedule: $e\nJSON: $json');
@@ -62,6 +65,7 @@ class ShiftSchedule {
     'startTime': startTime.toIso8601String(),
     'endTime': endTime.toIso8601String(),
     'isActive': isActive,
+    'hoursPerDay': hoursPerDay,
   };
 
   bool isWorkingAt(DateTime dateTime) {

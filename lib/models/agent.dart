@@ -125,11 +125,17 @@ class Agent {
 }
 
 class ShiftSchedule {
+  final String id;
+  final String scheduleType;
+  final double hoursPerDay;
   final DateTime startTime;
   final DateTime endTime;
   final List<int> weekdays;
 
-  ShiftSchedule({
+  const ShiftSchedule({
+    required this.id,
+    required this.scheduleType,
+    this.hoursPerDay = 8.0,
     required this.startTime,
     required this.endTime,
     required this.weekdays,
@@ -147,6 +153,9 @@ class ShiftSchedule {
           : now.add(const Duration(hours: 8));
       
       return ShiftSchedule(
+        id: json['id']?.toString() ?? '',
+        scheduleType: json['scheduleType']?.toString() ?? '',
+        hoursPerDay: json['hoursPerDay']?.toDouble() ?? 8.0,
         startTime: startTime,
         endTime: endTime,
         weekdays: json['weekdays'] != null 
@@ -161,14 +170,20 @@ class ShiftSchedule {
       // Return a default schedule instead of throwing
       final now = DateTime.now();
       return ShiftSchedule(
+        id: '',
+        scheduleType: '',
+        hoursPerDay: 8.0,
         startTime: now,
         endTime: now.add(const Duration(hours: 8)),
-        weekdays: [],
+        weekdays: [DateTime.monday, DateTime.tuesday, DateTime.wednesday, DateTime.thursday, DateTime.friday, DateTime.saturday, DateTime.sunday],
       );
     }
   }
 
   Map<String, dynamic> toJson() => {
+    'id': id,
+    'scheduleType': scheduleType,
+    'hoursPerDay': hoursPerDay,
     'startTime': startTime.toIso8601String(),
     'endTime': endTime.toIso8601String(),
     'weekdays': weekdays,
