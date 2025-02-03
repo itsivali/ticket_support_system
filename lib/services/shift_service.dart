@@ -86,6 +86,33 @@ class ShiftService {
     }
   }
 
+  Future<List<Shift>> getAllShifts() async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/shifts'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Shift.fromJson(json)).toList();
+      }
+      throw _handleError(response);
+    } catch (e) {
+      ConsoleLogger.error('Error fetching all shifts', e.toString());
+      rethrow;
+    }
+  }
+
+  Future<Shift?> getAgentShift(String agentId) async {
+    try {
+      final shifts = await getAllShifts();
+      return shifts.firstWhere((shift) => shift.agentId == agentId);
+    } catch (e) {
+      return null;
+    }
+  }
+
   Exception _handleError(http.Response response) {
     try {
       final error = json.decode(response.body)['error'];

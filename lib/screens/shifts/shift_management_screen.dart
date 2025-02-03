@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/agent_provider.dart';
-import '../models/agent.dart';
-import '../widgets/app_drawer.dart';
+import '../../providers/agent_provider.dart';
+import '../../models/agent.dart';
+import '../../widgets/app_drawer.dart';
 
 class ShiftManagementScreen extends StatefulWidget {
   const ShiftManagementScreen({super.key});
