@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../models/queue_manager.dart';
+import '../models/queue_manager.dart' as queue_manager;
 import '../services/queue_service.dart';
+import '../models/ticket.dart' as ticket_model;
 import '../utils/console_logger.dart';
 
 class QueueProvider extends ChangeNotifier {
-  QueueManager? _queueManager;
+  queue_manager.QueueManager? _queueManager;
   Timer? _autoAssignmentTimer;
   final QueueService _queueService = QueueService();
 
@@ -13,7 +14,7 @@ class QueueProvider extends ChangeNotifier {
 
   bool get isLoading => _isLoading;
 
-  QueueManager? get queueManager => _queueManager;
+  queue_manager.QueueManager? get queueManager => _queueManager;
 
   bool get autoAssign => _queueManager?.settings.autoAssignEnabled ?? false;
 
@@ -21,7 +22,7 @@ class QueueProvider extends ChangeNotifier {
 
   bool get isAutoAssignEnabled => _isAutoAssignEnabled;
 
-  List<Ticket> tickets = [];
+  List<ticket_model.Ticket> tickets = [];
 
   Future<void> fetchQueueStatus() async {
     try {

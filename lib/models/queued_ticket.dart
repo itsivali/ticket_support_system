@@ -1,8 +1,8 @@
-import 'ticket.dart';
+import '../models/ticket.dart' as ticket_model;
 
 class QueuedTicket {
   final String id;
-  final Ticket ticket;
+  final ticket_model.Ticket ticket;
   final double priority;
   final DateTime queuedAt;
   bool isExpanded;
@@ -22,7 +22,7 @@ class QueuedTicket {
   factory QueuedTicket.fromJson(Map<String, dynamic> json) {
     return QueuedTicket(
       id: json['id'] as String,
-      ticket: Ticket.fromJson(json['ticket'] as Map<String, dynamic>),
+      ticket: ticket_model.Ticket.fromJson(json['ticket'] as Map<String, dynamic>),
       priority: json['priority'] as double,
       queuedAt: DateTime.parse(json['queuedAt'] as String),
       isExpanded: json['isExpanded'] as bool? ?? false,

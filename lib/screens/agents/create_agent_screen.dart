@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../models/agent.dart';
 import '../../providers/agent_provider.dart';
 import '../../widgets/loading_overlay.dart';
+import '../../models/shift_schedule.dart'; 
 
 class CreateAgentScreen extends StatelessWidget {
   const CreateAgentScreen({super.key});
@@ -54,6 +55,16 @@ class _AgentFormState extends State<AgentForm> {
         isOnline: true,
         currentTickets: [],
         skills: ['Communication', 'Problem Solving', 'Technical Support'], // Default skills
+        shiftSchedule: ShiftSchedule(
+          id: '1', // Example value
+          agentId: '1', // Example value
+          weekdays: [1, 2], // Example value (1 for Monday, 2 for Tuesday)
+          startTime: DateTime(0, 1, 1, 9, 0), // Example value
+          endTime: DateTime(0, 1, 1, 17, 0), // Example value
+          isActive: true, // Example value
+          scheduleType: 'Regular', // Example value
+        ), // Example value
+        lastAssignment: DateTime.now(), // Example value
       );
 
       final success = await context.read<AgentProvider>().createAgent(newAgent);

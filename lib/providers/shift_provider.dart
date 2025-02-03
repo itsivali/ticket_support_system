@@ -6,7 +6,7 @@ import '../models/agent.dart' as agent_model;
 import '../services/shift_service.dart';
 import '../utils/console_logger.dart';
 
-class ShiftProvider extends ChangeNotifier {
+class ShiftProvider with ChangeNotifier {
   final ShiftService _shiftService;
   List<ShiftSchedule> _currentShifts = [];
   bool _isLoading = false;
@@ -158,6 +158,14 @@ class ShiftProvider extends ChangeNotifier {
     }
 
     return true;
+  }
+
+  Future<void> updateShiftSchedule(String agentId, ShiftSchedule newShiftSchedule) async {
+    // Implement the logic to update the shift schedule
+
+    // For example, you can update the shift schedule in a database or a list
+
+    // and then notify listeners about the change
   }
 
   @override

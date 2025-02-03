@@ -37,10 +37,8 @@ class AutoAssignmentService {
       return false;
     }
 
-    if (agent.shiftSchedule != null) {
-      if (!agent.shiftSchedule!.canHandleTicket(ticket)) {
-        return false;
-      }
+    if (!agent.shiftSchedule.canHandleTicket(ticket)) {
+      return false;
     }
 
     return true;
@@ -61,7 +59,7 @@ class AutoAssignmentService {
       requiredSkills: ticket.requiredSkills,
     );
 
-    final List<String> updatedTickets = List.from(agent.currentTickets)..add(ticket.id);
+    final List<Ticket> updatedTickets = List.from(agent.currentTickets)..add(ticket);
     final updatedAgent = Agent(
       id: agent.id,
       name: agent.name,

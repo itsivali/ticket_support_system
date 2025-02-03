@@ -1,6 +1,6 @@
 class Ticket {
   final String id;
-  final String title; 
+  final String title;
   final String description;
   final String status;
   final String priority;
@@ -8,10 +8,10 @@ class Ticket {
   final DateTime createdAt;
   final DateTime dueDate;
   final int estimatedHours;
-  final DateTime lastUpdated;
   final List<String> requiredSkills;
+  final DateTime lastUpdated;
 
-  Ticket({
+  const Ticket({
     required this.id,
     required this.title,
     required this.description,
@@ -21,45 +21,40 @@ class Ticket {
     required this.createdAt,
     required this.dueDate,
     required this.estimatedHours,
-    required this.lastUpdated,
     required this.requiredSkills,
+    required this.lastUpdated,
   });
 
-  // From JSON factory
   factory Ticket.fromJson(Map<String, dynamic> json) {
     return Ticket(
       id: json['id'] as String,
       title: json['title'] as String,
-      description: json['description'] as String,
+      description: json['description'] as String, 
       status: json['status'] as String,
       priority: json['priority'] as String,
       assignedTo: json['assignedTo'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       dueDate: DateTime.parse(json['dueDate'] as String),
-      estimatedHours: (json['estimatedHours'] as num).toInt(),
-      lastUpdated: DateTime.parse(json['lastUpdated'] as String),
+      estimatedHours: json['estimatedHours'] as int,
       requiredSkills: List<String>.from(json['requiredSkills'] as List),
+      lastUpdated: DateTime.parse(json['lastUpdated'] as String),
     );
   }
 
-  // To JSON method
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'status': status,
-      'priority': priority,
-      'assignedTo': assignedTo,
-      'createdAt': createdAt.toIso8601String(),
-      'dueDate': dueDate.toIso8601String(),
-      'estimatedHours': estimatedHours,
-      'lastUpdated': lastUpdated.toIso8601String(),
-      'requiredSkills': requiredSkills,
-    };
-  }
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'description': description,
+    'status': status,
+    'priority': priority,
+    'assignedTo': assignedTo,
+    'createdAt': createdAt.toIso8601String(),
+    'dueDate': dueDate.toIso8601String(),
+    'estimatedHours': estimatedHours,
+    'requiredSkills': requiredSkills,
+    'lastUpdated': lastUpdated.toIso8601String(),
+  };
 
-  // Copy with method
   Ticket copyWith({
     String? id,
     String? title,
@@ -70,8 +65,8 @@ class Ticket {
     DateTime? createdAt,
     DateTime? dueDate,
     int? estimatedHours,
-    DateTime? lastUpdated,
     List<String>? requiredSkills,
+    DateTime? lastUpdated,
   }) {
     return Ticket(
       id: id ?? this.id,
@@ -83,32 +78,12 @@ class Ticket {
       createdAt: createdAt ?? this.createdAt,
       dueDate: dueDate ?? this.dueDate,
       estimatedHours: estimatedHours ?? this.estimatedHours,
-      lastUpdated: lastUpdated ?? this.lastUpdated,
       requiredSkills: requiredSkills ?? this.requiredSkills,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
     );
   }
 
-  double calculatePriority() {
-    double priority = 0.0;
-    
-    switch (this.priority) {
-      case 'HIGH': priority = 3.0;
-      case 'MEDIUM': priority = 2.0;
-      case 'LOW': priority = 1.0;
-      default: priority = 0.0;
-    }
-
-    final waitingTime = DateTime.now().difference(createdAt).inHours;
-    priority += (waitingTime / 24.0);
-    
-    final timeUntilDue = dueDate.difference(DateTime.now()).inHours;
-    if (timeUntilDue < 24) {
-      priority *= 1.5;
-    }
-    
-    return priority;
-  }
-
-  bool get isUrgent => 
-    dueDate.difference(DateTime.now()).inHours < 24;
+  bool get isUrgent => DateTime.now().difference(dueDate).inHours < 24;
+  bool get isOverdue => DateTime.now().isAfter(dueDate);
+  bool get isAssigned => assignedTo != null;
 }

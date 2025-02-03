@@ -52,6 +52,9 @@ class QueuedTicket {
   final DateTime queuedAt;
   bool isExpanded;
 
+  // Add title getter
+  String get title => ticket.title;
+
   QueuedTicket({
     required this.id,
     required this.ticket,
@@ -145,10 +148,8 @@ class QueueManager {
       return false;
     }
 
-    if (agent.shiftSchedule != null) {
-      final shiftEnd = agent.shiftSchedule!.endTime;
-      if (ticket.dueDate.isAfter(shiftEnd)) return false;
-    }
+    final shiftEnd = agent.shiftSchedule.endTime;
+    if (ticket.dueDate.isAfter(shiftEnd)) return false;
 
     return true;
   }

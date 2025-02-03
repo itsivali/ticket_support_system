@@ -65,4 +65,17 @@ class UIHelpers {
       ),
     );
   }
+
+  static String weekdayName(int day) {
+    const weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+    return weekdays[day - 1];
+  }
 }
