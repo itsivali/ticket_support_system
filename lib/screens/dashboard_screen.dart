@@ -94,147 +94,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               SizedBox(height: 24),
               _AgentStatus(),
               SizedBox(height: 24),
+              _QueueOverview(),
+              SizedBox(height: 24),
               _ShiftOverview(),
               SizedBox(height: 24),
               _AutoAssignmentStatus(),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusOverview extends StatelessWidget {
-  const _StatusOverview();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 1.5,
-      children: [
-        _StatusCard(
-          title: 'Open Tickets',
-          value: context.select((TicketProvider p) => 
-            p.tickets.where((t) => t.status == 'OPEN').length.toString()),
-          icon: Icons.confirmation_number,
-          color: theme.colorScheme.primary,
-        ),
-        _StatusCard(
-          title: 'Available Agents',
-          value: context.select((AgentProvider p) => 
-            p.agents.where((a) => a.isAvailable && a.isOnline).length.toString()),
-          icon: Icons.people,
-          color: theme.colorScheme.secondary,
-        ),
-        _StatusCard(
-          title: 'Queue Size',
-          value: context.select((QueueProvider p) => 
-            p.queueManager?.size.toString() ?? '0'),
-          icon: Icons.queue,
-          color: theme.colorScheme.tertiary,
-        ),
-        _StatusCard(
-          title: 'Active Shifts',
-          value: context.select((ShiftProvider p) => 
-            p.currentShifts.length.toString()),
-          icon: Icons.schedule,
-          color: theme.colorScheme.error,
-        ),
-      ],
-    );
-  }
-}
-
-class _StatusCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _StatusCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 32, color: color),
-            const SizedBox(height: 8),
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickActions extends StatelessWidget {
-  const _QuickActions();
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Quick Actions',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _ActionButton(
-                  label: 'Create Ticket',
-                  icon: Icons.add,
-                  onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
-                ),
-                _ActionButton(
-                  label: 'Assign Tickets',
-                  icon: Icons.assignment_ind,
-                  onPressed: () => Navigator.pushNamed(context, '/ticket-queue'),
-                ),
-                _ActionButton(
-                  label: 'Manage Agents',
-                  icon: Icons.people,
-                  onPressed: () => Navigator.pushNamed(context, '/agents'),
-                ),
-                _ActionButton(
-                  label: 'View Queue',
-                  icon: Icons.queue,
-                  onPressed: () => Navigator.pushNamed(context, '/manage-tickets'),
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     );
@@ -283,24 +149,21 @@ class _TicketMetrics extends StatelessWidget {
             const SizedBox(height: 16),
             Consumer<TicketProvider>(
               builder: (context, provider, child) {
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
                 final tickets = provider.tickets;
+                final openTickets = tickets.where((t) => t.status == 'OPEN').length;
+                final inProgressTickets = tickets.where((t) => t.status == 'IN_PROGRESS').length;
+                final closedTickets = tickets.where((t) => t.status == 'CLOSED').length;
+
                 return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _MetricRow(
-                      label: 'Open',
-                      value: tickets.where((t) => t.status == 'OPEN').length,
-                      color: Colors.blue,
-                    ),
-                    _MetricRow(
-                      label: 'In Progress',
-                      value: tickets.where((t) => t.status == 'IN_PROGRESS').length,
-                      color: Colors.orange,
-                    ),
-                    _MetricRow(
-                      label: 'Closed',
-                      value: tickets.where((t) => t.status == 'CLOSED').length,
-                      color: Colors.green,
-                    ),
+                    Text('Open Tickets: $openTickets'),
+                    Text('In Progress Tickets: $inProgressTickets'),
+                    Text('Closed Tickets: $closedTickets'),
                   ],
                 );
               },
@@ -312,39 +175,72 @@ class _TicketMetrics extends StatelessWidget {
   }
 }
 
-class _MetricRow extends StatelessWidget {
-  final String label;
-  final int value;
-  final Color color;
-
-  const _MetricRow({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+class _QuickActions extends StatelessWidget {
+  const _QuickActions();
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _ActionButton(
+          label: 'Create Ticket',
+          icon: Icons.add,
+          onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
+        ),
+        _ActionButton(
+          label: 'Manage Tickets',
+          icon: Icons.assignment,
+          onPressed: () => Navigator.pushNamed(context, '/manage-tickets'),
+        ),
+        _ActionButton(
+          label: 'Agents',
+          icon: Icons.people,
+          onPressed: () => Navigator.pushNamed(context, '/agents'),
+        ),
+      ],
+    );
+  }
+}
+
+class _StatusOverview extends StatelessWidget {
+  const _StatusOverview();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Status Overview',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(label),
-          const Spacer(),
-          Text(
-            value.toString(),
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-        ],
+            const SizedBox(height: 16),
+            Consumer<QueueProvider>(
+              builder: (context, provider, child) {
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final queueStats = provider.queueManager?.getQueueStats() ?? {};
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Total Tickets: ${queueStats['total'] ?? 0}'),
+                    Text('High Priority: ${queueStats['high'] ?? 0}'),
+                    Text('Medium Priority: ${queueStats['medium'] ?? 0}'),
+                    Text('Low Priority: ${queueStats['low'] ?? 0}'),
+                    Text('Urgent: ${queueStats['urgent'] ?? 0}'),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -361,44 +257,67 @@ class _AgentStatus extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Agent Status',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/agents'),
-                  child: const Text('View All'),
-                ),
-              ],
+            Text(
+              'Agent Status',
+              style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
             Consumer<AgentProvider>(
               builder: (context, provider, child) {
-                return ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: provider.agents.take(5).length,
-                  itemBuilder: (context, index) {
-                    final agent = provider.agents[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: agent.isOnline 
-                            ? Colors.green 
-                            : Colors.grey,
-                        child: const Icon(Icons.person, color: Colors.white),
-                      ),
-                      title: Text(agent.name),
-                      subtitle: Text('${agent.currentTickets.length} active tickets'),
-                      trailing: Icon(
-                        Icons.circle,
-                        size: 12,
-                        color: agent.isAvailable ? Colors.green : Colors.grey,
-                      ),
-                    );
-                  },
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final agents = provider.agents;
+                final onlineAgents = agents.where((a) => a.isOnline).length;
+                final availableAgents = agents.where((a) => a.isAvailable).length;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Total Agents: ${agents.length}'),
+                    Text('Online Agents: $onlineAgents'),
+                    Text('Available Agents: $availableAgents'),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _QueueOverview extends StatelessWidget {
+  const _QueueOverview();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Queue Overview',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 16),
+            Consumer<QueueProvider>(
+              builder: (context, provider, child) {
+                if (provider.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final queuedTickets = provider.queueManager?.pendingTickets.length ?? 0;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Queued Tickets: $queuedTickets'),
+                  ],
                 );
               },
             ),
@@ -444,8 +363,8 @@ class _ShiftOverview extends StatelessWidget {
                     final shift = provider.currentShifts[index];
                     return ListTile(
                       leading: const Icon(Icons.schedule),
-                      title: Text(shift.agentName),
-                      subtitle: Text('${shift.startTime.format(context)} - ${shift.endTime.format(context)}'),
+                      title: Text(shift.agentId),
+                      subtitle: Text('${shift.startTime} - ${shift.endTime}'),
                     );
                   },
                 );
@@ -485,7 +404,7 @@ class _AutoAssignmentStatus extends StatelessWidget {
             const SizedBox(height: 16),
             Consumer<QueueProvider>(
               builder: (context, provider, child) {
-                final isEnabled = provider.queueManager?.settings.autoAssignEnabled ?? false;
+                final isEnabled = provider.queueManager?.settings.autoAssign ?? false;
                 return SwitchListTile(
                   title: const Text('Auto Assignment'),
                   subtitle: Text(isEnabled ? 'Enabled' : 'Disabled'),

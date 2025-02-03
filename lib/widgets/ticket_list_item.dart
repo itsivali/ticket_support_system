@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/ticket.dart';
-import '../utils/date_formatter.dart';
 import 'package:intl/intl.dart';
 
 class TicketListItem extends StatelessWidget {
@@ -129,7 +128,7 @@ class TicketListItem extends StatelessWidget {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              DateFormatter.formatDateTime(DateTime.parse(ticket.createdAt)),
+                              DateFormatter.formatDateTime(ticket.createdAt),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                             const Spacer(),

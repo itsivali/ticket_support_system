@@ -32,7 +32,7 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
     _title = widget.ticket.title;
     _description = widget.ticket.description;
     _dueDate = widget.ticket.dueDate;
-    _estimatedHours = widget.ticket.estimatedHours;
+    _estimatedHours = widget.ticket.estimatedHours.toDouble();
     _status = widget.ticket.status;
     _priority = widget.ticket.priority;
     // Only store the ID string
@@ -57,12 +57,13 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
           title: _title,
           description: _description,
           dueDate: _dueDate,
-          estimatedHours: _estimatedHours,
+          estimatedHours: _estimatedHours.toInt(),
           status: _status,
           priority: _priority,
           assignedTo: _assignedTo,
           createdAt: widget.ticket.createdAt,
           requiredSkills: widget.ticket.requiredSkills,
+          lastUpdated: DateTime.now(), // Add this line
         );
 
         await Provider.of<TicketProvider>(context, listen: false)

@@ -56,12 +56,13 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         title: _titleController.text,
         description: _descriptionController.text,
         dueDate: _dueDate,
-        estimatedHours: _estimatedHours,
+        estimatedHours: _estimatedHours.toInt(),
         priority: _priority,
         status: 'OPEN',
         assignedTo: _assignedTo,
         requiredSkills: _requiredSkills,
-        createdAt: DateTime.now().toIso8601String(),
+        createdAt: DateTime.now(),
+        lastUpdated: DateTime.now(),
       );
 
       await context.read<TicketProvider>().createTicket(ticket, context);

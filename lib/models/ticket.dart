@@ -7,7 +7,8 @@ class Ticket {
   final String? assignedTo;
   final DateTime createdAt;
   final DateTime dueDate;
-  final double estimatedHours;
+  final int estimatedHours;
+  final DateTime lastUpdated;
   final List<String> requiredSkills;
 
   Ticket({
@@ -20,6 +21,7 @@ class Ticket {
     required this.createdAt,
     required this.dueDate,
     required this.estimatedHours,
+    required this.lastUpdated,
     required this.requiredSkills,
   });
 
@@ -34,7 +36,8 @@ class Ticket {
       assignedTo: json['assignedTo'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       dueDate: DateTime.parse(json['dueDate'] as String),
-      estimatedHours: (json['estimatedHours'] as num).toDouble(),
+      estimatedHours: (json['estimatedHours'] as num).toInt(),
+      lastUpdated: DateTime.parse(json['lastUpdated'] as String),
       requiredSkills: List<String>.from(json['requiredSkills'] as List),
     );
   }
@@ -51,6 +54,7 @@ class Ticket {
       'createdAt': createdAt.toIso8601String(),
       'dueDate': dueDate.toIso8601String(),
       'estimatedHours': estimatedHours,
+      'lastUpdated': lastUpdated.toIso8601String(),
       'requiredSkills': requiredSkills,
     };
   }
@@ -65,7 +69,8 @@ class Ticket {
     String? assignedTo,
     DateTime? createdAt,
     DateTime? dueDate,
-    double? estimatedHours,
+    int? estimatedHours,
+    DateTime? lastUpdated,
     List<String>? requiredSkills,
   }) {
     return Ticket(
@@ -78,6 +83,7 @@ class Ticket {
       createdAt: createdAt ?? this.createdAt,
       dueDate: dueDate ?? this.dueDate,
       estimatedHours: estimatedHours ?? this.estimatedHours,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
       requiredSkills: requiredSkills ?? this.requiredSkills,
     );
   }

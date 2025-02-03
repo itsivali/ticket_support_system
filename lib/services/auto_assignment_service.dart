@@ -57,7 +57,7 @@ class AutoAssignmentService {
       estimatedHours: ticket.estimatedHours,
       priority: ticket.priority,
       createdAt: ticket.createdAt,
-      lastUpdated: DateTime.now().toIso8601String(),
+      lastUpdated: DateTime.now(),
       requiredSkills: ticket.requiredSkills,
     );
 

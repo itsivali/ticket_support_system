@@ -7,7 +7,10 @@ class QueueSettings {
   final bool allowManualClaims;
   final Duration autoAssignInterval;
 
-  const QueueSettings({
+  bool get autoAssign => _autoAssign;
+  bool _autoAssign;
+
+  QueueSettings({
     this.autoAssignEnabled = true,
     this.maxTicketsPerAgent = 3,
     this.reassignmentDelay = const Duration(minutes: 15),
@@ -19,7 +22,8 @@ class QueueSettings {
     this.maxQueueSize = 100,
     this.allowManualClaims = true,
     this.autoAssignInterval = const Duration(minutes: 5),
-  });
+    required bool autoAssign,
+  }) : _autoAssign = autoAssign;
 
   factory QueueSettings.fromJson(Map<String, dynamic> json) {
     return QueueSettings(
@@ -40,6 +44,7 @@ class QueueSettings {
       autoAssignInterval: Duration(
         minutes: json['autoAssignIntervalMinutes'] ?? 5
       ),
+      autoAssign: json['autoAssign'] ?? true,
     );
   }
 
@@ -51,6 +56,7 @@ class QueueSettings {
     'maxQueueSize': maxQueueSize,
     'allowManualClaims': allowManualClaims,
     'autoAssignIntervalMinutes': autoAssignInterval.inMinutes,
+    'autoAssign': _autoAssign,
   };
 
   QueueSettings copyWith({
@@ -61,6 +67,7 @@ class QueueSettings {
     int? maxQueueSize,
     bool? allowManualClaims,
     Duration? autoAssignInterval,
+    bool? autoAssign,
   }) {
     return QueueSettings(
       autoAssignEnabled: autoAssignEnabled ?? this.autoAssignEnabled,
@@ -70,6 +77,7 @@ class QueueSettings {
       maxQueueSize: maxQueueSize ?? this.maxQueueSize,
       allowManualClaims: allowManualClaims ?? this.allowManualClaims,
       autoAssignInterval: autoAssignInterval ?? this.autoAssignInterval,
+      autoAssign: autoAssign ?? _autoAssign,
     );
   }
 
