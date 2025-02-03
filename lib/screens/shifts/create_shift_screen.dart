@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/shift_schedule.dart';
-import '../../models/agent.dart';
+import '../../models/shift_schedule.dart' as shift_schedule;
 import '../../providers/shift_provider.dart';
 import '../../providers/agent_provider.dart';
 import '../../widgets/loading_overlay.dart';
@@ -18,7 +17,7 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   String? _selectedAgentId;
-  Set<int> _selectedWeekdays = {};
+  final Set<int> _selectedWeekdays = {};
   TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
   String _scheduleType = 'REGULAR';
@@ -139,8 +138,8 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
 
     try {
       final now = DateTime.now();
-      final schedule = ShiftSchedule(
-        id: '',
+      final schedule = shift_schedule.ShiftSchedule(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
         agentId: _selectedAgentId!,
         weekdays: _selectedWeekdays.toList()..sort(),
         startTime: DateTime(
@@ -162,18 +161,20 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
             (_endTime.minute - _startTime.minute) / 60.0,
       );
 
-      final success = await context
-          .read<ShiftProvider>()
-          .updateAgentSchedule(_selectedAgentId!, schedule);
+      final navigator = Navigator.of(context);
+      final shiftProvider = context.read<ShiftProvider>();
+      final success = await shiftProvider.updateAgentSchedule(_selectedAgentId!, schedule);
 
       if (success && mounted) {
-        Navigator.pop(context);
+        navigator.pop();
       }
     } catch (e) {
-      UIHelpers.showErrorSnackBar(
-        context: context,
-        message: 'Failed to create shift: $e',
-      );
+      if (mounted) {
+        UIHelpers.showErrorSnackBar(
+          context: context,
+          message: 'Failed to create shift: $e',
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
