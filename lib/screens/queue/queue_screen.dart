@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/ticket.dart';
 import '../../providers/queue_provider.dart';
 import '../../widgets/ticket_list_item.dart';
-import '../../utils/ui_helpers.dart';
+import '../../models/ticket.dart' as ticket_model;
+
+
 
 class QueueScreen extends StatefulWidget {
   const QueueScreen({super.key});
@@ -28,6 +29,10 @@ class _QueueScreenState extends State<QueueScreen> {
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void _showAssignDialog(ticket_model.Ticket ticket) {
+    // Implement the dialog logic here
   }
 
   @override
@@ -61,7 +66,7 @@ class _QueueScreenState extends State<QueueScreen> {
           return ListView.builder(
             itemCount: provider.tickets.length,
             itemBuilder: (context, index) {
-              final ticket = provider.tickets[index];
+              final ticket = provider.tickets[index] as ticket_model.Ticket;
               return TicketListItem(
                 ticket: ticket,
                 onAssign: () => _showAssignDialog(ticket),

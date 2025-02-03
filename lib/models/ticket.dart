@@ -10,7 +10,7 @@ class Ticket {
   final double estimatedHours;
   final List<String> requiredSkills;
 
-   Ticket({
+  Ticket({
     required this.id,
     required this.title,
     required this.description,

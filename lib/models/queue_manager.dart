@@ -1,5 +1,6 @@
 import '../models/agent.dart';
 
+
 class Ticket {
   final String id;
   final String title;
@@ -18,22 +19,69 @@ class Ticket {
     this.assignedTo,
     this.status = 'OPEN',
   }) : createdAt = createdAt ?? DateTime.now();
+
+  factory Ticket.fromJson(Map<String, dynamic> json) {
+    return Ticket(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      priority: json['priority'] as String,
+      dueDate: DateTime.parse(json['dueDate'] as String),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      assignedTo: json['assignedTo'] as String?,
+      status: json['status'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'priority': priority,
+      'dueDate': dueDate.toIso8601String(),
+      'createdAt': createdAt.toIso8601String(),
+      'assignedTo': assignedTo,
+      'status': status,
+    };
+  }
 }
 
 class QueuedTicket {
   final String id;
-  final String title;
   final Ticket ticket;
-  final DateTime addedAt;
-  double priority;
+  final double priority;
+  final DateTime queuedAt;
+  bool isExpanded;
 
   QueuedTicket({
     required this.id,
-    required this.title,
     required this.ticket,
     required this.priority,
-    DateTime? addedAt,
-  }) : addedAt = addedAt ?? DateTime.now();
+    DateTime? queuedAt,
+    this.isExpanded = false,
+  }) : queuedAt = queuedAt ?? DateTime.now();
+
+  factory QueuedTicket.fromJson(Map<String, dynamic> json) {
+    return QueuedTicket(
+      id: json['id'] as String,
+      ticket: Ticket.fromJson(json['ticket'] as Map<String, dynamic>),
+      priority: json['priority'] as double,
+      queuedAt: DateTime.parse(json['queuedAt'] as String),
+      isExpanded: json['isExpanded'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'ticket': ticket.toJson(),
+      'priority': priority,
+      'queuedAt': queuedAt.toIso8601String(),
+      'isExpanded': isExpanded,
+    };
+  }
+
+  @override
+  String toString() => 'QueuedTicket(id: $id, title: ${ticket.title}, priority: $priority, queuedAt: $queuedAt, isExpanded: $isExpanded)';
 }
 
 class QueueSettings {
@@ -41,28 +89,40 @@ class QueueSettings {
   final int maxTicketsPerAgent;
   final Map<String, int> priorityWeights;
 
-  const QueueSettings({
-    this.autoAssignEnabled = true,
-    this.maxTicketsPerAgent = 3,
-    this.priorityWeights = const {
-      'HIGH': 3,
-      'MEDIUM': 2,
-      'LOW': 1,
-    },
+  QueueSettings({
+    required this.autoAssignEnabled,
+    required this.maxTicketsPerAgent,
+    required this.priorityWeights,
   });
+
+  factory QueueSettings.fromJson(Map<String, dynamic> json) {
+    return QueueSettings(
+      autoAssignEnabled: json['autoAssignEnabled'] as bool,
+      maxTicketsPerAgent: json['maxTicketsPerAgent'] as int,
+      priorityWeights: Map<String, int>.from(json['priorityWeights']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'autoAssignEnabled': autoAssignEnabled,
+      'maxTicketsPerAgent': maxTicketsPerAgent,
+      'priorityWeights': priorityWeights,
+    };
+  }
 }
 
 class QueueManager {
   final String id;
+  final QueueSettings settings;
   final List<QueuedTicket> pendingTickets;
   final Map<String, List<String>> agentAssignments;
-  final QueueSettings settings;
 
   QueueManager({
     required this.id,
-    this.pendingTickets = const [],
-    this.agentAssignments = const {},
     required this.settings,
+    required this.pendingTickets,
+    required this.agentAssignments,
   });
 
   int get size => pendingTickets.length;
@@ -94,7 +154,6 @@ class QueueManager {
   void addTicket(Ticket ticket) {
     final queuedTicket = QueuedTicket(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: ticket.title,
       ticket: ticket,
       priority: _calculatePriority(ticket),
     );
@@ -155,21 +214,21 @@ class QueueManager {
       pendingTickets: (json['pendingTickets'] as List)
           .map((ticketJson) => QueuedTicket(
                 id: ticketJson['id'] as String,
-                title: ticketJson['title'] as String,
-                ticket: Ticket(
-                  id: ticketJson['ticket']['id'] as String,
-                  title: ticketJson['ticket']['title'] as String,
-                  priority: ticketJson['ticket']['priority'] as String,
-                  dueDate: DateTime.parse(ticketJson['ticket']['dueDate'] as String),
-                  createdAt: DateTime.parse(ticketJson['ticket']['createdAt'] as String),
-                  assignedTo: ticketJson['ticket']['assignedTo'] as String?,
-                  status: ticketJson['ticket']['status'] as String,
-                ),
+                ticket: Ticket.fromJson(ticketJson['ticket'] as Map<String, dynamic>),
                 priority: ticketJson['priority'] as double,
-                addedAt: DateTime.parse(ticketJson['addedAt'] as String),
+                queuedAt: DateTime.parse(ticketJson['queuedAt'] as String),
               ))
           .toList(),
       agentAssignments: Map<String, List<String>>.from(json['agentAssignments']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'settings': settings.toJson(),
+      'pendingTickets': pendingTickets.map((qt) => qt.toJson()).toList(),
+      'agentAssignments': agentAssignments,
+    };
   }
 }

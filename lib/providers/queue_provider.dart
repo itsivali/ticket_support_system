@@ -4,7 +4,7 @@ import '../models/queue_manager.dart';
 import '../services/queue_service.dart';
 import '../utils/console_logger.dart';
 
-class QueueProvider extends ChangeNotifier {
+class QueueProvider with ChangeNotifier {
   final QueueService _queueService = QueueService();
   QueueManager? _queueManager;
   bool _isLoading = false;
@@ -117,6 +117,13 @@ class QueueProvider extends ChangeNotifier {
 
   Future<void> toggleAutoAssign(bool value) async {
     _isAutoAssignEnabled = value;
+    notifyListeners();
+  }
+
+  Future<void> refreshQueue() async {
+    // Add logic to refresh the queue
+    // For example, fetch tickets from a server or database
+    // _tickets = await fetchTickets();
     notifyListeners();
   }
 }
