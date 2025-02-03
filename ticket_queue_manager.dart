@@ -1,6 +1,6 @@
-import '../models/ticket.dart';
-import '../models/agent.dart';
-import '../utils/priority_queue.dart';
+import 'lib/models/ticket.dart';
+import 'lib/models/agent.dart';
+import 'lib/utils/priority_queue.dart';
 
 class TicketQueueManager {
   final PriorityQueue<Ticket> _queue;

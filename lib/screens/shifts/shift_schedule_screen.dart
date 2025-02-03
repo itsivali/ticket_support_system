@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/agent.dart';
+import 'package:collection/collection.dart';
+import '../../models/agent.dart' hide ShiftSchedule;
 import '../../models/shift_schedule.dart';
 import '../../providers/agent_provider.dart';
 import '../../providers/shift_provider.dart';
@@ -25,6 +26,7 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen> {
   Set<int> _selectedWeekdays = {};
   TimeOfDay _startTime = const TimeOfDay(hour: 9, minute: 0);
   TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
+  String _scheduleType = 'REGULAR';
 
   @override
   void initState() {
@@ -33,17 +35,19 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen> {
   }
 
   void _loadCurrentSchedule() {
-    if (widget.agent.shiftSchedule != null) {
+    final schedule = widget.agent.shiftSchedule;
+    if (schedule != null) {
       setState(() {
-        _selectedWeekdays = widget.agent.shiftSchedule!.weekdays.toSet();
+        _selectedWeekdays = schedule.weekdays.toSet();
         _startTime = TimeOfDay(
-          hour: widget.agent.shiftSchedule!.startTime.hour,
-          minute: widget.agent.shiftSchedule!.startTime.minute,
+          hour: schedule.startTime.hour,
+          minute: schedule.startTime.minute,
         );
         _endTime = TimeOfDay(
-          hour: widget.agent.shiftSchedule!.endTime.hour,
-          minute: widget.agent.shiftSchedule!.endTime.minute,
+          hour: schedule.endTime.hour,
+          minute: schedule.endTime.minute,
         );
+        _scheduleType = schedule.scheduleType;
       });
     }
   }
@@ -121,7 +125,7 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen> {
     if (_selectedWeekdays.isEmpty) {
       UIHelpers.showErrorSnackBar(
         context: context,
-        message: 'Please select at least one working day',
+        message: 'Select at least one working day',
       );
       return false;
     }
@@ -137,56 +141,91 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen> {
       return false;
     }
 
+    final workHours = (endMinutes - startMinutes) / 60;
+    if (workHours < 1 || workHours > 24) {
+      UIHelpers.showErrorSnackBar(
+        context: context,
+        message: 'Work hours must be between 1 and 24',
+      );
+      return false;
+    }
+
     return true;
   }
 
   Future<void> _saveSchedule() async {
-    if (!_validateSchedule()) return;
+    if (!_formKey.currentState!.validate() || !_validateSchedule()) return;
 
     setState(() => _isLoading = true);
 
     try {
       final now = DateTime.now();
-      final startTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        _startTime.hour,
-        _startTime.minute,
-      );
-      final endTime = DateTime(
-        now.year,
-        now.month,
-        now.day,
-        _endTime.hour,
-        _endTime.minute,
-      );
-
       final schedule = ShiftSchedule(
         id: widget.agent.shiftSchedule?.id ?? '',
         agentId: widget.agent.id,
         weekdays: _selectedWeekdays.toList()..sort(),
-        startTime: startTime,
-        endTime: endTime,
-        hoursPerDay: endTime.difference(startTime).inHours.toDouble(),
+        startTime: DateTime(
+          now.year, now.month, now.day,
+          _startTime.hour, _startTime.minute
+        ),
+        endTime: DateTime(
+          now.year, now.month, now.day,
+          _endTime.hour, _endTime.minute
+        ),
+        scheduleType: _scheduleType,
+        hoursPerDay: (_endTime.hour * 60 + _endTime.minute - 
+                      _startTime.hour * 60 - _startTime.minute) / 60.0,
       );
 
-      await context.read<ShiftProvider>().updateAgentSchedule(
-        widget.agent.id,
-        schedule,
-      );
+      final success = await context.read<ShiftProvider>()
+          .updateAgentSchedule(widget.agent.id, schedule);
 
       if (!mounted) return;
-      Navigator.pop(context);
+
+      if (success) {
+        Navigator.pop(context);
+      } else {
+        UIHelpers.showErrorSnackBar(
+          context: context,
+          message: 'Failed to save schedule'
+        );
+      }
     } catch (e) {
+      if (!mounted) return;
       UIHelpers.showErrorSnackBar(
         context: context,
-        message: 'Failed to save schedule: $e',
+        message: 'Error: ${e.toString()}'
       );
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _updateSchedule() async {
+    final schedule = ShiftSchedule(
+      id: '',
+      agentId: widget.agent.id,
+      weekdays: [1, 2, 3, 4, 5], // Mon-Fri
+      startTime: DateTime(2024, 1, 1, 9, 0), // 9 AM
+      endTime: DateTime(2024, 1, 1, 17, 0), // 5 PM
+      hoursPerDay: 8,
+    );
+
+    final success = await context.read<ShiftProvider>().updateAgentSchedule(
+      widget.agent.id,
+      schedule,
+    );
+
+    if (success) {
+      UIHelpers.showSuccessSnackBar(
+        context: context,
+        message: 'Schedule updated successfully',
+      );
+    } else {
+      UIHelpers.showErrorSnackBar(
+        context: context,
+        message: 'Failed to update schedule',
+      );
     }
   }
 
@@ -213,39 +252,69 @@ class _ShiftScheduleScreenState extends State<ShiftScheduleScreen> {
             children: [
               _buildWeekdaySelector(),
               const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: ListTile(
-                      title: const Text('Start Time'),
-                      subtitle: Text(_startTime.format(context)),
-                      leading: const Icon(Icons.access_time),
-                      onTap: () => _selectTime(true),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListTile(
-                      title: const Text('End Time'),
-                      subtitle: Text(_endTime.format(context)),
-                      leading: const Icon(Icons.access_time),
-                      onTap: () => _selectTime(false),
-                    ),
-                  ),
-                ],
-              ),
+              _buildTimeSelectors(),
               const SizedBox(height: 24),
+              _buildScheduleType(),
+              const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
                   onPressed: _isLoading ? null : _saveSchedule,
                   icon: const Icon(Icons.save),
-                  label: Text(_isLoading ? 'SAVING...' : 'SAVE SCHEDULE'),
+                  label: Text(_isLoading ? 'Saving...' : 'Save Schedule'),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _isLoading ? null : _updateSchedule,
+                  icon: const Icon(Icons.update),
+                  label: Text(_isLoading ? 'UPDATING...' : 'UPDATE SCHEDULE'),
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildScheduleType() {
+    return DropdownButtonFormField<String>(
+      decoration: const InputDecoration(
+        labelText: 'Schedule Type',
+        border: OutlineInputBorder(),
+      ),
+      value: _scheduleType,
+      items: const [
+        DropdownMenuItem(value: 'REGULAR', child: Text('Regular')),
+        DropdownMenuItem(value: 'FLEXIBLE', child: Text('Flexible')),
+      ],
+      onChanged: (value) => setState(() => _scheduleType = value!),
+    );
+  }
+
+  Widget _buildTimeSelectors() {
+    return Row(
+      children: [
+        Expanded(
+          child: ListTile(
+            title: const Text('Start Time'),
+            subtitle: Text(_startTime.format(context)),
+            leading: const Icon(Icons.access_time),
+            onTap: () => _selectTime(true),
+          ),
+        ),
+        Expanded(
+          child: ListTile(
+            title: const Text('End Time'),
+            subtitle: Text(_endTime.format(context)),
+            leading: const Icon(Icons.access_time),
+            onTap: () => _selectTime(false),
+          ),
+        ),
+      ],
     );
   }
 }

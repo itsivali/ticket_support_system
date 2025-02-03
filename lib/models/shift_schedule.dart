@@ -1,4 +1,5 @@
 import './ticket.dart';
+import './shift.dart';
 
 class ShiftSchedule {
   final String id;
@@ -8,6 +9,7 @@ class ShiftSchedule {
   final DateTime endTime;
   final bool isActive;
   final double hoursPerDay;
+  final String scheduleType;
 
   ShiftSchedule({
     required this.id,
@@ -15,8 +17,9 @@ class ShiftSchedule {
     required this.weekdays,
     required this.startTime,
     required this.endTime,
-    this.isActive = true,
     required this.hoursPerDay,
+    this.isActive = true,
+    this.scheduleType = 'REGULAR',
   }) {
     // Validate schedule data
     if (weekdays.any((day) => day < 1 || day > 7)) {
@@ -53,10 +56,23 @@ class ShiftSchedule {
         endTime: endTime,
         isActive: json['isActive'] ?? true,
         hoursPerDay: json['hoursPerDay'] ?? 8.0,
+        scheduleType: json['scheduleType'] ?? 'default',
       );
     } catch (e) {
       throw FormatException('Error parsing ShiftSchedule: $e\nJSON: $json');
     }
+  }
+
+  factory ShiftSchedule.fromShift(Shift shift) {
+    return ShiftSchedule(
+      id: shift.id,
+      agentId: shift.agentId,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+      weekdays: shift.weekdays,
+      isActive: shift.isActive,
+      hoursPerDay: 8.0,
+    );
   }
 
   Map<String, dynamic> toJson() => {
@@ -66,6 +82,7 @@ class ShiftSchedule {
     'endTime': endTime.toIso8601String(),
     'isActive': isActive,
     'hoursPerDay': hoursPerDay,
+    'scheduleType': scheduleType,
   };
 
   bool isWorkingAt(DateTime dateTime) {
@@ -145,8 +162,51 @@ class ShiftSchedule {
   }
 
   double getRemainingHours() {
-    // Calculate remaining hours in the shift
-    // This is a basic implementation - adjust the logic according to your needs
-    return 8.0; // Default to 8 hours
+    final now = DateTime.now();
+    if (!isWorkingAt(now)) return 0.0;
+    
+    // Create end time for today's shift
+    final todayShiftEnd = DateTime(
+      now.year, 
+      now.month, 
+      now.day,
+      endTime.hour,
+      endTime.minute
+    );
+    
+    // Calculate remaining time in hours
+    final remainingMinutes = todayShiftEnd.difference(now).inMinutes;
+    return remainingMinutes / 60.0;
+  }
+
+  ShiftSchedule copyWith({
+    String? id,
+    String? agentId,
+    DateTime? startTime,
+    DateTime? endTime,
+    List<int>? weekdays,
+    bool? isActive,
+    double? hoursPerDay,
+  }) {
+    return ShiftSchedule(
+      id: id ?? this.id,
+      agentId: agentId ?? this.agentId,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      weekdays: weekdays ?? this.weekdays,
+      isActive: isActive ?? this.isActive,
+      hoursPerDay: hoursPerDay ?? this.hoursPerDay,
+    );
+  }
+
+  Map<String, dynamic> toShift() {
+    return {
+      'id': id,
+      'agentId': agentId,
+      'weekdays': weekdays,
+      'startTime': startTime.toString(),
+      'endTime': endTime.toString(),
+      'isActive': isActive,
+    };
   }
 }

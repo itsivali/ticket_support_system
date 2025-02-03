@@ -26,6 +26,17 @@ class Shift {
     );
   }
 
+  factory Shift.fromMap(Map<String, dynamic> map) {
+    return Shift(
+      id: map['id'] ?? '',
+      agentId: map['agentId'] ?? '',
+      startTime: map['startTime'] ?? DateTime.now(),
+      endTime: map['endTime'] ?? DateTime.now(),
+      weekdays: List<int>.from(map['weekdays'] ?? []),
+      isActive: map['isActive'] ?? true,
+    );
+  }
+
   Map<String, dynamic> toJson() => {
     'agentId': agentId,
     'weekdays': weekdays,

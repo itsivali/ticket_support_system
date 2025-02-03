@@ -51,21 +51,21 @@ class ShiftService {
     }
   }
 
-  Future<Shift> updateShift(String shiftId, Map<String, dynamic> updates) async {
+  Future<Shift> updateShift(String? id, Shift schedule) async {
     try {
       final response = await _client.put(
-        Uri.parse('$baseUrl/shifts/$shiftId'),
+        Uri.parse('$baseUrl/shifts/${id ?? ''}'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: json.encode(updates),
+        body: jsonEncode(schedule.toJson()),
       );
 
       if (response.statusCode == 200) {
-        return Shift.fromJson(json.decode(response.body));
+        return Shift.fromJson(jsonDecode(response.body));
       }
-      throw _handleError(response);
+      throw Exception('Failed to update shift schedule');
     } catch (e) {
       ConsoleLogger.error('Error updating shift', e.toString());
       rethrow;
