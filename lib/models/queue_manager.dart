@@ -2,6 +2,7 @@ import '../models/agent.dart';
 
 class Ticket {
   final String id;
+  final String title;
   final String priority;
   final DateTime dueDate;
   final DateTime createdAt;
@@ -10,6 +11,7 @@ class Ticket {
 
   Ticket({
     required this.id,
+    required this.title,
     required this.priority,
     required this.dueDate,
     DateTime? createdAt,
@@ -20,12 +22,14 @@ class Ticket {
 
 class QueuedTicket {
   final String id;
+  final String title;
   final Ticket ticket;
   final DateTime addedAt;
   double priority;
 
   QueuedTicket({
     required this.id,
+    required this.title,
     required this.ticket,
     required this.priority,
     DateTime? addedAt,
@@ -90,6 +94,7 @@ class QueueManager {
   void addTicket(Ticket ticket) {
     final queuedTicket = QueuedTicket(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: ticket.title,
       ticket: ticket,
       priority: _calculatePriority(ticket),
     );
@@ -150,8 +155,10 @@ class QueueManager {
       pendingTickets: (json['pendingTickets'] as List)
           .map((ticketJson) => QueuedTicket(
                 id: ticketJson['id'] as String,
+                title: ticketJson['title'] as String,
                 ticket: Ticket(
                   id: ticketJson['ticket']['id'] as String,
+                  title: ticketJson['ticket']['title'] as String,
                   priority: ticketJson['ticket']['priority'] as String,
                   dueDate: DateTime.parse(ticketJson['ticket']['dueDate'] as String),
                   createdAt: DateTime.parse(ticketJson['ticket']['createdAt'] as String),

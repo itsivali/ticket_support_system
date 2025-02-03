@@ -4,16 +4,21 @@ import '../models/queue_manager.dart';
 import '../services/queue_service.dart';
 import '../utils/console_logger.dart';
 
-class QueueProvider with ChangeNotifier {
+class QueueProvider extends ChangeNotifier {
   final QueueService _queueService = QueueService();
   QueueManager? _queueManager;
   bool _isLoading = false;
   String? _error;
   Timer? _autoAssignmentTimer;
+  bool _isAutoAssignEnabled = false;
+
+  final List<Ticket> _tickets = [];
 
   QueueManager? get queueManager => _queueManager;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  bool get isAutoAssignEnabled => _isAutoAssignEnabled;
+  List<Ticket> get tickets => _tickets;
 
   QueueProvider() {
     _startAutoAssignment();
@@ -108,5 +113,10 @@ class QueueProvider with ChangeNotifier {
       'low': 0,
       'urgent': 0,
     };
+  }
+
+  Future<void> toggleAutoAssign(bool value) async {
+    _isAutoAssignEnabled = value;
+    notifyListeners();
   }
 }

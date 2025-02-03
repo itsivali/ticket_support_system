@@ -7,7 +7,7 @@ import 'providers/shift_provider.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/tickets/ticket_screens.dart';
 import 'screens/agents/agent_screens.dart';
-import 'screens/queue_screens.dart';
+import 'screens/queue/queue_screens.dart';
 import 'screens/shift_screens.dart';
 import 'models/ticket.dart';
 import 'models/agent.dart';

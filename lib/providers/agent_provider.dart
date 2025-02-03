@@ -8,10 +8,12 @@ class AgentProvider with ChangeNotifier {
   List<Agent> _agents = [];
   bool _isLoading = false;
   String? _error;
+  Agent? _currentAgent;
 
   List<Agent> get agents => _agents;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  Agent? get currentAgent => _currentAgent;
 
   Future<void> fetchAgents() async {
     _isLoading = true;
@@ -105,6 +107,11 @@ class AgentProvider with ChangeNotifier {
 
   void clearError() {
     _error = null;
+    notifyListeners();
+  }
+
+  void setCurrentAgent(Agent agent) {
+    _currentAgent = agent;
     notifyListeners();
   }
 }
