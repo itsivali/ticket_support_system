@@ -1,49 +1,34 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import '../models/queue_manager.dart';
 import '../services/queue_service.dart';
 import '../utils/console_logger.dart';
 
-class QueueProvider with ChangeNotifier {
-  final QueueService _queueService = QueueService();
+class QueueProvider extends ChangeNotifier {
   QueueManager? _queueManager;
-  bool _isLoading = false;
-  String? _error;
   Timer? _autoAssignmentTimer;
-  bool _isAutoAssignEnabled = false;
+  final QueueService _queueService = QueueService();
 
-  final List<Ticket> _tickets = [];
+  final bool _isLoading = false;
+
+  bool get isLoading => _isLoading;
 
   QueueManager? get queueManager => _queueManager;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
+
+  bool get autoAssign => _queueManager?.settings.autoAssignEnabled ?? false;
+
+  bool _isAutoAssignEnabled = false;
+
   bool get isAutoAssignEnabled => _isAutoAssignEnabled;
-  List<Ticket> get tickets => _tickets;
 
-  QueueProvider() {
-    _startAutoAssignment();
-  }
-
-  @override
-  void dispose() {
-    _autoAssignmentTimer?.cancel();
-    super.dispose();
-  }
+  List<Ticket> tickets = [];
 
   Future<void> fetchQueueStatus() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
     try {
-      _queueManager = await _queueService.getQueueStatus();
-      _error = null;
-    } catch (e) {
-      _error = e.toString();
-      ConsoleLogger.error('Error fetching queue status', e.toString());
-    } finally {
-      _isLoading = false;
+      _queueManager = await _queueService.getQueueManager();
       notifyListeners();
+    } catch (e) {
+      ConsoleLogger.error('Failed to fetch queue status', e.toString());
     }
   }
 
@@ -79,40 +64,26 @@ class QueueProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> assignTicket(String ticketId, String agentId) async {
-    try {
-      final success = await _queueService.assignTicket(ticketId, agentId);
-      if (success) {
-        await fetchQueueStatus();
-      }
-      return success;
-    } catch (e) {
-       ConsoleLogger.error('Error in auto assignment', e.toString());
-      return false;
+  Future<void> updateAutoAssign(bool isEnabled) async {
+    if (_queueManager == null) return;
+
+    _queueManager!.settings = _queueManager!.settings.copyWith(autoAssignEnabled: isEnabled);
+    notifyListeners();
+
+    if (isEnabled) {
+      _startAutoAssignment();
+    } else {
+      _autoAssignmentTimer?.cancel();
     }
   }
 
-  Future<bool> claimTicket(String ticketId, String agentId) async {
+  Future<void> assignTicket(String ticketId, String agentId) async {
     try {
-      final success = await _queueService.claimTicket(ticketId, agentId);
-      if (success) {
-        await fetchQueueStatus();
-      }
-      return success;
+      await _queueService.assignTicket(ticketId, agentId);
+      await fetchQueueStatus();
     } catch (e) {
-      ConsoleLogger.error('Error in auto assignment', e.toString());
-      return false;
+      ConsoleLogger.error('Failed to assign ticket', e.toString());
     }
-  }
-
-  Map<String, int> getQueueMetrics() {
-    return _queueManager?.getQueueStats() ?? {
-      'total': 0,
-      'high': 0,
-      'medium': 0,
-      'low': 0,
-      'urgent': 0,
-    };
   }
 
   Future<void> toggleAutoAssign(bool value) async {
@@ -120,10 +91,28 @@ class QueueProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  Future<bool> claimTicket(String ticketId, String agentId) async {
+    try {
+      await _queueService.claimTicket(ticketId, agentId);
+      await fetchQueueStatus();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<void> refreshQueue() async {
-    // Add logic to refresh the queue
-    // For example, fetch tickets from a server or database
-    // _tickets = await fetchTickets();
+    try {
+      tickets = await _queueService.getTickets();
+    } catch (e) {
+      ConsoleLogger.error('Failed to refresh queue', e.toString());
+      tickets = [];
+    }
+
+    // Example:
+
+    // tickets = await yourApiService.getTickets();
+
     notifyListeners();
   }
 }

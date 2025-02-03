@@ -7,6 +7,7 @@ import '../providers/shift_provider.dart';
 import '../models/agent.dart';
 import '../models/shift.dart';
 import '../models/ticket.dart';
+import '../models/queue_settings.dart';
 import '../widgets/app_drawer.dart';
 import '../utils/console_logger.dart';
 
@@ -404,13 +405,13 @@ class _AutoAssignmentStatus extends StatelessWidget {
             const SizedBox(height: 16),
             Consumer<QueueProvider>(
               builder: (context, provider, child) {
-                final isEnabled = provider.queueManager?.settings.autoAssign ?? false;
+                final isEnabled = provider.autoAssign;
                 return SwitchListTile(
                   title: const Text('Auto Assignment'),
                   subtitle: Text(isEnabled ? 'Enabled' : 'Disabled'),
                   value: isEnabled,
                   onChanged: (value) {
-                    // Update auto-assignment setting
+                    provider.updateAutoAssign(value);
                   },
                 );
               },

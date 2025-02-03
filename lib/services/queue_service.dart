@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/queue_manager.dart';
+import '../models/queue_manager.dart' as qm;
 import '../models/agent.dart';
+import '../models/ticket.dart';
 import '../utils/console_logger.dart';
 
 class QueueService {
@@ -14,7 +15,7 @@ class QueueService {
     http.Client? client,
   }) : _client = client ?? http.Client();
 
-  Future<QueueManager> getQueueStatus() async {
+  Future<qm.QueueManager> getQueueStatus() async {
     try {
       final response = await _client.get(
         Uri.parse('$baseUrl/queue/status'),
@@ -22,7 +23,7 @@ class QueueService {
       );
 
       if (response.statusCode == 200) {
-        return QueueManager.fromJson(json.decode(response.body));
+      return qm.QueueManager.fromJson(json.decode(response.body));
       }
       
       throw _handleError(response);
@@ -102,6 +103,44 @@ class QueueService {
       throw _handleError(response);
     } catch (e) {
       ConsoleLogger.error('Error getting available agents', e.toString());
+      return [];
+    }
+  }
+
+  Future<qm.QueueManager> getQueueManager() async {
+    try {
+      final response = await _client.get(
+      Uri.parse('$baseUrl/queue/manager'),
+      headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+      return qm.QueueManager.fromJson(json.decode(response.body));
+      }
+
+      throw _handleError(response);
+    } catch (e) {
+      ConsoleLogger.error('Error fetching queue manager', e.toString());
+      throw Exception('Failed to fetch queue manager: ${e.toString()}');
+    }
+  }
+
+  Future<List<Ticket>> getTickets() async {
+    try {
+      final response = await _client.get(
+        Uri.parse('$baseUrl/tickets'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode == 200) {
+        return (json.decode(response.body) as List)
+            .map((ticket) => Ticket.fromJson(ticket))
+            .toList();
+      }
+
+      throw _handleError(response);
+    } catch (e) {
+      ConsoleLogger.error('Error fetching tickets', e.toString());
       return [];
     }
   }

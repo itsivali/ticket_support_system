@@ -110,11 +110,19 @@ class QueueSettings {
       'priorityWeights': priorityWeights,
     };
   }
+
+  QueueSettings copyWith({bool? autoAssignEnabled}) {
+    return QueueSettings(
+      autoAssignEnabled: autoAssignEnabled ?? this.autoAssignEnabled,
+      maxTicketsPerAgent: maxTicketsPerAgent,
+      priorityWeights: priorityWeights,
+    );
+  }
 }
 
 class QueueManager {
   final String id;
-  final QueueSettings settings;
+  QueueSettings settings;
   final List<QueuedTicket> pendingTickets;
   final Map<String, List<String>> agentAssignments;
 
