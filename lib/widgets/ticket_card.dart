@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/ticket.dart';
 import '../providers/ticket_provider.dart';
-import '../screens/edit_ticket_screen.dart';
+import '../screens/tickets/edit_ticket_screen.dart';
 
 class TicketCard extends StatelessWidget {
   final Ticket ticket;

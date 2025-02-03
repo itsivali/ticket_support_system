@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/ticket_provider.dart';
-import '../providers/agent_provider.dart';
-import '../widgets/ticket_card.dart';
-import '../models/ticket.dart';
+import '../../providers/ticket_provider.dart';
+import '../../providers/agent_provider.dart';
+import '../../widgets/ticket_card.dart';
+import '../../models/ticket.dart';
 
 class TicketListScreen extends StatefulWidget {
   const TicketListScreen({super.key});
