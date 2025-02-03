@@ -40,7 +40,7 @@ class TicketQueueManager {
     double priority = priorityWeights[ticket.priority] ?? 1.0;
     
     // Factor in waiting time
-    final waitingHours = DateTime.now().difference(DateTime.parse(ticket.createdAt)).inHours;
+    final waitingHours = DateTime.now().difference(ticket.createdAt).inHours;
     priority += (waitingHours / 24.0); // Increase priority with wait time
     
     // Factor in due date proximity
