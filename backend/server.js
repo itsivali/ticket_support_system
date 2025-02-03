@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const ticketRoutes = require('./routes/tickets.routes');
-const agentRoutes = require('./routes/agents');
+const agentRoutes = require('./routes/agents.routes');
+const shiftRoutes = require('./routes/shifts.routes');
 const errorHandler = require('./middleware/errorHandler');
 const seedDatabase = require('./scripts/seed');
 
@@ -29,6 +30,7 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/agents', agentRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/shifts', shiftRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
