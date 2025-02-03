@@ -80,22 +80,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       drawer: const AppDrawer(),
       body: RefreshIndicator(
         onRefresh: _refreshData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
+        child: const SingleChildScrollView(
+          physics: AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _StatusOverview(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               _QuickActions(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               _TicketMetrics(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               _AgentStatus(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               _ShiftOverview(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               _AutoAssignmentStatus(),
             ],
           ),

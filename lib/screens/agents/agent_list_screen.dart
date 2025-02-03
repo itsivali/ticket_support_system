@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/agent_provider.dart';
-import '../../models/agent.dart';
 import '../../widgets/agent_card.dart';
-import '../../widgets/app_drawer.dart';
-import 'create_agent_screen.dart';
 
 class AgentListScreen extends StatelessWidget {
   const AgentListScreen({super.key});

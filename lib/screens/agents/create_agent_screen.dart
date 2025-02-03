@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../models/agent.dart';
 import '../../providers/agent_provider.dart';
+import '../../widgets/loading_overlay.dart';
 
 class CreateAgentScreen extends StatelessWidget {
   const CreateAgentScreen({super.key});
@@ -103,7 +105,15 @@ class _AgentFormState extends State<AgentForm> {
                   labelText: 'Email',
                   prefixIcon: Icon(Icons.email),
                 ),
-                validator: Validators.email,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter an email';
+                  }
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
                 keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
