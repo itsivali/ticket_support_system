@@ -1,3 +1,5 @@
+import 'package:ticket_support_system/utils/console_logger.dart';
+
 class Ticket {
   final String id;
   final String title;
@@ -26,21 +28,33 @@ class Ticket {
   });
 
   factory Ticket.fromJson(Map<String, dynamic> json) {
+  try {
     return Ticket(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String, 
-      status: json['status'] as String,
-      priority: json['priority'] as String,
-      assignedTo: json['assignedTo'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-      dueDate: DateTime.parse(json['dueDate'] as String),
-      estimatedHours: json['estimatedHours'] as int,
-      requiredSkills: List<String>.from(json['requiredSkills'] as List),
-      lastUpdated: DateTime.parse(json['lastUpdated'] as String),
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
+      title: json['title']?.toString() ?? '',
+      description: json['description']?.toString() ?? '',
+      status: json['status']?.toString() ?? 'OPEN',
+      priority: json['priority']?.toString() ?? 'MEDIUM',
+      assignedTo: json['assignedTo']?.toString(),
+      createdAt: json['createdAt'] != null 
+          ? DateTime.parse(json['createdAt'].toString())
+          : DateTime.now(),
+      dueDate: json['dueDate'] != null 
+          ? DateTime.parse(json['dueDate'].toString())
+          : DateTime.now().add(const Duration(days: 1)),
+      estimatedHours: (json['estimatedHours'] as num?)?.toInt() ?? 1,
+      requiredSkills: (json['requiredSkills'] as List?)
+          ?.map((e) => e.toString())
+          .toList() ?? [],
+      lastUpdated: json['lastUpdated'] != null 
+          ? DateTime.parse(json['lastUpdated'].toString())
+          : DateTime.now(),
     );
+  } catch (e) {
+    ConsoleLogger.error('Error parsing Ticket from JSON', 'Data: $json\nError: $e');
+    rethrow;
   }
-
+}
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,

@@ -21,7 +21,11 @@ class TicketService {
       );
 
       if (response.statusCode == 200) {
-        return Ticket.fromJson(json.decode(response.body));
+        final jsonData = json.decode(response.body);
+        if (jsonData == null) {
+          throw Exception('Received null response data');
+        }
+        return Ticket.fromJson(jsonData as Map<String, dynamic>);
       }
       throw _handleError(response);
     } catch (e) {
@@ -38,7 +42,7 @@ class TicketService {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> jsonData = json.decode(response.body);
+        final List<dynamic> jsonData = json.decode(response.body) as List<dynamic>;
         return jsonData
             .map((json) => Ticket.fromJson(json as Map<String, dynamic>))
             .toList();
@@ -63,7 +67,11 @@ class TicketService {
       );
 
       if (response.statusCode == 201) {
-        return Ticket.fromJson(json.decode(response.body));
+        final jsonData = json.decode(response.body);
+        if (jsonData == null) {
+          throw Exception('Received null response data');
+        }
+        return Ticket.fromJson(jsonData as Map<String, dynamic>);
       }
       throw _handleError(response);
     } catch (e) {
@@ -84,7 +92,11 @@ class TicketService {
       );
 
       if (response.statusCode == 200) {
-        return Ticket.fromJson(json.decode(response.body));
+        final jsonData = json.decode(response.body);
+        if (jsonData == null) {
+          throw Exception('Received null response data');
+        }
+        return Ticket.fromJson(jsonData as Map<String, dynamic>);
       }
       throw _handleError(response);
     } catch (e) {
@@ -109,8 +121,9 @@ class TicketService {
 
   Exception _handleError(http.Response response) {
     try {
-      final error = json.decode(response.body)['error'];
-      return Exception(error ?? 'Unknown error');
+      final responseData = json.decode(response.body);
+      final error = responseData['error']?.toString() ?? 'Unknown error';
+      return Exception(error);
     } catch (_) {
       return Exception('Request failed: ${response.statusCode}');
     }
