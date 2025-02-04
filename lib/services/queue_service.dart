@@ -156,6 +156,26 @@ class QueueService {
     }
   }
 
+  Future<void> saveQueueManager(qm.QueueManager queueManager) async {
+    try {
+      final response = await _client.post(
+        Uri.parse('$baseUrl/queue/manager'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode(queueManager.toJson()),
+      );
+
+      if (response.statusCode != 201) {
+        throw _handleError(response);
+      }
+    } catch (e) {
+      ConsoleLogger.error('Error saving queue manager', e.toString());
+      rethrow;
+    }
+  }
+
   Exception _handleError(http.Response response) {
     try {
       final error = json.decode(response.body)['error'];

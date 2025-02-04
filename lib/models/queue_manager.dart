@@ -1,4 +1,5 @@
 import '../models/agent.dart';
+import '../utils/console_logger.dart';
 
 
 class Ticket {
@@ -213,23 +214,21 @@ class QueueManager {
   }
 
   factory QueueManager.fromJson(Map<String, dynamic> json) {
-    return QueueManager(
-      id: json['id'] as String,
-      settings: QueueSettings(
-        autoAssignEnabled: json['settings']['autoAssignEnabled'] as bool,
-        maxTicketsPerAgent: json['settings']['maxTicketsPerAgent'] as int,
-        priorityWeights: Map<String, int>.from(json['settings']['priorityWeights']),
-      ),
-      pendingTickets: (json['pendingTickets'] as List)
-          .map((ticketJson) => QueuedTicket(
-                id: ticketJson['id'] as String,
-                ticket: Ticket.fromJson(ticketJson['ticket'] as Map<String, dynamic>),
-                priority: ticketJson['priority'] as double,
-                queuedAt: DateTime.parse(ticketJson['queuedAt'] as String),
-              ))
-          .toList(),
-      agentAssignments: Map<String, List<String>>.from(json['agentAssignments']),
-    );
+    try {
+      return QueueManager(
+        id: json['_id']?.toString() ?? json['id']?.toString() ?? '',
+        settings: QueueSettings.fromJson(json['settings'] as Map<String, dynamic>),
+        pendingTickets: (json['pendingTickets'] as List?)
+            ?.map((ticket) => QueuedTicket.fromJson(ticket as Map<String, dynamic>))
+            .toList() ?? [],
+        agentAssignments: Map<String, List<String>>.from(
+          json['agentAssignments'] as Map<String, dynamic>? ?? {},
+        ),
+      );
+    } catch (e) {
+      ConsoleLogger.error('Error parsing QueueManager from JSON', e.toString());
+      rethrow;
+    }
   }
 
   Map<String, dynamic> toJson() {

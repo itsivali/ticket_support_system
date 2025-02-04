@@ -157,7 +157,7 @@ class _CreateShiftScreenState extends State<CreateShiftScreen> {
           _endTime.minute,
         ),
         scheduleType: _scheduleType,
-        isActive: true, // Add the required isActive parameter
+        isActive: true, 
       );
 
       final navigator = Navigator.of(context);

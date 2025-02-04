@@ -5,10 +5,20 @@ import '../../providers/shift_provider.dart';
 import '../../models/shift_schedule.dart';
 import '../../models/agent.dart';
 import '../../widgets/app_drawer.dart';
-
+import '../../utils/ui_helpers.dart';
 
 class ShiftManagementScreen extends StatelessWidget {
   const ShiftManagementScreen({super.key});
+
+  String _formatWeekdays(List<int> weekdays) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return weekdays.map((day) => days[day - 1]).join(', ');
+  }
+
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:'
+           '${time.minute.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +45,12 @@ class ShiftManagementScreen extends StatelessWidget {
           final shifts = shiftProvider.currentShifts;
           final agents = agentProvider.agents;
 
+          if (agents.isEmpty) {
+            return const Center(
+              child: Text('No agents available'),
+            );
+          }
+
           return ListView.builder(
             itemCount: agents.length,
             itemBuilder: (context, index) {
@@ -46,54 +62,77 @@ class ShiftManagementScreen extends StatelessWidget {
                   agentId: agent.id,
                   weekdays: [],
                   startTime: DateTime.now(),
-                  endTime: DateTime.now(),
+                  endTime: DateTime.now().add(const Duration(hours: 8)),
                   isActive: false,
-                  scheduleType: 'NONE',
+                  scheduleType: 'FIXED',
                 ),
               );
 
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  title: Text(agent.name),
+                child: ExpansionTile(
+                  leading: CircleAvatar(
+                    backgroundColor: shift.isActive ? Colors.green : Colors.grey,
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                    ),
+                  ),
+                  title: Text(
+                    agent.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   subtitle: Text(
                     shift.id.isEmpty
                         ? 'No shift assigned'
-                        : 'Working days: ${_formatWeekdays(shift.weekdays)}\n'
-                          '${_formatTime(shift.startTime)} - ${_formatTime(shift.endTime)}',
+                        : 'Schedule: ${shift.scheduleType}',
                   ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.edit),
-                    onPressed: () => _editShift(context, agent, shift),
-                  ),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (shift.weekdays.isNotEmpty) ...[
+                            Text('Working Days: ${_formatWeekdays(shift.weekdays)}'),
+                            const SizedBox(height: 8),
+                          ],
+                          Text('Hours: ${_formatTime(shift.startTime)} - ${_formatTime(shift.endTime)}'),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                icon: const Icon(Icons.edit),
+                                label: const Text('Edit Schedule'),
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/edit-shift',
+                                    arguments: {
+                                      'agent': agent,
+                                      'shift': shift,
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               );
             },
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.pushNamed(context, '/create-shift'),
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add),
+        label: const Text('New Schedule'),
       ),
-    );
-  }
-
-  String _formatWeekdays(List<int> weekdays) {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return weekdays.map((day) => days[day - 1]).join(', ');
-  }
-
-  String _formatTime(DateTime time) {
-    return '${time.hour.toString().padLeft(2, '0')}:'
-           '${time.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _editShift(BuildContext context, Agent agent, ShiftSchedule shift) {
-    Navigator.pushNamed(
-      context,
-      '/edit-shift',
-      arguments: {'agent': agent, 'shift': shift},
     );
   }
 }

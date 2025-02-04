@@ -4,13 +4,16 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js & dart lib/scripts/generate_fake_data.dart"
+    "seed": "node scripts/seed.js",
+    "seed:dart": "cd .. && dart lib/scripts/generate_fake_data.dart",
+    "start": "npm run seed && npm run seed:dart && node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "mongoose": "^5.12.3"
+    "mongoose": "^5.12.3",
+    "@faker-js/faker": "^8.0.0"
   },
   "devDependencies": {},
   "author": "",

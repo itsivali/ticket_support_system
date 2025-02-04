@@ -8,13 +8,13 @@ import 'screens/dashboard_screen.dart';
 import 'screens/tickets/ticket_screens.dart';
 import 'screens/agents/agent_screens.dart';
 import 'screens/queue/queue_screens.dart';
-import 'screens/shift_screens.dart';
+import 'screens/shifts/shift_screens.dart';
+import 'screens/shifts/create_shift_screen.dart';
+import 'screens/shifts/edit_shift_screen.dart';
 import 'models/ticket.dart';
 import 'models/agent.dart';
+import 'models/shift_schedule.dart';
 import 'theme/app_theme.dart';
-import 'screens/shifts/edit_shift_screen.dart';
-import 'models/shift_schedule.dart'; 
-import 'screens/tickets/manage_tickets_screen.dart'; 
 
 void main() {
   runApp(
@@ -50,36 +50,23 @@ class MyApp extends StatelessWidget {
         '/queue': (context) => const QueueScreen(),
         '/shifts': (context) => const ShiftManagementScreen(),
         '/auto-assignment': (context) => const AutoAssignmentScreen(),
-         '/manage-tickets': (context) => const ManageTicketsScreen(),
-          '/shift-management': (context) => const ShiftManagementScreen(), 
- 
+        '/shift-management': (context) => const ShiftManagementScreen(),
+        '/create-shift': (context) => const CreateShiftScreen(),
       },
       onGenerateRoute: (settings) {
         switch (settings.name) {
-          case '/edit-ticket':
-            return MaterialPageRoute(
-              builder: (context) => EditTicketScreen(
-                ticket: settings.arguments as Ticket,
-              ),
-            );
-          case '/edit-agent':
-            return MaterialPageRoute(
-              builder: (context) => EditAgentScreen(
-                agent: settings.arguments as Agent,
-              ),
-            );
-          case '/agent-details':
-            return MaterialPageRoute(
-              builder: (context) => AgentDetailsScreen(
-                agent: settings.arguments as Agent,
-              ),
-            );
           case '/edit-shift':
             final args = settings.arguments as Map<String, dynamic>;
             return MaterialPageRoute(
               builder: (context) => EditShiftScreen(
                 agent: args['agent'] as Agent,
                 shift: args['shift'] as ShiftSchedule,
+              ),
+            );
+          case '/edit-ticket':
+            return MaterialPageRoute(
+              builder: (context) => EditTicketScreen(
+                ticket: settings.arguments as Ticket,
               ),
             );
           default:

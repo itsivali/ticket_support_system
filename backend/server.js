@@ -37,7 +37,7 @@ app.use(errorHandler);
 
 async function startServer() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ticket_support_system');
     log.info('Connected to MongoDB');
 
     // Seed the database if needed
