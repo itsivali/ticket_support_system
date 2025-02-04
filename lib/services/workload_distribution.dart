@@ -9,7 +9,7 @@ class WorkloadDistribution {
   List<AgentWorkload> calculateWorkloads(List<Agent> agents) {
     return agents.map((agent) {
       final totalHours = agent.currentTickets.length * 8.0;
-      final maxHours = agent.shiftSchedule?.hoursPerDay ?? 8.0;
+      final maxHours = agent.shiftSchedule.hoursPerDay;
       final utilization = totalHours / maxHours;
       
       return AgentWorkload(

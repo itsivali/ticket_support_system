@@ -66,7 +66,7 @@ class _QueueScreenState extends State<QueueScreen> {
           return ListView.builder(
             itemCount: provider.tickets.length,
             itemBuilder: (context, index) {
-              final ticket = provider.tickets[index] as ticket_model.Ticket;
+              final ticket = provider.tickets[index];
               return TicketListItem(
                 ticket: ticket,
                 onAssign: () => _showAssignDialog(ticket),

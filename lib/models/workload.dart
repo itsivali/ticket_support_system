@@ -11,16 +11,14 @@ class WorkloadManager {
     if (currentWorkload >= maxTickets) return false;
 
     // Shift validation
-    if (agent.shiftSchedule != null) {
-      final shiftEnd = agent.shiftSchedule!.endTime;
-      final ticketDue = ticket.dueDate;
-      
-      if (ticketDue.isAfter(shiftEnd)) return false;
-      
-      final remainingTime = shiftEnd.difference(DateTime.now());
-      if (remainingTime.inHours < ticket.estimatedHours) return false;
-    }
-
+    final shiftEnd = agent.shiftSchedule.endTime;
+    final ticketDue = ticket.dueDate;
+    
+    if (ticketDue.isAfter(shiftEnd)) return false;
+    
+    final remainingTime = shiftEnd.difference(DateTime.now());
+    if (remainingTime.inHours < ticket.estimatedHours) return false;
+  
     return true;
   }
 
@@ -31,12 +29,10 @@ class WorkloadManager {
     score += (agent.currentTickets.length / maxTickets) * 100;
     
     // Shift time remaining factor
-    if (agent.shiftSchedule != null) {
-      final remainingHours = agent.shiftSchedule!.endTime
-          .difference(DateTime.now()).inHours;
-      score += ((maxWorkload - remainingHours) / maxWorkload) * 50;
-    }
-
+    final remainingHours = agent.shiftSchedule.endTime
+        .difference(DateTime.now()).inHours;
+    score += ((maxWorkload - remainingHours) / maxWorkload) * 50;
+  
     return score;
   }
 

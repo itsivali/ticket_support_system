@@ -4,10 +4,6 @@ import '../providers/ticket_provider.dart';
 import '../providers/agent_provider.dart';
 import '../providers/queue_provider.dart';
 import '../providers/shift_provider.dart';
-import '../models/agent.dart';
-import '../models/shift.dart';
-import '../models/ticket.dart';
-import '../models/queue_settings.dart';
 import '../widgets/app_drawer.dart';
 import '../utils/console_logger.dart';
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/agent.dart';
 import '../../models/shift_schedule.dart';
-import '../../providers/agent_provider.dart';
 import '../../providers/shift_provider.dart';
 import '../../widgets/app_drawer.dart';
 import '../../utils/ui_helpers.dart';

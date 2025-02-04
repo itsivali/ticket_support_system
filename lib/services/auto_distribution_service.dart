@@ -65,11 +65,9 @@ class AutoDistributionService {
     final currentWorkload = _workloadTracker.getCurrentWorkload(agent.id);
     if (currentWorkload >= maxWorkload) return false;
 
-    if (agent.shiftSchedule != null) {
-      final remainingHours = agent.shiftSchedule!.getRemainingHours();
-      if (remainingHours < ticket.estimatedHours) return false;
-    }
-
+    final remainingHours = agent.shiftSchedule.getRemainingHours();
+    if (remainingHours < ticket.estimatedHours) return false;
+  
     return true;
   }
 
@@ -87,12 +85,10 @@ class AutoDistributionService {
     score += (skillsMatch / agent.skills.length) * skillsMatchBonus;
     
     // Time availability
-    if (agent.shiftSchedule != null) {
-      final hoursLeft = agent.shiftSchedule!.getRemainingHours();
-      final timeScore = (hoursLeft - ticket.estimatedHours) * hoursRemainingWeight;
-      score += timeScore.clamp(0.0, hoursRemainingWeight * 8);
-    }
-    
+    final hoursLeft = agent.shiftSchedule.getRemainingHours();
+    final timeScore = (hoursLeft - ticket.estimatedHours) * hoursRemainingWeight;
+    score += timeScore.clamp(0.0, hoursRemainingWeight * 8);
+      
     return score.clamp(0.0, 100.0);
   }
 
