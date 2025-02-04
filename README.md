@@ -221,18 +221,6 @@ The app deploys automatically to GitHub Pages on main branch pushes.
 
 Production URL: https://itsivali.github.io/ticket_support_system/
 
-## API Documentation
-
-- Local: http://localhost:3000/api-docs
-- Prod: https://itsivali.github.io/ticket_support_system/api-docs
-
-## Contributing
-
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
-5. Open pull request
 
 ## License
 
