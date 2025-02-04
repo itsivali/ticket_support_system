@@ -11,21 +11,10 @@ permissions:
   id-token: write
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup MongoDB
-        uses: supercharge/mongodb-github-action@1.10.0
-        with:
-          mongodb-version: '6.0'
-          mongodb-port: 27017
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -33,15 +22,43 @@ jobs:
           flutter-version: '3.16.0'
           channel: 'stable'
 
-      - name: Install backend dependencies & seed data
+      - name: Install Flutter dependencies
+        run: flutter pub get
+
+      - name: Run Flutter tests
+        run: flutter test
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup MongoDB
+        uses: supercharge/mongodb-github-action@1.10.0
+        with:
+          mongodb-version: '6.0'
+          mongodb-port: 27017
+
+      - name: Run backend tests
         working-directory: ./backend
         run: |
           npm install
           npm run seed:all
-          npm start &
-          sleep 10
+          npm test
         env:
           MONGODB_URI: mongodb://localhost:27017/ticket_support_system
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0'
+          channel: 'stable'
 
       - name: Build Flutter web
         run: |
