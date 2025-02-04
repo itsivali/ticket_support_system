@@ -1,7 +1,7 @@
 const { faker } = require('@faker-js/faker');
 const mongoose = require('mongoose');
 const Ticket = require('../models/ticket.model');
-const Agent = require('../models/agent');
+const Agent = require('../models/agent.model');
 require('dotenv').config();
 
 async function seedDatabase() {

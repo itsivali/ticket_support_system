@@ -1,39 +1,27 @@
 const Ticket = require('../models/ticket.model');
-const Agent = require('../models/agent');
+const Agent = require('../models/agent.model');
 
 exports.getAllTickets = async (req, res) => {
   try {
-    const tickets = await Ticket.find().populate('assignedTo');
+    const tickets = await Ticket.find();
     res.json(tickets);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
-exports.getTicketById = async (req, res, next) => {
+exports.getTicketById = async (req, res) => {
   try {
-    const ticket = await Ticket.findById(req.params.id).populate('assignedTo');
-    if (!ticket) {
-      return res.status(404).json({ message: 'Cannot find ticket' });
-    }
-    res.ticket = ticket;
-    next();
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+    res.json(ticket);
   } catch (err) {
-    return res.status(500).json({ message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
 exports.createTicket = async (req, res) => {
-  const ticket = new Ticket({
-    title: req.body.title,
-    description: req.body.description,
-    dueDate: req.body.dueDate,
-    estimatedHours: req.body.estimatedHours,
-    status: req.body.status,
-    priority: req.body.priority,
-    assignedTo: req.body.assignedTo || null,
-  });
-
+  const ticket = new Ticket(req.body);
   try {
     const newTicket = await ticket.save();
     res.status(201).json(newTicket);
@@ -43,31 +31,10 @@ exports.createTicket = async (req, res) => {
 };
 
 exports.updateTicket = async (req, res) => {
-  if (req.body.title != null) {
-    res.ticket.title = req.body.title;
-  }
-  if (req.body.description != null) {
-    res.ticket.description = req.body.description;
-  }
-  if (req.body.dueDate != null) {
-    res.ticket.dueDate = req.body.dueDate;
-  }
-  if (req.body.estimatedHours != null) {
-    res.ticket.estimatedHours = req.body.estimatedHours;
-  }
-  if (req.body.status != null) {
-    res.ticket.status = req.body.status;
-  }
-  if (req.body.priority != null) {
-    res.ticket.priority = req.body.priority;
-  }
-  if (req.body.assignedTo !== undefined) {
-    res.ticket.assignedTo = req.body.assignedTo;
-  }
-
   try {
-    const updatedTicket = await res.ticket.save();
-    res.json(updatedTicket);
+    const ticket = await Ticket.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+    res.json(ticket);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
@@ -76,10 +43,8 @@ exports.updateTicket = async (req, res) => {
 exports.deleteTicket = async (req, res) => {
   try {
     const ticket = await Ticket.findByIdAndDelete(req.params.id);
-    if (!ticket) {
-      return res.status(404).json({ message: 'Cannot find ticket' });
-    }
-    res.json({ message: 'Deleted Ticket' });
+    if (!ticket) return res.status(404).json({ message: 'Ticket not found' });
+    res.json({ message: 'Ticket deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

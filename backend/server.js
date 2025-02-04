@@ -33,10 +33,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/shifts', shiftRoutes);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+app.use(errorHandler);
 
 async function startServer() {
   try {

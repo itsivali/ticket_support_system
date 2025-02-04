@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Ticket = require('./ticket.model');
-const Agent = require('./agent');
+const Agent = require('./agent.model');
 
 // Ticket Schema
 const ticketSchema = new mongoose.Schema({
