@@ -46,6 +46,7 @@ class MyApp extends StatelessWidget {
         '/create-agent': (context) => const CreateAgentScreen(),
         '/queue': (context) => const QueueScreen(),
         '/shifts': (context) => const ShiftManagementScreen(),
+        '/auto-assignment': (context) => const AutoAssignmentScreen(),
       },
       onGenerateRoute: (settings) {
         switch (settings.name) {
@@ -70,14 +71,6 @@ class MyApp extends StatelessWidget {
           default:
             return null;
         }
-      },
-      builder: (context, child) {
-        return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: const TextScaler.linear(1.0),
-          ),
-          child: child!,
-        );
       },
     );
   }
