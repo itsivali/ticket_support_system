@@ -1,14 +1,14 @@
 name: ticket_support_system
-description: "A ticket support system built with Flutter"
+description: "A ticket support system application"
 publish_to: 'none'
 
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.1.0 <4.0.0'
 
 dependencies:
-  cupertino_icons: ^1.0.6
+  cupertino_icons: ^1.0.2
   flutter:
     sdk: flutter
   flutter_chat_types: ^3.6.2
@@ -31,11 +31,12 @@ dependency_overrides:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^2.0.0
 
 flutter:
   uses-material-design: true
-  
+  assets:
+    - /assets
   # Web configurations
   web:
     build:
