@@ -21,13 +21,13 @@ class ShiftSchedule {
 
   factory ShiftSchedule.fromJson(Map<String, dynamic> json) {
     return ShiftSchedule(
-      id: json['id'],
-      agentId: json['agentId'],
-      weekdays: List<int>.from(json['weekdays']),
+      id: json['id'] ?? '',
+      agentId: json['agentId'] ?? '',
+      weekdays: List<int>.from(json['weekdays'] ?? []),
       startTime: DateTime.parse(json['startTime']),
       endTime: DateTime.parse(json['endTime']),
-      isActive: json['isActive'],
-      scheduleType: json['scheduleType'],
+      isActive: json['isActive'] ?? true,
+      scheduleType: json['scheduleType'] ?? 'FIXED',
     );
   }
 

@@ -58,7 +58,7 @@ class TicketQueueManager {
     final currentAssignments = _agentAssignments[agent.id]?.length ?? 0;
     if (currentAssignments >= 3) return false;
 
-    if (!agent.shiftSchedule!.isWorkingAt(ticket.dueDate)) {
+    if (!agent.shiftSchedule.isWorkingAt(ticket.dueDate)) {
       return false;
     }
   

@@ -1,23 +1,47 @@
-import 'dart:async';
-import 'dart:collection';
-import '../models/notification.dart' as model;
-import '../interfaces/notification_channel.dart' as channel;
-import '../utils/console_logger.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:mongo_dart/mongo_dart.dart';
+import 'package:logger/logger.dart';
+
 
 class NotificationService {
-  static const int maxRetries = 3;
-  static const Duration retryInterval = Duration(minutes: 1);
-  
-  final Map<String, channel.NotificationChannel> _channels = {};
-  final Queue<NotificationItem> _queue = Queue();
-  Timer? _processTimer;
+  final String connectionString;
+  late Db db;
 
-  NotificationService() {
-    _startQueueProcessing();
+  NotificationService(this.connectionString);
+
+  Future<void> connect() async {
+  // late Db db; (removed this line)
+  late Db db;
+  var logger = Logger();
+
+  try {
+    db = Db(connectionString);
+    await db.open();
+    logger.i('Connected to the database');
+  } catch (e) {
+    logger.e('Error connecting to the database: $e');
+  }
   }
 
-  void registerChannel(String type, channel.NotificationChannel channel) {
-    _channels[type] = channel;
+  Future<List<AppNotification>> getNotifications(String recipientId) async {
+    late DbCollection notificationsCollection;
+    var logger = Logger();
+
+    try {
+      notificationsCollection = db.collection('notifications');
+      final notifications = await notificationsCollection.find(where.eq('recipientId', recipientId)).toList();
+
+      return notifications.map((notification) {
+      return AppNotification(
+        title: notification['title'] as String,
+        message: notification['message'] as String,
+      );
+      }).toList();
+    } catch (e) {
+      logger.e('Error fetching notifications: $e');
+    }
+    return [];
   }
 
   Future<void> notify({
@@ -25,82 +49,88 @@ class NotificationService {
     required String title,
     required String message,
     required String type,
-    Map<String, dynamic>? metadata,
   }) async {
-    if (!_channels.containsKey(type)) {
-      throw ArgumentError('No channel registered for type: $type');
-    }
-
-    final notification = model.Notification(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      recipientId: recipientId,
-      title: title,
-      message: message,
-      type: type,
-      metadata: metadata,
-    );
-
-    _queue.add(NotificationItem(notification: notification));
-    ConsoleLogger.info('Notification queued', 'ID: ${notification.id}');
+  var logger = Logger();
+  try {
+    final notificationsCollection = db.collection('notifications');
+    await notificationsCollection.insert({
+    'recipientId': recipientId,
+    'title': title,
+    'message': message,
+    'type': type,
+    'timestamp': DateTime.now().toIso8601String(),
+    });
+    logger.i('Notification sent to $recipientId');
+  } catch (e) {
+    logger.e('Error sending notification: $e');
   }
-
-  void _startQueueProcessing() {
-    _processTimer?.cancel();
-    _processTimer = Timer.periodic(
-      const Duration(seconds: 5),
-      (_) => _processQueue()
-    );
-  }
-
-  Future<void> _processQueue() async {
-    if (_queue.isEmpty) return;
-
-    final item = _queue.removeFirst();
-    final channel = _channels[item.notification.type];
-    
-    if (channel != null) {
-      try {
-        final channelNotification = channel.notification(
-          id: item.notification.id,
-          recipientId: item.notification.recipientId,
-          title: item.notification.title,
-          message: item.notification.message,
-          type: item.notification.type,
-          metadata: item.notification.metadata,
-        );
-        final success = await channel.send(channelNotification);
-        if (!success && item.retryCount < maxRetries) {
-          _scheduleRetry(item);
-        }
-      } catch (e) {
-        ConsoleLogger.error('Delivery failed', e.toString());
-        if (item.retryCount < maxRetries) {
-          _scheduleRetry(item);
-        }
-      }
-    }
-  }
-
-  void _scheduleRetry(NotificationItem item) {
-    item.retryCount++;
-    Future.delayed(
-      retryInterval * item.retryCount,
-      () => _queue.add(item)
-    );
-  }
-
-  void dispose() {
-    _processTimer?.cancel();
-    _queue.clear();
   }
 }
 
-class NotificationItem {
-  final model.Notification notification;
-  int retryCount;
+class AppNotification {
+  final String title;
+  final String message;
 
-  NotificationItem({
-    required this.notification,
-    this.retryCount = 0,
-  });
+  AppNotification({required this.title, required this.message});
+}
+
+void main() async {
+  final notificationService = NotificationService('mongodb://localhost:27017/ticket_support_system');
+  await notificationService.connect();
+
+  runApp(MyApp(notificationService: notificationService));
+}
+
+class MyApp extends StatelessWidget {
+  final NotificationService notificationService;
+
+  const MyApp({super.key, required this.notificationService});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        Provider<NotificationService>.value(value: notificationService),
+      ],
+      child: const MaterialApp(
+        home: NotificationScreen(),
+      ),
+    );
+  }
+}
+
+class NotificationScreen extends StatelessWidget {
+  const NotificationScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final notificationService = Provider.of<NotificationService>(context);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Notifications')),
+      body: FutureBuilder<List<AppNotification>>(
+        future: notificationService.getNotifications('recipientId'),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Text('No notifications');
+          } else {
+            final appNotifications = snapshot.data!;
+            return ListView.builder(
+              itemCount: appNotifications.length,
+              itemBuilder: (context, index) {
+                final appNotification = appNotifications[index];
+                return ListTile(
+                  title: Text(appNotification.title),
+                  subtitle: Text(appNotification.message),
+                );
+              },
+            );
+          }
+        },
+      ),
+    );
+  }
 }

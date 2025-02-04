@@ -53,11 +53,11 @@ class Agent {
             : ShiftSchedule(
                 id: '',
                 agentId: id,
-                scheduleType: '',
+                weekdays: [],
                 startTime: DateTime.now(),
                 endTime: DateTime.now().add(const Duration(hours: 8)),
-                weekdays: [DateTime.monday, DateTime.tuesday, DateTime.wednesday, DateTime.thursday, DateTime.friday, DateTime.saturday, DateTime.sunday],
                 isActive: true,
+                scheduleType: 'FIXED',
               ),
         lastAssignment: json['lastAssignment'] != null
             ? DateTime.parse(json['lastAssignment'])
