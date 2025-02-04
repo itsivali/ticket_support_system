@@ -215,11 +215,6 @@ flutter test
 cd backend && npm test
 ```
 
-## Deployment
-
-The app deploys automatically to GitHub Pages on main branch pushes.
-
-Production URL: https://itsivali.github.io/ticket_support_system/
 
 
 ## License
