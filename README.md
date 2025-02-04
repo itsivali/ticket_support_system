@@ -54,9 +54,10 @@ A ticket management system built with Flutter and Node.js that helps teams track
 1. Clone the repository:
 ```bash
 git clone https://github.com/itsivali/ticket_support_system.git
+
+
 cd ticket_support_system
 
-```markdown
 # Ticket Support System
 
 A modern, efficient ticket management solution built with Flutter Web and Node.js.
