@@ -15,15 +15,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev ninja-build libwebkit2gtk-4.0-dev
+          
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.0'
           channel: 'stable'
+          cache: true
+
+      - name: Enable Flutter web
+        run: flutter config --enable-web
 
       - name: Install Flutter dependencies
-        run: flutter pub get
+        run: |
+          flutter clean
+          flutter pub cache repair
+          flutter pub get
 
       - name: Run Flutter tests
         run: flutter test
@@ -32,6 +44,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
+          cache: 'npm'
 
       - name: Setup MongoDB
         uses: supercharge/mongodb-github-action@1.10.0
@@ -43,7 +56,6 @@ jobs:
         working-directory: ./backend
         run: |
           npm install
-          npm run seed:all
           npm test
         env:
           MONGODB_URI: mongodb://localhost:27017/ticket_support_system
@@ -54,16 +66,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev ninja-build libwebkit2gtk-4.0-dev
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.16.0'
           channel: 'stable'
+          cache: true
+
+      - name: Enable Flutter web
+        run: flutter config --enable-web
+
+      - name: Install dependencies
+        run: |
+          flutter clean
+          flutter pub cache repair
+          flutter pub get
 
       - name: Build Flutter web
         run: |
-          flutter pub get
-          flutter build web --release --base-href "/ticket_support_system/"
+          flutter build web --release --base-href "/ticket_support_system/" \
+            --web-renderer canvaskit \
+            --dart-define=FLUTTER_WEB_USE_SKIA=true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
