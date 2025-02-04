@@ -65,7 +65,7 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
         lastUpdated: DateTime.now(),
       );
 
-      await context.read<TicketProvider>().createTicket(ticket, context);
+      await context.read<TicketProvider>().createTicket(ticket);
 
       if (mounted) {
         Navigator.pop(context);

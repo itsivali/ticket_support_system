@@ -104,7 +104,7 @@ class TicketCard extends StatelessWidget {
                 );
                 
                 await Provider.of<TicketProvider>(context, listen: false)
-                    .deleteTicket(ticket.id, context);
+                    .deleteTicket(ticket.id);
                 
                 // Close loading dialog
                 if (context.mounted) {

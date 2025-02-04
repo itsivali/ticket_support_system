@@ -63,11 +63,11 @@ class _EditTicketScreenState extends State<EditTicketScreen> {
           assignedTo: _assignedTo,
           createdAt: widget.ticket.createdAt,
           requiredSkills: widget.ticket.requiredSkills,
-          lastUpdated: DateTime.now(), // Add this line
+          lastUpdated: DateTime.now(), 
         );
 
         await Provider.of<TicketProvider>(context, listen: false)
-            .updateTicket(updatedTicket, context);
+            .updateTicket(updatedTicket);
 
         if (!mounted) return;
         Navigator.pop(context);

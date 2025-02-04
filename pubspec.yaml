@@ -35,3 +35,11 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  
+  # Web configurations
+  web:
+    build:
+      defaults:
+        options:
+          renderer: canvaskit
+          optimize: true

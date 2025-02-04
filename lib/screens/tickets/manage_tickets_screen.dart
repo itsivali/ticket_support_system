@@ -153,6 +153,8 @@ class _ManageTicketsScreenState extends State<ManageTicketsScreen> {
   }
 
   Future<void> _deleteTicket(BuildContext context, Ticket ticket) async {
+    final ticketProvider = context.read<TicketProvider>();
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -174,15 +176,15 @@ class _ManageTicketsScreenState extends State<ManageTicketsScreen> {
 
     if (confirmed == true) {
       try {
-        await context.read<TicketProvider>().deleteTicket(ticket.id);
+        await ticketProvider.deleteTicket(ticket.id);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             const SnackBar(content: Text('Ticket deleted successfully')),
           );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          scaffoldMessenger.showSnackBar(
             SnackBar(content: Text('Error deleting ticket: $e')),
           );
         }
