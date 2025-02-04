@@ -190,7 +190,7 @@ class _QuickActions extends StatelessWidget {
         _ActionButton(
           label: 'Manage Tickets',
           icon: Icons.assignment,
-          onPressed: () => Navigator.pushNamed(context, '/manage-tickets'),
+          onPressed: () => Navigator.pushNamed(context, '/tickets'),
         ),
         _ActionButton(
           label: 'Agents',
