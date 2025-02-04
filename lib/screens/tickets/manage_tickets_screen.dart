@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/ticket_provider.dart';
-import '../../models/ticket.dart';
-import '../../widgets/ticket_card.dart';
+import '../../providers/agent_provider.dart';
+import '../../widgets/ticket_list_item.dart';
 import '../../widgets/app_drawer.dart';
+import '../../models/ticket.dart';
+import '../../models/agent.dart';
+import '../../models/shift_schedule.dart';
 
 class ManageTicketsScreen extends StatefulWidget {
   const ManageTicketsScreen({super.key});
@@ -19,9 +22,16 @@ class _ManageTicketsScreenState extends State<ManageTicketsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TicketProvider>().fetchTickets();
-    });
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final ticketProvider = context.read<TicketProvider>();
+    final agentProvider = context.read<AgentProvider>();
+    await Future.wait([
+      ticketProvider.fetchTickets(),
+      agentProvider.fetchAgents(),
+    ]);
   }
 
   void _showFilterDialog() {
@@ -157,75 +167,60 @@ class _ManageTicketsScreenState extends State<ManageTicketsScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh Tickets',
-            onPressed: () => context.read<TicketProvider>().fetchTickets(),
+            onPressed: _loadData,
           ),
         ],
       ),
       drawer: const AppDrawer(),
-      body: Consumer<TicketProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
+      body: Consumer2<TicketProvider, AgentProvider>(
+        builder: (context, ticketProvider, agentProvider, _) {
+          if (ticketProvider.isLoading || agentProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final filteredTickets = _getFilteredTickets(provider.tickets);
+          final tickets = _getFilteredTickets(ticketProvider.tickets);
 
-          if (filteredTickets.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.assignment_turned_in,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No tickets found',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    const Icon(Icons.assignment),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Total Tickets: ${filteredTickets.length}',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+          return ListView.builder(
+            itemCount: tickets.length,
+            itemBuilder: (context, index) {
+              final ticket = tickets[index];
+              final assignedAgent = agentProvider.agents
+                  .firstWhere(
+                    (agent) => agent.id == ticket.assignedTo,
+                    orElse: () => Agent(
+                      id: '',
+                      name: 'Unassigned',
+                      email: '',
+                      role: 'SUPPORT',
+                      shiftSchedule: ShiftSchedule(
+                        id: '',
+                        agentId: '',
+                        weekdays: [],
+                        startTime: DateTime.now(),
+                        endTime: DateTime.now(),
+                        isActive: false,
+                        scheduleType: '',
                       ),
+                      lastAssignment: DateTime.now(),
                     ),
-                  ],
+                  );
+
+              return TicketListItem(
+                ticket: ticket,
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  '/edit-ticket',
+                  arguments: ticket,
                 ),
-              ),
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 1.5,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
+                trailing: Text(
+                  assignedAgent.name,
+                  style: TextStyle(
+                    color: assignedAgent.id.isEmpty ? Colors.grey : Colors.black,
+                    fontStyle: assignedAgent.id.isEmpty ? FontStyle.italic : FontStyle.normal,
                   ),
-                  itemCount: filteredTickets.length,
-                  itemBuilder: (context, index) {
-                    return TicketCard(ticket: filteredTickets[index]);
-                  },
                 ),
-              ),
-            ],
+              );
+            },
           );
         },
       ),

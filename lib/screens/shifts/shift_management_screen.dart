@@ -1,23 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/agent_provider.dart';
+import '../../providers/shift_provider.dart';
+import '../../models/shift_schedule.dart';
 import '../../models/agent.dart';
 import '../../widgets/app_drawer.dart';
 
-class ShiftManagementScreen extends StatefulWidget {
+
+class ShiftManagementScreen extends StatelessWidget {
   const ShiftManagementScreen({super.key});
 
   @override
-  State<ShiftManagementScreen> createState() => _ShiftManagementScreenState();
-}
-
-class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
-  final List<int> _selectedWeekdays = [];
-  TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
-  TimeOfDay _endTime = const TimeOfDay(hour: 17, minute: 0);
-  Agent? _selectedAgent;
-
-  @override 
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -25,162 +18,82 @@ class _ShiftManagementScreenState extends State<ShiftManagementScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<AgentProvider>().fetchAgents(),
+            onPressed: () {
+              context.read<ShiftProvider>().fetchCurrentShifts();
+              context.read<AgentProvider>().fetchAgents();
+            },
           ),
         ],
       ),
       drawer: const AppDrawer(),
-      body: Consumer<AgentProvider>(
-        builder: (context, provider, child) {
-          if (provider.isLoading) {
+      body: Consumer2<ShiftProvider, AgentProvider>(
+        builder: (context, shiftProvider, agentProvider, _) {
+          if (shiftProvider.isLoading || agentProvider.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DropdownButtonFormField<Agent>(
-                  value: _selectedAgent,
-                  decoration: const InputDecoration(
-                    labelText: 'Select Agent',
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                  items: provider.agents.map((agent) {
-                    return DropdownMenuItem(
-                      value: agent,
-                      child: Text(agent.name),
-                    );
-                  }).toList(),
-                  onChanged: (value) => setState(() => _selectedAgent = value),
+          final shifts = shiftProvider.currentShifts;
+          final agents = agentProvider.agents;
+
+          return ListView.builder(
+            itemCount: agents.length,
+            itemBuilder: (context, index) {
+              final agent = agents[index];
+              final shift = shifts.firstWhere(
+                (s) => s.agentId == agent.id,
+                orElse: () => ShiftSchedule(
+                  id: '',
+                  agentId: agent.id,
+                  weekdays: [],
+                  startTime: DateTime.now(),
+                  endTime: DateTime.now(),
+                  isActive: false,
+                  scheduleType: 'NONE',
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Working Days',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    FilterChip(
-                      label: const Text('Mon'),
-                      selected: _selectedWeekdays.contains(1),
-                      onSelected: (selected) => setState(() {
-                        selected 
-                          ? _selectedWeekdays.add(1)
-                          : _selectedWeekdays.remove(1);
-                      }),
-                    ),
-                    FilterChip(
-                      label: const Text('Tue'),
-                      selected: _selectedWeekdays.contains(2),
-                      onSelected: (selected) => setState(() {
-                        selected 
-                          ? _selectedWeekdays.add(2)
-                          : _selectedWeekdays.remove(2);
-                      }),
-                    ),
-                  FilterChip(
-                    label: const Text('Wed'),
-                    selected: _selectedWeekdays.contains(3),
-                    onSelected: (selected) => setState(() {
-                      selected 
-                        ? _selectedWeekdays.add(3)
-                        : _selectedWeekdays.remove(3);
-                    }),
+              );
+
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  title: Text(agent.name),
+                  subtitle: Text(
+                    shift.id.isEmpty
+                        ? 'No shift assigned'
+                        : 'Working days: ${_formatWeekdays(shift.weekdays)}\n'
+                          '${_formatTime(shift.startTime)} - ${_formatTime(shift.endTime)}',
                   ),
-                  FilterChip(
-                    label: const Text('Thu'),
-                    selected: _selectedWeekdays.contains(4),
-                    onSelected: (selected) => setState(() {
-                      selected 
-                        ? _selectedWeekdays.add(4)
-                        : _selectedWeekdays.remove(4);
-                    }),
-                  ),
-                  FilterChip(
-                    label: const Text('Fri'),
-                    selected: _selectedWeekdays.contains(5),
-                    onSelected: (selected) => setState(() {
-                      selected 
-                        ? _selectedWeekdays.add(5)
-                        : _selectedWeekdays.remove(5);
-                    }),
-                  ),
-                  FilterChip(
-                    label: const Text('Sat'),
-                    selected: _selectedWeekdays.contains(6),
-                    onSelected: (selected) => setState(() {
-                      selected 
-                        ? _selectedWeekdays.add(6)
-                        : _selectedWeekdays.remove(6);
-                    }),
-                  ),
-                  FilterChip(
-                    label: const Text('Sun'),
-                    selected: _selectedWeekdays.contains(7),
-                    onSelected: (selected) => setState(() {
-                      selected 
-                        ? _selectedWeekdays.add(7)
-                        : _selectedWeekdays.remove(7);
-                    }),
-                  ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ListTile(
-                        title: const Text('Start Time'),
-                        subtitle: Text(_startTime.format(context)),
-                        leading: const Icon(Icons.access_time),
-                        onTap: () async {
-                          final time = await showTimePicker(
-                            context: context,
-                            initialTime: _startTime,
-                          );
-                          if (time != null) {
-                            setState(() => _startTime = time);
-                          }
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: ListTile(
-                        title: const Text('End Time'),
-                        subtitle: Text(_endTime.format(context)),
-                        leading: const Icon(Icons.access_time),
-                        onTap: () async {
-                          final time = await showTimePicker(
-                            context: context,
-                            initialTime: _endTime,
-                          );
-                          if (time != null) {
-                            setState(() => _endTime = time);
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: _selectedAgent == null ? null : () {
-                      // Save shift schedule
-                    },
-                    icon: const Icon(Icons.save),
-                    label: const Text('SAVE SCHEDULE'),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.edit),
+                    onPressed: () => _editShift(context, agent, shift),
                   ),
                 ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.pushNamed(context, '/create-shift'),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  String _formatWeekdays(List<int> weekdays) {
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return weekdays.map((day) => days[day - 1]).join(', ');
+  }
+
+  String _formatTime(DateTime time) {
+    return '${time.hour.toString().padLeft(2, '0')}:'
+           '${time.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _editShift(BuildContext context, Agent agent, ShiftSchedule shift) {
+    Navigator.pushNamed(
+      context,
+      '/edit-shift',
+      arguments: {'agent': agent, 'shift': shift},
     );
   }
 }

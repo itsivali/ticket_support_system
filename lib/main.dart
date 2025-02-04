@@ -12,6 +12,9 @@ import 'screens/shift_screens.dart';
 import 'models/ticket.dart';
 import 'models/agent.dart';
 import 'theme/app_theme.dart';
+import 'screens/shifts/edit_shift_screen.dart';
+import 'models/shift_schedule.dart'; 
+import 'screens/tickets/manage_tickets_screen.dart'; 
 
 void main() {
   runApp(
@@ -47,6 +50,9 @@ class MyApp extends StatelessWidget {
         '/queue': (context) => const QueueScreen(),
         '/shifts': (context) => const ShiftManagementScreen(),
         '/auto-assignment': (context) => const AutoAssignmentScreen(),
+         '/manage-tickets': (context) => const ManageTicketsScreen(),
+          '/shift-management': (context) => const ShiftManagementScreen(), 
+ 
       },
       onGenerateRoute: (settings) {
         switch (settings.name) {
@@ -66,6 +72,14 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (context) => AgentDetailsScreen(
                 agent: settings.arguments as Agent,
+              ),
+            );
+          case '/edit-shift':
+            final args = settings.arguments as Map<String, dynamic>;
+            return MaterialPageRoute(
+              builder: (context) => EditShiftScreen(
+                agent: args['agent'] as Agent,
+                shift: args['shift'] as ShiftSchedule,
               ),
             );
           default:

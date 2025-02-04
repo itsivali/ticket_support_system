@@ -8,6 +8,7 @@ class TicketListItem extends StatelessWidget {
   final VoidCallback? onAssign;
   final VoidCallback? onClaim;
   final bool isExpanded;
+  final Widget? trailing; 
 
   const TicketListItem({
     super.key,
@@ -16,6 +17,7 @@ class TicketListItem extends StatelessWidget {
     this.onAssign,
     this.onClaim,
     this.isExpanded = false,
+    this.trailing, 
   });
 
   Color _getStatusColor() {
