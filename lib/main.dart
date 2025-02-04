@@ -7,6 +7,7 @@ import 'providers/shift_provider.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/tickets/ticket_screens.dart';
 import 'screens/agents/agent_screens.dart';
+import 'screens/queue/rules_configuration_screen.dart';
 import 'screens/queue/queue_screens.dart';
 import 'screens/shifts/shift_screens.dart';
 import 'screens/shifts/create_shift_screen.dart';
@@ -45,6 +46,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/tickets': (context) => const TicketListScreen(),
         '/create-ticket': (context) => const CreateTicketScreen(),
+        '/manage-tickets': (context) => const ManageTicketsScreen(),
         '/agents': (context) => const AgentListScreen(),
         '/create-agent': (context) => const CreateAgentScreen(),
         '/queue': (context) => const QueueScreen(),
@@ -52,21 +54,22 @@ class MyApp extends StatelessWidget {
         '/auto-assignment': (context) => const AutoAssignmentScreen(),
         '/shift-management': (context) => const ShiftManagementScreen(),
         '/create-shift': (context) => const CreateShiftScreen(),
+        '/rules-configuration': (context) => const RulesConfigurationScreen(),
       },
       onGenerateRoute: (settings) {
         switch (settings.name) {
+          case '/edit-ticket':
+            return MaterialPageRoute(
+              builder: (context) => EditTicketScreen(
+                ticket: settings.arguments as Ticket,
+              ),
+            );
           case '/edit-shift':
             final args = settings.arguments as Map<String, dynamic>;
             return MaterialPageRoute(
               builder: (context) => EditShiftScreen(
                 agent: args['agent'] as Agent,
                 shift: args['shift'] as ShiftSchedule,
-              ),
-            );
-          case '/edit-ticket':
-            return MaterialPageRoute(
-              builder: (context) => EditTicketScreen(
-                ticket: settings.arguments as Ticket,
               ),
             );
           default:

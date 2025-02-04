@@ -64,7 +64,6 @@ exports.assignTicket = async (req, res) => {
         return res.status(404).json({ message: 'Agent not found' });
       }
 
-      // Check agent availability and shift
       if (!agent.isAvailable || !agent.isOnline) {
         return res.status(400).json({ message: 'Agent is not available' });
       }
@@ -82,12 +81,11 @@ exports.assignTicket = async (req, res) => {
       
       await Promise.all([ticket.save(), agent.save()]);
     } else {
-      // Queue the ticket
+
       ticket.assignedTo = null;
       ticket.status = 'OPEN';
       await ticket.save();
       
-      // Try auto-assignment to available agents
       await autoAssignTicket(ticket);
     }
 

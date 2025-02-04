@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/ticket_provider.dart';
-import '../../providers/agent_provider.dart';
-import '../../widgets/ticket_list_item.dart';
-import '../../widgets/app_drawer.dart';
 import '../../models/ticket.dart';
-import '../../models/agent.dart';
-import '../../models/shift_schedule.dart';
+import '../../widgets/loading_overlay.dart';
+
 
 class ManageTicketsScreen extends StatefulWidget {
   const ManageTicketsScreen({super.key});
 
-  @override
+  @override 
   State<ManageTicketsScreen> createState() => _ManageTicketsScreenState();
 }
 
@@ -22,135 +19,9 @@ class _ManageTicketsScreenState extends State<ManageTicketsScreen> {
   @override
   void initState() {
     super.initState();
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    final ticketProvider = context.read<TicketProvider>();
-    final agentProvider = context.read<AgentProvider>();
-    await Future.wait([
-      ticketProvider.fetchTickets(),
-      agentProvider.fetchAgents(),
-    ]);
-  }
-
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Filter Tickets'),
-        content: StatefulBuilder(
-          builder: (context, setState) => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: _statusFilter,
-                decoration: const InputDecoration(labelText: 'Status'),
-                items: [
-                  const DropdownMenuItem(value: 'all', child: Text('All')),
-                  DropdownMenuItem(
-                    value: 'OPEN',
-                    child: Row(
-                      children: [
-                        Icon(Icons.fiber_new, color: Colors.blue[700]),
-                        const SizedBox(width: 8),
-                        const Text('Open'),
-                      ],
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: 'IN_PROGRESS',
-                    child: Row(
-                      children: [
-                        Icon(Icons.trending_up, color: Colors.orange[700]),
-                        const SizedBox(width: 8),
-                        const Text('In Progress'),
-                      ],
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: 'CLOSED',
-                    child: Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.green[700]),
-                        const SizedBox(width: 8),
-                        const Text('Closed'),
-                      ],
-                    ),
-                  ),
-                ],
-                onChanged: (value) => setState(() => _statusFilter = value!),
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _priorityFilter,
-                decoration: const InputDecoration(labelText: 'Priority'),
-                items: [
-                  const DropdownMenuItem(value: 'all', child: Text('All')),
-                  DropdownMenuItem(
-                    value: 'HIGH',
-                    child: Row(
-                      children: [
-                        Icon(Icons.arrow_upward, color: Colors.red[700]),
-                        const SizedBox(width: 8),
-                        const Text('High'),
-                      ],
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: 'MEDIUM',
-                    child: Row(
-                      children: [
-                        Icon(Icons.remove, color: Colors.orange[700]),
-                        const SizedBox(width: 8),
-                        const Text('Medium'),
-                      ],
-                    ),
-                  ),
-                  DropdownMenuItem(
-                    value: 'LOW',
-                    child: Row(
-                      children: [
-                        Icon(Icons.arrow_downward, color: Colors.green[700]),
-                        const SizedBox(width: 8),
-                        const Text('Low'),
-                      ],
-                    ),
-                  ),
-                ],
-                onChanged: (value) => setState(() => _priorityFilter = value!),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                _statusFilter = 'all';
-                _priorityFilter = 'all';
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Reset'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Apply'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Ticket> _getFilteredTickets(List<Ticket> tickets) {
-    return tickets.where((ticket) {
-      final matchesStatus = _statusFilter == 'all' || 
-                          ticket.status == _statusFilter;
-      final matchesPriority = _priorityFilter == 'all' || 
-                             ticket.priority == _priorityFilter;
-      return matchesStatus && matchesPriority;
-    }).toList();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TicketProvider>().fetchTickets();
+    });
   }
 
   @override
@@ -159,76 +30,163 @@ class _ManageTicketsScreenState extends State<ManageTicketsScreen> {
       appBar: AppBar(
         title: const Text('Manage Tickets'),
         actions: [
-          IconButton(
+          PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
-            tooltip: 'Filter Tickets',
-            onPressed: _showFilterDialog,
+            onSelected: (value) => setState(() => _statusFilter = value),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'all', child: Text('All Status')),
+              const PopupMenuItem(value: 'OPEN', child: Text('Open')),
+              const PopupMenuItem(value: 'IN_PROGRESS', child: Text('In Progress')),
+              const PopupMenuItem(value: 'CLOSED', child: Text('Closed')),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh Tickets',
-            onPressed: _loadData,
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.priority_high),
+            onSelected: (value) => setState(() => _priorityFilter = value),
+            itemBuilder: (context) => [
+              const PopupMenuItem(value: 'all', child: Text('All Priorities')),
+              const PopupMenuItem(value: 'HIGH', child: Text('High')),
+              const PopupMenuItem(value: 'MEDIUM', child: Text('Medium')), 
+              const PopupMenuItem(value: 'LOW', child: Text('Low')),
+            ],
           ),
         ],
       ),
-      drawer: const AppDrawer(),
-      body: Consumer2<TicketProvider, AgentProvider>(
-        builder: (context, ticketProvider, agentProvider, _) {
-          if (ticketProvider.isLoading || agentProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+      body: Consumer<TicketProvider>(
+        builder: (context, provider, _) {
+          if (provider.isLoading) {
+            return LoadingOverlay(
+              isLoading: provider.isLoading,
+              child: Container(),
+            );
           }
 
-          final tickets = _getFilteredTickets(ticketProvider.tickets);
+          final tickets = provider.filterTickets(
+            status: _statusFilter,
+            priority: _priorityFilter,
+          );
+
+          if (tickets.isEmpty) {
+            return const Center(child: Text('No tickets found'));
+          }
 
           return ListView.builder(
             itemCount: tickets.length,
+            padding: const EdgeInsets.all(8),
             itemBuilder: (context, index) {
               final ticket = tickets[index];
-              final assignedAgent = agentProvider.agents
-                  .firstWhere(
-                    (agent) => agent.id == ticket.assignedTo,
-                    orElse: () => Agent(
-                      id: '',
-                      name: 'Unassigned',
-                      email: '',
-                      role: 'SUPPORT',
-                      shiftSchedule: ShiftSchedule(
-                        id: '',
-                        agentId: '',
-                        weekdays: [],
-                        startTime: DateTime.now(),
-                        endTime: DateTime.now(),
-                        isActive: false,
-                        scheduleType: '',
+              return Card(
+                child: ExpansionTile(
+                  title: Text(ticket.title),
+                  subtitle: Text('Status: ${ticket.status} | Priority: ${ticket.priority}'),
+                  leading: _getPriorityIcon(ticket.priority),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Description: ${ticket.description}'),
+                          const SizedBox(height: 8),
+                          Text('Created: ${_formatDate(ticket.createdAt)}'),
+                          Text('Due: ${_formatDate(ticket.dueDate)}'),
+                          Text('Estimated Hours: ${ticket.estimatedHours}'),
+                          if (ticket.requiredSkills.isNotEmpty)
+                            Text('Skills: ${ticket.requiredSkills.join(", ")}'),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                icon: const Icon(Icons.edit),
+                                label: const Text('Edit'),
+                                onPressed: () => _editTicket(context, ticket),
+                              ),
+                              const SizedBox(width: 8),
+                              TextButton.icon(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                label: const Text('Delete', 
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                                onPressed: () => _deleteTicket(context, ticket),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      lastAssignment: DateTime.now(),
                     ),
-                  );
-
-              return TicketListItem(
-                ticket: ticket,
-                onTap: () => Navigator.pushNamed(
-                  context,
-                  '/edit-ticket',
-                  arguments: ticket,
-                ),
-                trailing: Text(
-                  assignedAgent.name,
-                  style: TextStyle(
-                    color: assignedAgent.id.isEmpty ? Colors.grey : Colors.black,
-                    fontStyle: assignedAgent.id.isEmpty ? FontStyle.italic : FontStyle.normal,
-                  ),
+                  ],
                 ),
               );
             },
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.pushNamed(context, '/create-ticket'),
-        icon: const Icon(Icons.add),
-        label: const Text('New Ticket'),
+        child: const Icon(Icons.add),
       ),
     );
+  }
+
+  Widget _getPriorityIcon(String priority) {
+    final color = switch(priority) {
+      'HIGH' => Colors.red,
+      'MEDIUM' => Colors.orange,
+      'LOW' => Colors.green,
+      _ => Colors.grey,
+    };
+    return Icon(Icons.flag, color: color);
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-'
+           '${date.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _editTicket(BuildContext context, Ticket ticket) async {
+    await Navigator.pushNamed(
+      context, 
+      '/edit-ticket',
+      arguments: ticket,
+    );
+  }
+
+  Future<void> _deleteTicket(BuildContext context, Ticket ticket) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Ticket'),
+        content: Text('Are you sure you want to delete "${ticket.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('DELETE'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await context.read<TicketProvider>().deleteTicket(ticket.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Ticket deleted successfully')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting ticket: $e')),
+          );
+        }
+      }
+    }
   }
 }

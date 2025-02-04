@@ -2,8 +2,41 @@ import 'package:faker/faker.dart';
 import '../models/ticket.dart' as ticket_model;
 import '../models/agent.dart';
 import '../models/shift_schedule.dart';
-import '../models/queue_manager.dart' as queue_manager_model;
 import '../models/queue_manager.dart';
+import '../models/queue_manager.dart' as queue_manager_model;
+import '../models/queue_manager.dart' as queue_manager_model show AssignmentRule;
+
+class QueueSettings {
+  final bool autoAssignEnabled;
+  final int maxTicketsPerAgent; 
+  final Map<String, int> priorityWeights;
+  final List<AssignmentRule> rules;
+
+  QueueSettings({
+    required this.autoAssignEnabled,
+    required this.maxTicketsPerAgent,
+    required this.priorityWeights,
+    required this.rules,
+  });
+}
+
+class AssignmentRule {
+  final String id;
+  final String name;
+  final String description;
+  final String condition; // AVAILABILITY, SHIFT_HOURS, WORKLOAD
+  final String priority;
+  final bool isActive;
+
+  AssignmentRule({
+    required this.id,
+    required this.name,  
+    required this.description,
+    required this.condition,
+    required this.priority,
+    this.isActive = true,
+  });
+}
 
 class FakeDataGenerator {
   final Faker _faker = Faker();
@@ -89,17 +122,41 @@ class FakeDataGenerator {
   QueueManager generateQueueManager(List<QueuedTicket> queuedTickets) {
     return QueueManager(
       id: _faker.guid.guid(),
-      settings: QueueSettings(
+      settings: queue_manager_model.QueueSettings(
         autoAssignEnabled: _faker.randomGenerator.boolean(),
         maxTicketsPerAgent: 3,
         priorityWeights: {
-          'HIGH': 3,
-          'MEDIUM': 2,
           'LOW': 1,
+          'MEDIUM': 2,
+          'HIGH': 3,
         },
+        rules: [
+          queue_manager_model.AssignmentRule(
+            id: '1',
+            name: 'Availability Check',
+            description: 'Check if agent is available',
+            condition: 'AVAILABILITY',
+            priority: 'HIGH',
+          ),
+          queue_manager_model.AssignmentRule(
+            id: '2', 
+            name: 'Working Hours',
+            description: 'Check agent working hours',
+            condition: 'SHIFT_HOURS',
+            priority: 'HIGH',
+          ),
+          queue_manager_model.AssignmentRule(
+            id: '3',
+            name: 'Workload Balance', 
+            description: 'Balance ticket distribution',  
+            condition: 'WORKLOAD',
+            priority: 'MEDIUM',
+          ),
+        ],
       ),
       pendingTickets: queuedTickets,
       agentAssignments: {},
+      lastAssignmentCheck: _getRandomPastDate(),
     );
   }
 

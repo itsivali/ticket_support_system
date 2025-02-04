@@ -31,9 +31,11 @@ class QueueService {
             autoAssignEnabled: true,
             maxTicketsPerAgent: 3,
             priorityWeights: const {'HIGH': 3, 'MEDIUM': 2, 'LOW': 1},
+            rules: const [],
           ),
           pendingTickets: [],
           agentAssignments: {},
+          lastAssignmentCheck: DateTime.now(),
         );
       }
       

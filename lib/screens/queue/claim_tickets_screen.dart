@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../models/queue_manager.dart';
-import '../../providers/queue_provider.dart';
+import '../../providers/queue_provider.dart' as queue_provider;
+import '../../models/queued_ticket.dart' as queued_ticket_model; 
 import '../../providers/agent_provider.dart';
 import '../../widgets/app_drawer.dart';
 import '../../utils/ui_helpers.dart';
+
+
 
 class ClaimTicketsScreen extends StatefulWidget {
   const ClaimTicketsScreen({super.key});
@@ -25,7 +27,7 @@ class _ClaimTicketsScreenState extends State<ClaimTicketsScreen> {
   Future<void> _refreshQueue() async {
     setState(() => _isLoading = true);
     try {
-      await context.read<QueueProvider>().fetchQueueStatus();
+      await context.read<queue_provider.QueueProvider>().fetchQueueStatus();
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -33,7 +35,7 @@ class _ClaimTicketsScreenState extends State<ClaimTicketsScreen> {
     }
   }
 
-  Future<void> _claimTicket(QueuedTicket queuedTicket) async {
+  Future<void> _claimTicket(queued_ticket_model.QueuedTicket queuedTicket) async {
     setState(() => _isLoading = true);
 
     try {
@@ -46,7 +48,7 @@ class _ClaimTicketsScreenState extends State<ClaimTicketsScreen> {
         return;
       }
 
-      final success = await context.read<QueueProvider>().claimTicket(
+      final success = await context.read<queue_provider.QueueProvider>().claimTicket(
         queuedTicket.ticket.id,
         agent.id,
       );
@@ -111,7 +113,7 @@ class _ClaimTicketsScreenState extends State<ClaimTicketsScreen> {
         ],
       ),
       drawer: const AppDrawer(),
-      body: Consumer<QueueProvider>(
+      body: Consumer<queue_provider.QueueProvider>(
         builder: (context, provider, child) {
           final queuedTickets = provider.queueManager?.pendingTickets ?? [];
 
@@ -141,7 +143,7 @@ class _ClaimTicketsScreenState extends State<ClaimTicketsScreen> {
             padding: const EdgeInsets.all(16),
             itemCount: queuedTickets.length,
             itemBuilder: (context, index) {
-              final queuedTicket = queuedTickets[index];
+              final queuedTicket = queuedTickets[index] as queued_ticket_model.QueuedTicket;
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(

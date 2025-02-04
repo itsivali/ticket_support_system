@@ -4,8 +4,9 @@ import '../models/queue_manager.dart' as queue_manager;
 import '../services/queue_service.dart';
 import '../models/ticket.dart' as ticket_model;
 import '../utils/console_logger.dart';
+import '../models/queue_manager.dart' show AssignmentRule;
 
-class QueueProvider extends ChangeNotifier {
+class QueueProvider with ChangeNotifier {
   queue_manager.QueueManager? _queueManager;
   Timer? _autoAssignmentTimer;
   final QueueService _queueService = QueueService();
@@ -17,6 +18,11 @@ class QueueProvider extends ChangeNotifier {
   queue_manager.QueueManager? get queueManager => _queueManager;
 
   bool get autoAssign => _queueManager?.settings.autoAssignEnabled ?? false;
+
+  set queueManager(queue_manager.QueueManager? value) {
+    _queueManager = value;
+    notifyListeners();
+  }
 
   bool _isAutoAssignEnabled = false;
 
@@ -110,10 +116,42 @@ class QueueProvider extends ChangeNotifier {
       tickets = [];
     }
 
-    // Example:
+       notifyListeners();
+  }
 
-    // tickets = await yourApiService.getTickets();
+  Future<void> addRule(AssignmentRule rule) async {
+    if (queueManager == null) return;
 
+    final settings = queueManager!.settings;
+    final newSettings = settings.copyWith(
+      rules: [...settings.rules, rule],
+    );
+    queueManager = queueManager!.copyWith(settings: newSettings);
+    notifyListeners();
+  }
+
+  Future<void> updateRule(AssignmentRule updatedRule) async {
+    if (queueManager == null) return;
+
+    final settings = queueManager!.settings;
+    final rules = [...settings.rules];
+    final index = rules.indexWhere((r) => r.id == updatedRule.id);
+    
+    if (index != -1) {
+      rules[index] = updatedRule;
+      final newSettings = settings.copyWith(rules: rules);
+      queueManager = queueManager!.copyWith(settings: newSettings);
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteRule(String ruleId) async {
+    if (queueManager == null) return;
+
+    final settings = queueManager!.settings;
+    final rules = settings.rules.where((r) => r.id != ruleId).toList();
+    final newSettings = settings.copyWith(rules: rules);
+    queueManager = queueManager!.copyWith(settings: newSettings);
     notifyListeners();
   }
 }
