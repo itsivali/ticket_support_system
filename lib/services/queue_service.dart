@@ -23,7 +23,18 @@ class QueueService {
       );
 
       if (response.statusCode == 200) {
-      return qm.QueueManager.fromJson(json.decode(response.body));
+        return qm.QueueManager.fromJson(json.decode(response.body));
+      } else if (response.statusCode == 404) {
+        return qm.QueueManager(
+          id: '',
+          settings: qm.QueueSettings(
+            autoAssignEnabled: true,
+            maxTicketsPerAgent: 3,
+            priorityWeights: const {'HIGH': 3, 'MEDIUM': 2, 'LOW': 1},
+          ),
+          pendingTickets: [],
+          agentAssignments: {},
+        );
       }
       
       throw _handleError(response);

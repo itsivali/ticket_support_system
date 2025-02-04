@@ -30,10 +30,11 @@ class Agent {
 
   factory Agent.fromJson(Map<String, dynamic> json) {
     try {
-      final id = json['_id']?.toString() ?? '';
+      final id = json['_id']?.toString() ?? json['id']?.toString() ?? '';
       final name = json['name']?.toString() ?? '';
       final email = json['email']?.toString() ?? '';
       final role = json['role']?.toString() ?? 'SUPPORT';
+      final shiftScheduleJson = json['shiftSchedule'] as Map<String, dynamic>? ?? {};
 
       return Agent(
         id: id,
@@ -42,23 +43,25 @@ class Agent {
         role: role,
         isAvailable: json['isAvailable'] ?? true,
         isOnline: json['isOnline'] ?? false,
-        currentTickets: json['currentTickets'] != null 
-            ? List<Ticket>.from(json['currentTickets'].map((ticket) => Ticket.fromJson(ticket as Map<String, dynamic>)))
-            : [],
-        skills: json['skills'] != null 
-            ? List<String>.from(json['skills'].map((skill) => skill.toString()))
-            : [],
-        shiftSchedule: json['shiftSchedule'] != null 
-            ? ShiftSchedule.fromJson(json['shiftSchedule'] as Map<String, dynamic>)
-            : ShiftSchedule(
-                id: '',
-                agentId: id,
-                weekdays: [],
-                startTime: DateTime.now(),
-                endTime: DateTime.now().add(const Duration(hours: 8)),
-                isActive: true,
-                scheduleType: 'FIXED',
-              ),
+        currentTickets: (json['currentTickets'] as List?)
+            ?.map((ticket) => Ticket.fromJson(ticket as Map<String, dynamic>))
+            .toList() ?? [],
+        skills: (json['skills'] as List?)
+            ?.map((skill) => skill.toString())
+            .toList() ?? [],
+        shiftSchedule: ShiftSchedule(
+          id: shiftScheduleJson['id']?.toString() ?? '',
+          agentId: id,
+          weekdays: List<int>.from(shiftScheduleJson['weekdays'] ?? []),
+          startTime: shiftScheduleJson['startTime'] != null 
+              ? DateTime.parse(shiftScheduleJson['startTime']) 
+              : DateTime.now(),
+          endTime: shiftScheduleJson['endTime'] != null 
+              ? DateTime.parse(shiftScheduleJson['endTime'])
+              : DateTime.now().add(const Duration(hours: 8)),
+          isActive: shiftScheduleJson['isActive'] ?? true,
+          scheduleType: shiftScheduleJson['scheduleType']?.toString() ?? 'FIXED',
+        ),
         lastAssignment: json['lastAssignment'] != null
             ? DateTime.parse(json['lastAssignment'])
             : DateTime.now(),
