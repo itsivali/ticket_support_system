@@ -84,8 +84,7 @@ class DatabaseHelper {
     return result.map((map) => Ticket.fromMap(map)).toList();
   }
 
-  // Assign a ticket to the first available agent.
-  // Ensure that your Ticket model includes a copyWith method.
+
   Future<void> assignTicket(Ticket ticket) async {
     final agents = await getAgents();
     final freeAgents = agents.where((a) {
