@@ -7,7 +7,7 @@ import 'src/db_initializer.dart' as db_initializer;
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize the proper database factory based on the platform.
+  // This will invoke the appropriate initializer based on the platform.
   await db_initializer.init();
 
   await DatabaseHelper.instance.database;
