@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:faker/faker.dart';
+import '../models/agent.dart';
+import '../models/ticket.dart';
+import '../services/database_helper.dart';
 import 'agents_screen.dart';
 import 'tickets_screen.dart';
 
@@ -17,6 +21,8 @@ class _HomeScreenState extends State<HomeScreen>
     Tab(icon: Icon(Icons.confirmation_number), text: 'Tickets'),
   ];
 
+  final Faker faker = Faker(); 
+
   @override
   void initState() {
     _tabController = TabController(vsync: this, length: myTabs.length);
@@ -29,12 +35,24 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
-  void _addAgent() {
-    // trigger a dialog or screen to create an Agent
+  void _addAgent() async {
+    Agent agent = Agent(
+      name: faker.person.name(),
+      online: faker.randomGenerator.boolean(),
+      shiftStart: DateTime.now(),
+    );
+    await DatabaseHelper.instance.createAgent(agent);
+    setState(() {});
   }
 
-  void _addTicket() {
-    // trigger a dialog or screen to create a Ticket
+  void _addTicket() async {
+    Ticket ticket = Ticket(
+      title: faker.lorem.sentence(),
+      description: faker.lorem.sentences(3).join(' '),
+      createdAt: DateTime.now(),
+    );
+    await DatabaseHelper.instance.createTicket(ticket);
+    setState(() {});
   }
 
   @override

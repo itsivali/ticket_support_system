@@ -1,8 +1,8 @@
 class Ticket {
-  final int? id;
+  final dynamic id; 
   final String title;
   final String description;
-  final int? agentId;
+  final dynamic agentId;
   final DateTime createdAt;
 
   Ticket({
@@ -15,7 +15,7 @@ class Ticket {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
+      if (id != null) '_id': id,
       'title': title,
       'description': description,
       'agentId': agentId,
@@ -25,7 +25,7 @@ class Ticket {
 
   factory Ticket.fromMap(Map<String, dynamic> map) {
     return Ticket(
-      id: map['id'],
+      id: map['_id'],
       title: map['title'],
       description: map['description'],
       agentId: map['agentId'],
@@ -34,10 +34,10 @@ class Ticket {
   }
 
   Ticket copyWith({
-    int? id,
+    dynamic id,
     String? title,
     String? description,
-    int? agentId,
+    dynamic agentId,
     DateTime? createdAt,
   }) {
     return Ticket(

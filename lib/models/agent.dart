@@ -1,5 +1,5 @@
 class Agent {
-  final int? id;
+  final dynamic id; 
   final String name;
   final bool online;
   final DateTime shiftStart;
@@ -13,18 +13,18 @@ class Agent {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
+      if (id != null) '_id': id,
       'name': name,
-      'online': online ? 1 : 0,
+      'online': online,
       'shiftStart': shiftStart.toIso8601String(),
     };
   }
 
   factory Agent.fromMap(Map<String, dynamic> map) {
     return Agent(
-      id: map['id'],
+      id: map['_id'],
       name: map['name'],
-      online: map['online'] == 1,
+      online: map['online'],
       shiftStart: DateTime.parse(map['shiftStart']),
     );
   }
