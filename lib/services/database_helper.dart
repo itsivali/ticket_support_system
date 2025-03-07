@@ -1,72 +1,104 @@
-import 'package:mongo_dart/mongo_dart.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import '../models/agent.dart';
 import '../models/ticket.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
-  late Db db;
-  late DbCollection agentCollection;
-  late DbCollection ticketCollection;
-
   DatabaseHelper._init();
 
-  Future<void> init() async {
-    // Update the connection string as needed.
-    db = await Db.create('mongodb://localhost:27017/ticket_support_system');
-    await db.open();
-    agentCollection = db.collection('agents');
-    ticketCollection = db.collection('tickets');
-  }
+  static const String baseUrl = 'http://localhost:3000';
 
   // Agent CRUD Methods
-  Future<ObjectId> createAgent(Agent agent) async {
-    final result = await agentCollection.insertOne(agent.toMap());
-    return result.id as ObjectId;
+  Future<String> createAgent(Agent agent) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/agents'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(agent.toMap()),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body)['id'];
+      } else {
+        throw Exception('Failed to create agent: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to create agent: $e');
+    }
   }
 
   Future<List<Agent>> getAgents() async {
-    final List<Map<String, dynamic>> results = await agentCollection.find().toList();
-    return results.map((map) => Agent.fromMap(map)).toList();
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/agents'));
+      if (response.statusCode == 200) {
+        final List list = jsonDecode(response.body);
+        return list.map((map) => Agent.fromMap(map)).toList();
+      } else {
+        throw Exception('Failed to load agents: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load agents: $e');
+    }
   }
 
   // Ticket CRUD Methods
-  Future<ObjectId> createTicket(Ticket ticket) async {
-    final result = await ticketCollection.insertOne(ticket.toMap());
-    return result.id as ObjectId;
+  Future<String> createTicket(Ticket ticket) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/tickets'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(ticket.toMap()),
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body)['id'];
+      } else {
+        throw Exception('Failed to create ticket: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to create ticket: $e');
+    }
   }
 
   Future<List<Ticket>> getTickets() async {
-    final List<Map<String, dynamic>> results = await ticketCollection.find().toList();
-    return results.map((map) => Ticket.fromMap(map)).toList();
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/tickets'));
+      if (response.statusCode == 200) {
+        final List list = jsonDecode(response.body);
+        return list.map((map) => Ticket.fromMap(map)).toList();
+      } else {
+        throw Exception('Failed to load tickets: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load tickets: $e');
+    }
   }
 
-  Future<int> updateTicket(Ticket ticket) async {
-    // using the _id field from MongoDB
-    var id = ticket.id is ObjectId ? ticket.id : ObjectId.fromHexString(ticket.id.toString());
-    final result = await ticketCollection.updateOne(
-      where.id(id as ObjectId),
-      modify.set('agentId', ticket.agentId).set('title', ticket.title).set('description', ticket.description),
-    );
-    return result.nModified;
+  Future<void> updateTicket(String id, Map<String, dynamic> update) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/tickets/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(update),
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update ticket: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to update ticket: $e');
+    }
   }
 
-  Future<int> deleteTicket(String id) async {
-    final result = await ticketCollection.deleteOne(where.id(ObjectId.fromHexString(id)));
-    return result.nRemoved;
-  }
-
-  Future<void> assignTicket(Ticket ticket) async {
-    // Example: assign ticket to the first free agent.
-    final agents = await getAgents();
-    final freeAgents = agents.where((a) {
-      final shiftEnd = a.shiftStart.add(const Duration(hours: 8));
-      return a.online && DateTime.now().isBefore(shiftEnd);
-    }).toList();
-
-    if (freeAgents.isNotEmpty) {
-      final assignedAgent = freeAgents.first;
-      Ticket updatedTicket = ticket.copyWith(agentId: assignedAgent.id);
-      await updateTicket(updatedTicket);
+  Future<void> deleteTicket(String id) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/tickets/$id'),
+        headers: {'Content-Type': 'application/json'},
+      );
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete ticket: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to delete ticket: $e');
     }
   }
 }
