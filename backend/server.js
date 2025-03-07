@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-const MONGO_URI = 'mongodb://localhost:27017';
+const MONGO_URI = 'mongodb://127.0.0.1:27017';
 const DB_NAME = 'ticket_support_system';
 
 let db;
