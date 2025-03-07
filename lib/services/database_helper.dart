@@ -44,7 +44,7 @@ class DatabaseHelper {
     // using the _id field from MongoDB
     var id = ticket.id is ObjectId ? ticket.id : ObjectId.fromHexString(ticket.id.toString());
     final result = await ticketCollection.updateOne(
-      where.id(id),
+      where.id(id as ObjectId),
       modify.set('agentId', ticket.agentId).set('title', ticket.title).set('description', ticket.description),
     );
     return result.nModified;
