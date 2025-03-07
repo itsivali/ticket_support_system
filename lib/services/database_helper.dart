@@ -1,91 +1,62 @@
-import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:mongo_dart/mongo_dart.dart';
 import '../models/agent.dart';
 import '../models/ticket.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
-  static Database? _database;
+  late Db db;
+  late DbCollection agentCollection;
+  late DbCollection ticketCollection;
+
   DatabaseHelper._init();
 
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'ticket_support_system.db');
-
-    _database = await openDatabase(path, version: 1, onCreate: _createDB);
-    return _database!;
-  }
-
-  Future<void> _createDB(Database db, int version) async {
-    await db.execute('''
-      CREATE TABLE agents (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        online INTEGER NOT NULL,
-        shiftStart TEXT NOT NULL
-      )
-    ''');
-    await db.execute('''
-      CREATE TABLE tickets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
-        description TEXT,
-        agentId INTEGER,
-        createdAt TEXT NOT NULL,
-        FOREIGN KEY(agentId) REFERENCES agents (id)
-      )
-    ''');
+  Future<void> init() async {
+    // Update the connection string as needed.
+    db = await Db.create('mongodb://localhost:27017/ticket_support_system');
+    await db.open();
+    agentCollection = db.collection('agents');
+    ticketCollection = db.collection('tickets');
   }
 
   // Agent CRUD Methods
-  Future<int> createAgent(Agent agent) async {
-    final db = await instance.database;
-    return await db.insert('agents', agent.toMap());
-  }
-
-  Future<int> updateAgent(Agent agent) async {
-    final db = await instance.database;
-    return await db.update('agents', agent.toMap(),
-        where: 'id = ?', whereArgs: [agent.id]);
-  }
-
-  Future<int> deleteAgent(int id) async {
-    final db = await instance.database;
-    return await db.delete('agents', where: 'id = ?', whereArgs: [id]);
+  Future<ObjectId> createAgent(Agent agent) async {
+    final result = await agentCollection.insertOne(agent.toMap());
+    return result.id as ObjectId;
   }
 
   Future<List<Agent>> getAgents() async {
-    final db = await instance.database;
-    final result = await db.query('agents');
-    return result.map((map) => Agent.fromMap(map)).toList();
+    final List<Map<String, dynamic>> results = await agentCollection.find().toList();
+    return results.map((map) => Agent.fromMap(map)).toList();
   }
 
   // Ticket CRUD Methods
-  Future<int> createTicket(Ticket ticket) async {
-    final db = await instance.database;
-    return await db.insert('tickets', ticket.toMap());
-  }
-
-  Future<int> updateTicket(Ticket ticket) async {
-    final db = await instance.database;
-    return await db.update('tickets', ticket.toMap(),
-        where: 'id = ?', whereArgs: [ticket.id]);
-  }
-
-  Future<int> deleteTicket(int id) async {
-    final db = await instance.database;
-    return await db.delete('tickets', where: 'id = ?', whereArgs: [id]);
+  Future<ObjectId> createTicket(Ticket ticket) async {
+    final result = await ticketCollection.insertOne(ticket.toMap());
+    return result.id as ObjectId;
   }
 
   Future<List<Ticket>> getTickets() async {
-    final db = await instance.database;
-    final result = await db.query('tickets');
-    return result.map((map) => Ticket.fromMap(map)).toList();
+    final List<Map<String, dynamic>> results = await ticketCollection.find().toList();
+    return results.map((map) => Ticket.fromMap(map)).toList();
   }
 
+  Future<int> updateTicket(Ticket ticket) async {
+    // using the _id field from MongoDB
+    var id = ticket.id is ObjectId ? ticket.id : ObjectId.fromHexString(ticket.id.toString());
+    final result = await ticketCollection.updateOne(
+      where.id(id),
+      modify.set('agentId', ticket.agentId).set('title', ticket.title).set('description', ticket.description),
+    );
+    return result.nModified;
+  }
+
+  Future<int> deleteTicket(String id) async {
+    final result = await ticketCollection.deleteOne(where.id(ObjectId.fromHexString(id)));
+    return result.nRemoved;
+  }
 
   Future<void> assignTicket(Ticket ticket) async {
+    // Example: assign ticket to the first free agent.
     final agents = await getAgents();
     final freeAgents = agents.where((a) {
       final shiftEnd = a.shiftStart.add(const Duration(hours: 8));
@@ -94,7 +65,8 @@ class DatabaseHelper {
 
     if (freeAgents.isNotEmpty) {
       final assignedAgent = freeAgents.first;
-      await updateTicket(ticket.copyWith(agentId: assignedAgent.id));
+      Ticket updatedTicket = ticket.copyWith(agentId: assignedAgent.id);
+      await updateTicket(updatedTicket);
     }
   }
 }
